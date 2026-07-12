@@ -37,6 +37,7 @@ let analysisPeriod = 'month'; // 'week' | 'month' | 'year' | 'custom'
 let analysisYear = new Date().getFullYear();
 let analysisMonth = new Date().getMonth();
 let analysisWeekStart = (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d; })();
+let analysisCatType = 'spending'; // 'spending' | 'income'
 
 // Add transaction state variables
 let selectedTxType = 'expense';
@@ -409,6 +410,14 @@ function renderRecentTransactions(list) {
 }
 
 // Analysis period pill control
+function weekLabelStr(start) {
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    const fmt = (d) => `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}`;
+    const yr = start.getFullYear() === end.getFullYear() ? ` ${start.getFullYear()}` : ` ${start.getFullYear()}`;
+    return `${fmt(start)} – ${fmt(end)}${yr}`;
+}
+
 function setAnalysisPeriod(period) {
     analysisPeriod = period;
     ['week','month','year','custom'].forEach(p => {
@@ -422,8 +431,29 @@ function setAnalysisPeriod(period) {
             btn.classList.add('text-on-surface-variant');
         }
     });
-    const nav = document.getElementById('analysis-period-nav');
-    if (nav) nav.classList.toggle('hidden', period === 'week' || period === 'custom');
+    // Show/hide navigators
+    const monthNav = document.getElementById('analysis-period-nav');
+    const weekNav = document.getElementById('analysis-week-nav');
+    const customNav = document.getElementById('analysis-custom-nav');
+    if (monthNav) monthNav.classList.toggle('hidden', period !== 'month' && period !== 'year');
+    if (weekNav)  weekNav.classList.toggle('hidden', period !== 'week');
+    if (customNav) customNav.classList.toggle('hidden', period !== 'custom');
+    // Seed custom dates if first time
+    if (period === 'custom') {
+        const fromEl = document.getElementById('analysis-custom-from');
+        const toEl   = document.getElementById('analysis-custom-to');
+        if (fromEl && !fromEl.value) {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            fromEl.value = firstDay.toISOString().slice(0,10);
+            toEl.value   = now.toISOString().slice(0,10);
+        }
+    }
+    // Seed week label
+    if (period === 'week') {
+        const wl = document.getElementById('analysis-week-label');
+        if (wl) wl.innerText = weekLabelStr(analysisWeekStart);
+    }
     updateAnalysis();
 }
 
@@ -431,14 +461,33 @@ function changeAnalysisPeriod(dir) {
     if (analysisPeriod === 'month') {
         analysisMonth += dir;
         if (analysisMonth > 11) { analysisMonth = 0; analysisYear++; }
-        if (analysisMonth < 0) { analysisMonth = 11; analysisYear--; }
-        const label = document.getElementById('analysis-month-label');
-        if (label) label.innerText = `${monthNames[analysisMonth]} ${analysisYear}`;
+        if (analysisMonth < 0)  { analysisMonth = 11; analysisYear--; }
     } else if (analysisPeriod === 'year') {
         analysisYear += dir;
-        const label = document.getElementById('analysis-month-label');
-        if (label) label.innerText = `${analysisYear}`;
     }
+    updateAnalysis();
+}
+
+function changeAnalysisWeek(dir) {
+    analysisWeekStart.setDate(analysisWeekStart.getDate() + dir * 7);
+    const wl = document.getElementById('analysis-week-label');
+    if (wl) wl.innerText = weekLabelStr(analysisWeekStart);
+    updateAnalysis();
+}
+
+function setAnalysisCatType(type) {
+    analysisCatType = type;
+    ['spending','income'].forEach(t => {
+        const btn = document.getElementById(`analysis-cat-pill-${t}`);
+        if (!btn) return;
+        if (t === type) {
+            btn.classList.add('bg-surface-variant','text-on-surface');
+            btn.classList.remove('text-on-surface-variant');
+        } else {
+            btn.classList.remove('bg-surface-variant','text-on-surface');
+            btn.classList.add('text-on-surface-variant');
+        }
+    });
     updateAnalysis();
 }
 
@@ -459,14 +508,21 @@ function transactionBelongsToAnalysisPeriod(t) {
     }
     if (!txDate) return false;
     if (analysisPeriod === 'week') {
-        const weekEnd = new Date(analysisWeekStart); weekEnd.setDate(weekEnd.getDate() + 6); weekEnd.setHours(23,59,59,999);
+        const weekEnd = new Date(analysisWeekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        weekEnd.setHours(23,59,59,999);
         return txDate >= analysisWeekStart && txDate <= weekEnd;
     } else if (analysisPeriod === 'month') {
         return txDate.getMonth() === analysisMonth && txDate.getFullYear() === analysisYear;
     } else if (analysisPeriod === 'year') {
         return txDate.getFullYear() === analysisYear;
-    } else { // custom — show all for now
-        return true;
+    } else { // custom
+        const fromEl = document.getElementById('analysis-custom-from');
+        const toEl   = document.getElementById('analysis-custom-to');
+        if (!fromEl || !toEl || !fromEl.value || !toEl.value) return true;
+        const from = new Date(fromEl.value); from.setHours(0,0,0,0);
+        const to   = new Date(toEl.value);   to.setHours(23,59,59,999);
+        return txDate >= from && txDate <= to;
     }
 }
 
@@ -478,106 +534,183 @@ function updateAnalysis() {
         if (analysisPeriod === 'year') label.innerText = `${analysisYear}`;
         else label.innerText = `${monthNames[analysisMonth]} ${analysisYear}`;
     }
-    let totalSpent = 0;
-    const categorySums = {};
+    const wl = document.getElementById('analysis-week-label');
+    if (wl && analysisPeriod === 'week') wl.innerText = weekLabelStr(analysisWeekStart);
 
+    const isSpending = analysisCatType === 'spending';
+    const txType = isSpending ? 'expense' : 'income';
+
+    // Sum by category for active type
+    let total = 0;
+    const categorySums = {};
     transactions.forEach(t => {
-        if (t.type === 'expense' && transactionBelongsToAnalysisPeriod(t)) {
-            totalSpent += t.amount;
+        if (t.type === txType && transactionBelongsToAnalysisPeriod(t)) {
+            total += t.amount;
             categorySums[t.category] = (categorySums[t.category] || 0) + t.amount;
         }
     });
 
-    document.getElementById('chart-total-spent').innerText = `₹${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const totalLabel = document.getElementById('chart-total-spent');
+    const totalLabelSub = totalLabel && totalLabel.previousElementSibling;
+    if (totalLabel) totalLabel.innerText = `₹${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (totalLabelSub) totalLabelSub.innerText = isSpending ? 'Total Spent' : 'Total Earned';
 
     // Build dynamic list and donut chart
     const listContainer = document.getElementById('analysis-category-list');
     listContainer.innerHTML = '';
 
     const svg = document.getElementById('donut-svg');
-    svg.innerHTML = ''; // reset SVG
+    svg.innerHTML = '';
 
-    let offset = 0;
+    // All known categories per type
+    const allExpenseCats = expenseCategories.map(c => ({ name: c.name, icon: c.icon }));
+    const allIncomeCats  = incomeCategories.map(c => ({ name: c.name, icon: c.icon }));
+    const allCats = isSpending ? allExpenseCats : allIncomeCats;
+
     const colors = {
-        'Groceries': '#ff8a50',
-        'Shopping': '#40c4ff',
-        'Education': '#b388ff',
-        'Transport': '#ff5252',
-        'Bills & Utilities': '#7e57c2',
-        'Entertainment': '#66bb6a',
-        'Medical': '#ef5350',
-        'Food & Drinks': '#ffd54f'
+        'Groceries': '#ff8a50', 'Shopping': '#40c4ff', 'Education': '#b388ff',
+        'Transport': '#ff5252', 'Bills & Utilities': '#7e57c2', 'Entertainment': '#66bb6a',
+        'Medical': '#ef5350', 'Food & Drinks': '#ffd54f',
+        'Salary': '#69f0ae', 'Freelance': '#40c4ff', 'Investments': '#b388ff',
+        'Gifts & Grants': '#ff8a50', 'Other Income': '#78909c'
     };
     const bgLightColors = {
-        'Groceries': 'bg-orange-500/10 text-orange-400',
-        'Shopping': 'bg-blue-500/10 text-blue-400',
-        'Education': 'bg-purple-500/10 text-purple-400',
-        'Transport': 'bg-red-500/10 text-red-400',
-        'Bills & Utilities': 'bg-indigo-500/10 text-indigo-400',
-        'Entertainment': 'bg-green-500/10 text-green-400',
-        'Medical': 'bg-red-400/10 text-red-300',
-        'Food & Drinks': 'bg-yellow-500/10 text-yellow-400'
-    };
-    const icons = {
-        'Groceries': 'shopping_basket',
-        'Shopping': 'shopping_bag',
-        'Education': 'school',
-        'Transport': 'commute',
-        'Bills & Utilities': 'receipt_long',
-        'Entertainment': 'sports_esports',
-        'Medical': 'medical_services',
-        'Food & Drinks': 'restaurant'
+        'Groceries': 'bg-orange-500/10 text-orange-400', 'Shopping': 'bg-blue-500/10 text-blue-400',
+        'Education': 'bg-purple-500/10 text-purple-400', 'Transport': 'bg-red-500/10 text-red-400',
+        'Bills & Utilities': 'bg-indigo-500/10 text-indigo-400', 'Entertainment': 'bg-green-500/10 text-green-400',
+        'Medical': 'bg-red-400/10 text-red-300', 'Food & Drinks': 'bg-yellow-500/10 text-yellow-400',
+        'Salary': 'bg-green-500/10 text-green-400', 'Freelance': 'bg-blue-500/10 text-blue-400',
+        'Investments': 'bg-purple-500/10 text-purple-400', 'Gifts & Grants': 'bg-orange-500/10 text-orange-400',
+        'Other Income': 'bg-surface-container-high text-on-surface-variant'
     };
 
-    const sortedCategories = Object.keys(categorySums).sort((a, b) => categorySums[b] - categorySums[a]);
+    // Sort: non-zero first by amount desc, then zero alphabetically
+    const withValue  = allCats.filter(c => (categorySums[c.name] || 0) > 0)
+                               .sort((a, b) => (categorySums[b.name] || 0) - (categorySums[a.name] || 0));
+    const withoutValue = allCats.filter(c => !(categorySums[c.name] > 0));
+    const sortedCats = [...withValue, ...withoutValue];
 
-    if (sortedCategories.length === 0) {
-        listContainer.innerHTML = `<p class="text-center text-on-surface-variant py-md">No expenses recorded this month.</p>`;
-        return;
-    }
-
-    sortedCategories.forEach(cat => {
-        const sum = categorySums[cat];
-        const pct = totalSpent > 0 ? (sum / totalSpent) * 100 : 0;
-        const strokeColor = colors[cat] || '#899484';
-        const bgLight = bgLightColors[cat] || 'bg-surface-container-high text-on-surface-variant';
-        const icon = icons[cat] || 'payments';
-
-        // Add list item
-        const item = document.createElement('div');
-        item.className = "flex items-center justify-between p-md bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer group";
-        item.onclick = () => showToast(`${cat}: ₹${sum.toFixed(2)} (${pct.toFixed(1)}%)`);
-        item.innerHTML = `
-            <div class="flex items-center gap-md">
-                <div class="w-12 h-12 rounded-full flex items-center justify-center ${bgLight}">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">${icon}</span>
-                </div>
-                <div>
-                    <p class="text-body-lg font-semibold">${cat}</p>
-                    <p class="text-label-md text-on-surface-variant">${pct.toFixed(1)}% of total</p>
-                </div>
-            </div>
-            <p class="text-body-lg font-bold">₹${sum.toFixed(2)}</p>
-        `;
-        listContainer.appendChild(item);
-
-        // Add SVG circle segment
-        // SVG formula: radius 15.915 gives a circumference of exactly 100
+    // Draw donut only for non-zero
+    let offset = 0;
+    withValue.forEach(cat => {
+        const sum = categorySums[cat.name];
+        const pct = total > 0 ? (sum / total) * 100 : 0;
+        const strokeColor = colors[cat.name] || '#899484';
         const strokeDasharray = `${pct} ${100 - pct}`;
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('class', 'donut-segment transition-all duration-500');
-        circle.setAttribute('cx', '18');
-        circle.setAttribute('cy', '18');
+        circle.setAttribute('cx', '18'); circle.setAttribute('cy', '18');
         circle.setAttribute('fill', 'transparent');
         circle.setAttribute('r', '15.915');
         circle.setAttribute('stroke', strokeColor);
         circle.setAttribute('stroke-width', '4.5');
         circle.setAttribute('stroke-dasharray', strokeDasharray);
         circle.setAttribute('stroke-dashoffset', (-offset).toString());
-
         svg.appendChild(circle);
         offset += pct;
     });
+
+    // Draw all category rows (including zero)
+    sortedCats.forEach(cat => {
+        const sum = categorySums[cat.name] || 0;
+        const pct = total > 0 && sum > 0 ? (sum / total) * 100 : 0;
+        const bgLight = bgLightColors[cat.name] || 'bg-surface-container-high text-on-surface-variant';
+        const isZero = sum === 0;
+
+        const item = document.createElement('div');
+        item.className = `flex items-center justify-between p-md bg-surface-container rounded-xl transition-colors ${
+            isZero ? 'opacity-40' : 'hover:bg-surface-container-high cursor-pointer'
+        }`;
+        if (!isZero) item.onclick = () => openCatTransactionsSheet(cat.name, cat.icon);
+        item.innerHTML = `
+            <div class="flex items-center gap-md">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center ${bgLight}">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">${cat.icon}</span>
+                </div>
+                <div>
+                    <p class="text-body-lg font-semibold">${cat.name}</p>
+                    <p class="text-label-md text-on-surface-variant">${isZero ? 'No transactions' : pct.toFixed(1) + '% of total'}</p>
+                </div>
+            </div>
+            <p class="text-body-lg font-bold ${isZero ? 'text-on-surface-variant' : ''}">₹${sum.toFixed(2)}</p>
+        `;
+        listContainer.appendChild(item);
+    });
+}
+
+function openCatTransactionsSheet(catName, catIcon) {
+    const txType = analysisCatType === 'spending' ? 'expense' : 'income';
+    const filtered = transactions.filter(t =>
+        t.type === txType &&
+        t.category === catName &&
+        transactionBelongsToAnalysisPeriod(t)
+    );
+
+    // Header
+    const titleEl = document.getElementById('cat-tx-sheet-title');
+    const subtitleEl = document.getElementById('cat-tx-sheet-subtitle');
+    if (titleEl) titleEl.innerText = catName;
+    if (subtitleEl) {
+        const periodStr = analysisPeriod === 'week'
+            ? weekLabelStr(analysisWeekStart)
+            : analysisPeriod === 'year'
+                ? `${analysisYear}`
+                : analysisPeriod === 'month'
+                    ? `${monthNames[analysisMonth]} ${analysisYear}`
+                    : 'Custom range';
+        subtitleEl.innerText = `${filtered.length} transaction${filtered.length !== 1 ? 's' : ''} · ${periodStr}`;
+    }
+
+    // List
+    const list = document.getElementById('cat-tx-sheet-list');
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+        list.innerHTML = `<p class="text-center text-on-surface-variant py-xl">No transactions found</p>`;
+    } else {
+        const isInc = txType === 'income';
+        let runTotal = 0;
+        filtered.forEach(t => { runTotal += t.amount; });
+
+        // Summary row
+        const summary = document.createElement('div');
+        summary.className = 'flex justify-between items-center py-sm px-md bg-surface-container rounded-xl mb-sm';
+        summary.innerHTML = `
+            <span class="text-label-lg text-on-surface-variant">Total</span>
+            <span class="text-headline-md font-headline-md ${isInc ? 'text-primary' : 'text-secondary'}">${isInc ? '+' : '-'}₹${runTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
+        `;
+        list.appendChild(summary);
+
+        filtered.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]';
+            card.onclick = () => { closeCatTransactionsSheet(); openEditTransactionModal(t); };
+            const colorClass = isInc ? 'text-primary bg-primary-container/20' : 'text-secondary bg-secondary-container/20';
+            card.innerHTML = `
+                <div class="w-10 h-10 rounded-full flex items-center justify-center ${colorClass} flex-shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">${t.categoryIcon || 'payments'}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline gap-sm">
+                        <p class="text-body-md font-semibold text-on-surface truncate">${t.note || t.category}</p>
+                        <p class="text-body-lg font-bold flex-shrink-0 ${isInc ? 'text-primary' : 'text-secondary'}">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <p class="text-label-md text-on-surface-variant">${t.date}</p>
+                        <span class="material-symbols-outlined text-on-surface-variant text-[16px]">${t.paymentMode === 'Cash' ? 'payments' : t.paymentMode === 'Credit Card' ? 'credit_card' : 'account_balance'}</span>
+                    </div>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    document.getElementById('sheet-cat-transactions').classList.remove('translate-y-full');
+    showBackdrop();
+}
+
+function closeCatTransactionsSheet() {
+    document.getElementById('sheet-cat-transactions').classList.add('translate-y-full');
+    checkBackdropNeeded();
 }
 
 // Accounts tab renderer
