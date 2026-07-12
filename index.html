@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en"><head>
+<html class="light-theme" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>ExpenLedge - Expense Manager</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,600;6..12,700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
@@ -14,65 +14,31 @@
                 theme: {
                     extend: {
                         "colors": {
-                            "inverse-primary": "#006e2f",
-                            "secondary": "#ffb2be",
-                            "outline-variant": "#3d4a3d",
-                            "outline": "#869585",
-                            "tertiary-fixed": "#d1e4ff",
-                            "on-tertiary-fixed-variant": "#144977",
-                            "primary-fixed-dim": "#4ae176",
-                            "surface-container-highest": "#353534",
-                            "on-error-container": "#ffdad6",
-                            "surface-elevated": "#2a2a2a",
-                            "outline-low": "#3f4a3c",
-                            "on-tertiary-fixed": "#001d36",
-                            "on-secondary-container": "#efa4b0",
-                            "error": "#ffb4ab",
-                            "tertiary-container": "#83afe3",
-                            "surface-container-low": "#1c1b1b",
-                            "on-secondary-fixed-variant": "#6d3640",
-                            "on-secondary": "#52202b",
-                            "inverse-surface": "#e5e2e1",
-                            "surface-dim": "#131313",
-                            "primary-container": "#22c55e",
-                            "income": "#4caf50",
-                            "on-primary": "#003915",
-                            "secondary-container": "#703843",
-                            "primary-fixed": "#6bff8f",
-                            "tertiary-fixed-dim": "#9ecaff",
-                            "surface-variant": "#353534",
-                            "on-surface": "#e5e2e1",
-                            "inverse-on-surface": "#313030",
-                            "on-primary-container": "#004b1e",
-                            "background": "#131313",
-                            "on-tertiary": "#003258",
-                            "on-error": "#690005",
-                            "secondary-fixed": "#ffd9de",
-                            "surface-card": "#202020",
-                            "tertiary": "#9fcaff",
-                            "primary": "#4be277",
-                            "surface-tint": "#4ae176",
-                            "on-surface-variant": "#bccbb9",
-                            "surface": "#131313",
-                            "secondary-fixed-dim": "#ffb2be",
-                            "surface-bright": "#393939",
-                            "surface-container": "#201f1f",
-                            "error-container": "#93000a",
-                            "on-background": "#e5e2e1",
-                            "surface-deep": "#0e0e0e",
-                            "outline-high": "#899484",
-                            "on-primary-fixed-variant": "#005321",
-                            "on-tertiary-container": "#07426f",
-                            "expense": "#d70357",
-                            "surface-container-lowest": "#0e0e0e",
-                            "surface-container-high": "#2a2a2a",
-                            "on-primary-fixed": "#002109",
-                            "on-secondary-fixed": "#380b16"
+                            "primary": "#4a7c59",
+                            "primary-container": "#4a7c59",
+                            "on-primary": "#ffffff",
+                            "secondary": "#a85c69",
+                            "secondary-container": "#a85c69",
+                            "tertiary": "#5c7ca8",
+                            "background": "#f4f6f4",
+                            "on-background": "#1a1c18",
+                            "surface": "#ffffff",
+                            "on-surface": "#1a1c18",
+                            "surface-variant": "#e2e5e1",
+                            "on-surface-variant": "#43483f",
+                            "surface-container": "#ffffff",
+                            "surface-container-high": "#f0f3ef",
+                            "surface-container-highest": "#d1d5db",
+                            "surface-container-lowest": "#ffffff",
+                            "outline-variant": "rgba(0, 0, 0, 0.08)",
+                            "error": "#ba1a1a",
+                            "on-error": "#ffffff",
+                            "error-container": "#ffdad6"
                         },
                         "borderRadius": {
                             "DEFAULT": "0.25rem",
                             "lg": "0.5rem",
-                            "xl": "0.75rem",
+                            "xl": "12px",
                             "full": "9999px"
                         },
                         "spacing": {
@@ -86,14 +52,14 @@
                             "lg": "24px"
                         },
                         "fontFamily": {
-                            "headline-md": ["Inter"],
-                            "headline-lg": ["Inter"],
-                            "body-lg": ["Inter"],
-                            "body-md": ["Inter"],
-                            "display-lg-mobile": ["Inter"],
-                            "label-lg": ["Inter"],
-                            "label-md": ["Inter"],
-                            "display-lg": ["Inter"]
+                            "headline-md": ["Nunito Sans"],
+                            "headline-lg": ["Nunito Sans"],
+                            "body-lg": ["Nunito Sans"],
+                            "body-md": ["Nunito Sans"],
+                            "display-lg-mobile": ["Nunito Sans"],
+                            "label-lg": ["Nunito Sans"],
+                            "label-md": ["Nunito Sans"],
+                            "display-lg": ["Nunito Sans"]
                         },
                         "fontSize": {
                             "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
@@ -113,9 +79,9 @@
     </script>
 <style>
         body {
-            background-color: #131313;
-            color: #e5e2e1;
-            font-family: 'Inter', sans-serif;
+            background-color: #f4f6f4;
+            color: #1a1c18;
+            font-family: 'Nunito Sans', sans-serif;
             overflow-x: hidden;
         }
 
@@ -159,13 +125,13 @@
         main:hover::-webkit-scrollbar-thumb,
         body:hover::-webkit-scrollbar-thumb,
         div:hover::-webkit-scrollbar-thumb {
-            background: rgba(34, 197, 94, 0.25);
+            background: rgba(74, 124, 89, 0.25);
         }
 
         .overflow-y-auto::-webkit-scrollbar-thumb:hover,
         .overflow-x-auto::-webkit-scrollbar-thumb:hover,
         div::-webkit-scrollbar-thumb:hover {
-            background: rgba(34, 197, 94, 0.45);
+            background: rgba(74, 124, 89, 0.45);
         }
 
         * {
@@ -175,7 +141,7 @@
         }
 
         *:hover {
-            scrollbar-color: rgba(34, 197, 94, 0.25) transparent;
+            scrollbar-color: rgba(74, 124, 89, 0.25) transparent;
         }
 
         .no-scrollbar::-webkit-scrollbar {
@@ -185,6 +151,13 @@
         .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+        }
+
+        .custom-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-color: rgba(0, 0, 0, 0.08);
         }
 
         /* Page animation styling */
@@ -209,19 +182,6 @@
             }
         }
         
-        /* Subtle icon animations */
-        @keyframes iconPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-        .active-nav-icon {
-            animation: iconPulse 2s infinite ease-in-out;
-        }
-        .icon-spin-hover:hover {
-            transform: rotate(45deg);
-            transition: transform 0.3s ease;
-        }
-
         /* Light Theme Overrides */
         .light-theme,
         .light-theme body {
@@ -259,7 +219,7 @@
         }
         .light-theme .bg-surface-container-lowest,
         .light-theme nav {
-            background-color: #e2e5e1 !important;
+            background-color: #ffffff !important;
             border-color: rgba(0, 0, 0, 0.08) !important;
         }
         .light-theme .bg-surface-container-highest {
@@ -312,7 +272,7 @@
 <div class="flex justify-between items-center py-md w-full">
 <div class="flex items-center gap-md">
 <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20">
-<img alt="Alex Thompson" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB63vzJuI2i2w5f_WlsJifrJENLVlzdrn4mOzlPDEj0I66uLQX2ZuTTJVrqmAPdIX6DLaFn9uQZ6FmmipvWbi-CpdIu49mvJ48v1vGARzAgyXNYED9ruHzWBT_DcKx74TwJVbzxUWIhKQ8qLl7z8ADVuEwqa9cPKRmCRQKxlHz0eh42V0PbN5KBiJX6VAYmXScJf3SnTNpYkdwexfNbKv95gY5wD_OdLxDiw6vXTWvYtuQKssO8yjaR"/>
+<img alt="Alex Thompson" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAV7rlQjlIq8KVW9mn5v1pGFmiTFtX53R1s7rObbh3PozHE5egVHxV5-PoWAiQnH71q8SCJoo3BLTsHIFXv2fm9EF6sn2IYrgCYZm81VqqSSH0VOBSPg_p8bYiABItYyTaCmaFMpkjr2rOjnLyDhsxztLTtmWNYZYp2s-d2100_KfkMghAfH1vKm_T3I9ZHpDQGj-9TWn8Ogk66CDIBJIQzG3Lh6Cq7iOycFxf5EteMFEGp7lrzIs6O"/>
 </div>
 <div>
 <p class="text-label-lg font-label-lg text-on-surface-variant" id="greeting-label">Good
@@ -321,7 +281,7 @@
 </div>
 </div>
 <div class="flex items-center gap-xs">
-<button class="p-xs hover:bg-surface-container-high rounded-full animate-hover icon-spin-hover" onclick="toggleTheme()">
+<button class="p-xs hover:bg-surface-container-high rounded-full animate-hover" onclick="toggleTheme()">
 <span class="material-symbols-outlined text-on-surface-variant text-[28px]" id="theme-toggle-icon">light_mode</span>
 </button>
 <button class="p-xs hover:bg-surface-container-high rounded-full animate-hover" onclick="openSearchOnTransactionsPage()">
@@ -330,20 +290,20 @@
 </div>
 </div>
 <!-- CARD 1: THIS MONTH SUMMARY -->
-<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 shadow-sm space-y-md">
+<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm">
 <div class="flex justify-between items-center">
 <div class="relative inline-block text-left">
 <button class="flex items-center gap-xs text-headline-md font-headline-md text-on-background hover:text-primary transition-colors focus:outline-none" id="dashboard-filter-btn" onclick="toggleDashboardFilterDropdown()">
 <span id="dashboard-filter-label">This month</span>
 <span class="material-symbols-outlined text-[20px]">expand_more</span>
 </button>
-<div class="hidden absolute left-0 mt-2 w-40 rounded-xl bg-surface-container-high border border-outline-variant/30 shadow-2xl z-50 overflow-hidden" id="dashboard-filter-dropdown">
+<div class="hidden absolute left-0 mt-2 w-40 rounded-xl bg-surface-container border border-outline-variant/30 shadow-lg z-50 overflow-hidden" id="dashboard-filter-dropdown">
 <div class="py-1">
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setDashboardFilter('month')">This
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setDashboardFilter('month')">This
                                     month</button>
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setDashboardFilter('year')">This
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setDashboardFilter('year')">This
                                     year</button>
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setDashboardFilter('all')">All
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setDashboardFilter('all')">All
                                     time</button>
 </div>
 </div>
@@ -355,22 +315,22 @@
 </div>
 <div class="grid grid-cols-2 gap-gutter">
 <!-- Spending Spending Card -->
-<div class="bg-secondary-container rounded-xl p-md flex flex-col gap-sm transition-transform active:scale-95 duration-200 cursor-pointer shadow-sm" onclick="openSpendingDetailsSheet()">
+<div class="bg-secondary rounded-xl p-md flex flex-col gap-sm transition-transform active:scale-95 duration-200 cursor-pointer shadow-sm" onclick="openSpendingDetailsSheet()">
 <div class="flex items-center gap-sm">
 <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
 <span class="material-symbols-outlined text-white">north_east</span>
 </div>
-<span class="text-label-lg font-label-lg text-white/80">Spending</span>
+<span class="text-label-lg font-label-lg text-white/90">Spending</span>
 </div>
 <p class="text-headline-md font-headline-md text-white" id="stat-spending">₹0.00</p>
 </div>
 <!-- Income Card -->
-<div class="bg-primary-container rounded-xl p-md flex flex-col gap-sm transition-transform active:scale-95 duration-200 cursor-pointer shadow-sm" onclick="openIncomeDetailsSheet()">
+<div class="bg-primary rounded-xl p-md flex flex-col gap-sm transition-transform active:scale-95 duration-200 cursor-pointer shadow-sm" onclick="openIncomeDetailsSheet()">
 <div class="flex items-center gap-sm">
 <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
 <span class="material-symbols-outlined text-white">south_west</span>
 </div>
-<span class="text-label-lg font-label-lg text-white/80">Income</span>
+<span class="text-label-lg font-label-lg text-white/90">Income</span>
 </div>
 <p class="text-headline-md font-headline-md text-white" id="stat-income">₹0.00</p>
 </div>
@@ -384,7 +344,7 @@
 </div>
 </section>
 <!-- CARD 2: RECENT TRANSACTIONS -->
-<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 shadow-sm space-y-md">
+<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm">
 <div class="flex justify-between items-center">
 <h2 class="text-headline-md font-headline-md text-on-background">Recent transactions</h2>
 <button class="text-primary text-label-lg font-label-lg hover:underline" onclick="switchView('transactions-all')">See all</button>
@@ -394,7 +354,7 @@
 </div>
 </section>
 <!-- CARD 3: BUDGET -->
-<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 shadow-sm space-y-md">
+<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm">
 <div class="flex justify-between items-center">
 <div class="cursor-pointer flex-1" onclick="switchView('budget')">
 <h3 class="text-headline-md font-headline-md text-on-background" id="budget-card-title">Monthly
@@ -418,13 +378,13 @@
 <div class="page-view space-y-lg" id="view-transactions-all">
 <!-- Header with Back Button -->
 <div class="flex items-center gap-md py-sm">
-<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center active:scale-95 transition-transform" onclick="switchView('home')">
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center active:scale-95 transition-transform shadow-sm" onclick="switchView('home')">
 <span class="material-symbols-outlined text-[24px]">arrow_back</span>
 </button>
 <h2 class="text-headline-md font-headline-md text-on-background">All Transactions</h2>
 </div>
 <!-- Search, Filter & Sort Controls Card -->
-<div class="bg-surface-container p-md rounded-xl border border-outline-variant/10 shadow-sm space-y-md">
+<div class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm">
 <!-- Search -->
 <div class="relative">
 <span class="material-symbols-outlined absolute left-md top-1/2 transform -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
@@ -440,12 +400,12 @@
 <span id="filter-type-label">All Types</span>
 <span class="material-symbols-outlined text-[18px]">expand_more</span>
 </button>
-<div class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-surface-container-highest border border-outline-variant/30 shadow-2xl z-50 overflow-hidden" id="filter-type-dropdown">
+<div class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-surface-container border border-outline-variant/30 shadow-lg z-50 overflow-hidden" id="filter-type-dropdown">
 <div class="py-1">
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setCustomFilterType('all')">All
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setCustomFilterType('all')">All
                                     Types</button>
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setCustomFilterType('expense')">Expenses</button>
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setCustomFilterType('income')">Income</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setCustomFilterType('expense')">Expenses</button>
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setCustomFilterType('income')">Income</button>
 </div>
 </div>
 </div>
@@ -456,15 +416,15 @@
 <span id="filter-sort-label">Newest First</span>
 <span class="material-symbols-outlined text-[18px]">expand_more</span>
 </button>
-<div class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-surface-container-highest border border-outline-variant/30 shadow-2xl z-50 overflow-hidden" id="filter-sort-dropdown">
+<div class="hidden absolute left-0 right-0 mt-2 rounded-xl bg-surface-container border border-outline-variant/30 shadow-lg z-50 overflow-hidden" id="filter-sort-dropdown">
 <div class="py-1">
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setCustomSort('date-desc')">Newest
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setCustomSort('date-desc')">Newest
                                     First</button>
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setCustomSort('date-asc')">Oldest
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setCustomSort('date-asc')">Oldest
                                     First</button>
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setCustomSort('amount-desc')">Highest
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setCustomSort('amount-desc')">Highest
                                     Amount</button>
-<button class="w-full text-left px-md py-sm hover:bg-surface-variant text-body-md text-on-surface" onclick="setCustomSort('amount-asc')">Lowest
+<button class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface" onclick="setCustomSort('amount-asc')">Lowest
                                     Amount</button>
 </div>
 </div>
@@ -479,14 +439,14 @@
 <!-- VIEW: ANALYSIS / INSIGHTS -->
 <div class="page-view space-y-lg" id="view-analysis">
 <!-- Period Pills -->
-<div class="flex bg-surface-container rounded-xl p-1 w-full border border-outline-variant/10">
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant" id="analysis-pill-week" onclick="setAnalysisPeriod('week')">Week</button>
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-variant text-on-surface" id="analysis-pill-month" onclick="setAnalysisPeriod('month')">Month</button>
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant" id="analysis-pill-year" onclick="setAnalysisPeriod('year')">Year</button>
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant" id="analysis-pill-custom" onclick="setAnalysisPeriod('custom')">Custom</button>
+<div class="flex bg-surface-container rounded-xl p-1 w-full border border-outline-variant/10 shadow-sm">
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high" id="analysis-pill-week" onclick="setAnalysisPeriod('week')">Week</button>
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-container-highest text-on-surface" id="analysis-pill-month" onclick="setAnalysisPeriod('month')">Month</button>
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high" id="analysis-pill-year" onclick="setAnalysisPeriod('year')">Year</button>
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high" id="analysis-pill-custom" onclick="setAnalysisPeriod('custom')">Custom</button>
 </div>
 <!-- Month/Year Navigator -->
-<div class="flex items-center justify-between py-sm px-md bg-surface-container rounded-xl" id="analysis-period-nav">
+<div class="flex items-center justify-between py-sm px-md bg-surface-container rounded-xl shadow-sm" id="analysis-period-nav">
 <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors" onclick="changeAnalysisPeriod(-1)">
 <span class="material-symbols-outlined">chevron_left</span>
 </button>
@@ -496,7 +456,7 @@
 </button>
 </div>
 <!-- Week Range Navigator (shown only in week mode) -->
-<div class="hidden flex items-center justify-between py-sm px-md bg-surface-container rounded-xl" id="analysis-week-nav">
+<div class="hidden flex items-center justify-between py-sm px-md bg-surface-container rounded-xl shadow-sm" id="analysis-week-nav">
 <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors" onclick="changeAnalysisWeek(-1)">
 <span class="material-symbols-outlined">chevron_left</span>
 </button>
@@ -506,7 +466,7 @@
 </button>
 </div>
 <!-- Custom Date Range (shown only in custom mode) -->
-<div class="hidden flex gap-sm items-center bg-surface-container rounded-xl p-sm" id="analysis-custom-nav">
+<div class="hidden flex gap-sm items-center bg-surface-container rounded-xl p-sm shadow-sm" id="analysis-custom-nav">
 <div class="flex-1 flex flex-col gap-xs">
 <span class="text-label-sm text-on-surface-variant px-xs">From</span>
 <input class="w-full bg-surface-container-high rounded-lg px-md py-sm text-body-md text-on-surface border border-outline-variant/30 focus:outline-none focus:border-primary" id="analysis-custom-from" onchange="updateAnalysis()" type="date"/>
@@ -518,7 +478,7 @@
 </div>
 </div>
 <!-- SVG Donut Chart Section -->
-<section class="bg-surface-container-low rounded-xl p-lg shadow-sm border border-outline-variant">
+<section class="bg-surface-container rounded-xl p-lg shadow-sm border border-outline-variant/10">
 <h2 class="text-label-lg font-label-lg text-on-surface-variant mb-md uppercase tracking-wider">
                     Category-wise spending</h2>
 <div class="relative w-full max-w-[240px] mx-auto" style="height:240px;">
@@ -537,9 +497,9 @@
 <!-- Header row: title + pill toggle -->
 <div class="flex items-center justify-between px-xs">
 <span class="text-label-lg font-label-lg text-on-surface-variant uppercase tracking-wider">All Categories</span>
-<div class="flex bg-surface-container rounded-full p-1 border border-outline-variant/10">
-<button class="px-md py-xs rounded-full text-label-lg font-bold transition-all bg-surface-variant text-on-surface" id="analysis-cat-pill-spending" onclick="setAnalysisCatType('spending')">Spending</button>
-<button class="px-md py-xs rounded-full text-label-lg font-bold transition-all text-on-surface-variant" id="analysis-cat-pill-income" onclick="setAnalysisCatType('income')">Income</button>
+<div class="flex bg-surface-container rounded-full p-1 border border-outline-variant/10 shadow-sm">
+<button class="px-md py-xs rounded-full text-label-lg font-bold transition-all bg-surface-container-highest text-on-surface" id="analysis-cat-pill-spending" onclick="setAnalysisCatType('spending')">Spending</button>
+<button class="px-md py-xs rounded-full text-label-lg font-bold transition-all text-on-surface-variant hover:bg-surface-container-high" id="analysis-cat-pill-income" onclick="setAnalysisCatType('income')">Income</button>
 </div>
 </div>
 <div class="space-y-sm" id="analysis-category-list">
@@ -547,7 +507,7 @@
 </div>
 </div>
 <!-- CARD: BUDGET (in Analysis view) -->
-<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 shadow-sm space-y-md">
+<section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm">
 <div class="flex justify-between items-center">
 <div class="cursor-pointer flex-1" onclick="switchView('budget')">
 <h3 class="text-headline-md font-headline-md text-on-background" id="analysis-budget-card-title">Monthly
@@ -601,7 +561,7 @@
 <span class="material-symbols-outlined text-tertiary text-[20px]" style="font-variation-settings: 'FILL' 1;">account_balance</span>
 <h3 class="font-label-lg text-label-lg text-on-surface-variant">Bank Accounts</h3>
 </div>
-<div class="bg-surface-container hover:bg-surface-variant transition-colors p-md rounded-xl flex justify-between items-center cursor-pointer shadow-sm border border-outline-variant/10" onclick="openEditAccountSheet('bank', 'Chase Personal Checking', 'Starting Balance (₹)')">
+<div class="bg-surface-container hover:bg-surface-container-high transition-colors p-md rounded-xl flex justify-between items-center cursor-pointer shadow-sm border border-outline-variant/10" onclick="openEditAccountSheet('bank', 'Chase Personal Checking', 'Starting Balance (₹)')">
 <span class="font-body-lg text-body-lg text-on-surface">Chase Personal Checking</span>
 <div class="flex items-center gap-sm">
 <span class="font-body-lg text-body-lg text-on-surface" id="acc-bank-balance">₹0.00</span>
@@ -615,7 +575,7 @@
 <span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">credit_card</span>
 <h3 class="font-label-lg text-label-lg text-on-surface-variant">Credit Cards</h3>
 </div>
-<div class="bg-surface-container hover:bg-surface-variant transition-colors p-md rounded-xl flex justify-between items-center cursor-pointer shadow-sm border border-outline-variant/10" onclick="openEditAccountSheet('card', 'Apple Credit Card', 'Starting Balance / Dues (₹)')">
+<div class="bg-surface-container hover:bg-surface-container-high transition-colors p-md rounded-xl flex justify-between items-center cursor-pointer shadow-sm border border-outline-variant/10" onclick="openEditAccountSheet('card', 'Apple Credit Card', 'Starting Balance / Dues (₹)')">
 <span class="font-body-lg text-body-lg text-on-surface">Apple Credit Card</span>
 <div class="flex items-center gap-sm">
 <span class="font-body-lg text-body-lg text-on-surface" id="acc-card-balance">₹0.00</span>
@@ -629,7 +589,7 @@
 <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">payments</span>
 <h3 class="font-label-lg text-label-lg text-on-surface-variant">Cash</h3>
 </div>
-<div class="bg-surface-container hover:bg-surface-variant transition-colors p-md rounded-xl flex justify-between items-center cursor-pointer shadow-sm border border-outline-variant/10" onclick="openEditAccountSheet('cash', 'Cash Wallet', 'Starting Cash (₹)')">
+<div class="bg-surface-container hover:bg-surface-container-high transition-colors p-md rounded-xl flex justify-between items-center cursor-pointer shadow-sm border border-outline-variant/10" onclick="openEditAccountSheet('cash', 'Cash Wallet', 'Starting Cash (₹)')">
 <span class="font-body-lg text-body-lg text-on-surface">Cash Wallet</span>
 <div class="flex items-center gap-sm">
 <span class="font-body-lg text-body-lg text-on-surface" id="acc-cash-balance">₹0.00</span>
@@ -642,14 +602,14 @@
 <!-- VIEW: BUDGETS & GOALS -->
 <div class="page-view space-y-lg" id="view-budget">
 <div class="flex items-center gap-md py-sm">
-<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center active:scale-95 transition-transform" onclick="switchView('home')">
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center active:scale-95 transition-transform shadow-sm" onclick="switchView('home')">
 <span class="material-symbols-outlined text-[24px]">arrow_back</span>
 </button>
 <h2 class="text-headline-md font-headline-md text-on-background">Budgets &amp; Goals</h2>
 </div>
 <!-- Tab Switcher -->
-<div class="flex bg-surface-container rounded-xl p-1 w-full border border-outline-variant/10">
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-variant text-on-surface" id="btn-budget-tab-monthly" onclick="switchBudgetViewTab('monthly')">Monthly
+<div class="flex bg-surface-container rounded-xl p-1 w-full border border-outline-variant/10 shadow-sm">
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-container-highest text-on-surface" id="btn-budget-tab-monthly" onclick="switchBudgetViewTab('monthly')">Monthly
                     Budget</button>
 <button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high" id="btn-budget-tab-yearly" onclick="switchBudgetViewTab('yearly')">Yearly
                     Budget</button>
@@ -669,7 +629,7 @@
 <span class="text-label-lg font-label-lg text-on-surface-variant" id="budget-limit-display">Limit ₹9,000</span>
 </div>
 <div class="relative w-full h-4 bg-surface-container-high rounded-full overflow-hidden">
-<div class="absolute top-0 left-0 h-full bg-primary-container progress-bar-fill" id="budget-progress-bar" style="width: 0%;"></div>
+<div class="absolute top-0 left-0 h-full bg-primary progress-bar-fill" id="budget-progress-bar" style="width: 0%;"></div>
 </div>
 <div class="flex items-center gap-sm text-primary" id="budget-status-text">
 <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
@@ -679,8 +639,8 @@
 </section>
 <!-- Warning Component -->
 <section class="hidden relative z-10 group cursor-pointer transition-transform active:scale-98" id="budget-warning-card">
-<div class="bg-surface-container p-lg rounded-xl border-l-4 border-secondary-container shadow-sm overflow-hidden relative">
-<div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary-container opacity-5 blur-2xl"></div>
+<div class="custom-glass p-lg rounded-xl border-l-4 border-secondary-container shadow-sm overflow-hidden relative">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary-container opacity-10 blur-3xl"></div>
 <div class="flex items-start gap-md">
 <span class="material-symbols-outlined text-secondary-container text-2xl mt-1">warning</span>
 <div class="space-y-xs">
@@ -708,7 +668,7 @@
 <section>
 <div class="bg-surface-container rounded-xl p-md flex items-center gap-md border border-outline-variant/10 shadow-sm">
 <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-surface-container-high">
-<img alt="Alex Thompson" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY5F7T9sKN73wZ5MlYo3LscYytRIJoqFv9JN_cFK7w0QkTffE2qtdXhQqUuNtcBe2I37HZmtf6iwDHlwtg9tgm1k06Y_mAKkG9L76sBCX12UR-7cq0ZEP0vcNiSTf4slROuqTurZuYKV6LR2iWWiHXw6PFzILmujTrTRJR41PXfqUpPaMZTtLx2x0KZLIPcUMwWJ5j3VX6KUQncSBj6jXNwpq-DgkqpyGvFvjdrw5DV9v8Ra1IK6Dj"/>
+<img alt="Alex Thompson" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfZw4N7iCGZEK8b06yo910xHA9uW_dcXH_BdoFneHdarOv4ogET5Nm8a8RWh0xRipGakxD1ff1hUrleE6O8O1Uha_AOV8c8Ygd9vYdm6q0iZBtLlop7QL5UDmT9mShuZshVThjZS610YObWLTi2_rFnfVv578Um5e83q1y4t1-3JUpa04_UUWHUeIBpWGJbikw9g2vAKLsJ78V7STsd3xU4IPmPcSNxbEY8Bu9LC2EVcBWrh2xAu6i"/>
 </div>
 <div class="flex-grow">
 <h2 class="font-headline-md text-headline-md text-on-surface" id="profile-name-display">Alex
@@ -716,7 +676,7 @@
 <p class="font-body-md text-on-surface-variant" id="profile-email-display">
                             alex.t@expenseledg.com</p>
 </div>
-<button class="material-symbols-outlined text-primary p-2 rounded-full hover:bg-surface-container-high transition-colors icon-spin-hover" onclick="openProfileSecuritySheet()">edit</button>
+<button class="material-symbols-outlined text-primary p-2 rounded-full hover:bg-surface-container-high transition-colors" onclick="openProfileSecuritySheet()">edit</button>
 </div>
 </section>
 <!-- Settings list -->
@@ -724,21 +684,21 @@
 <h3 class="font-label-lg text-label-lg text-on-surface-variant px-sm uppercase tracking-widest opacity-60">
                     Account &amp; Security</h3>
 <div class="bg-surface-container rounded-xl overflow-hidden divide-y divide-outline-variant/20 shadow-sm border border-outline-variant/10">
-<div class="flex items-center justify-between p-md hover:bg-surface-variant transition-colors cursor-pointer" onclick="openProfileSecuritySheet()">
+<div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openProfileSecuritySheet()">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-primary">security</span>
 <span class="font-body-lg text-body-lg">Profile &amp; Security</span>
 </div>
 <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
 </div>
-<div class="flex items-center justify-between p-md hover:bg-surface-variant transition-colors cursor-pointer" onclick="openManageCategoriesSheet()">
+<div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openManageCategoriesSheet()">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-primary">category</span>
 <span class="font-body-lg text-body-lg">Manage Categories</span>
 </div>
 <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
 </div>
-<div class="flex items-center justify-between p-md hover:bg-surface-variant transition-colors cursor-pointer" onclick="switchView('budget')">
+<div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer" onclick="switchView('budget')">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-primary">target</span>
 <span class="font-body-lg text-body-lg">Budgets &amp; Goals</span>
@@ -752,14 +712,14 @@
 <h3 class="font-label-lg text-label-lg text-on-surface-variant px-sm uppercase tracking-widest opacity-60">
                     Data Management</h3>
 <div class="bg-surface-container rounded-xl overflow-hidden divide-y divide-outline-variant/20 shadow-sm border border-outline-variant/10">
-<div class="flex items-center justify-between p-md hover:bg-surface-variant transition-colors cursor-pointer" onclick="openExportDataSheet()">
+<div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openExportDataSheet()">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-tertiary">file_export</span>
 <span class="font-body-lg text-body-lg">Export Data (CSV)</span>
 </div>
 <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
 </div>
-<div class="flex items-center justify-between p-md hover:bg-surface-variant transition-colors cursor-pointer" onclick="openBackupRestoreSheet()">
+<div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer" onclick="openBackupRestoreSheet()">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-tertiary">cloud_sync</span>
 <span class="font-body-lg text-body-lg">Backup &amp; Restore</span>
@@ -770,18 +730,18 @@
 </section>
 <!-- Log out button -->
 <section class="mt-lg mb-8">
-<button class="w-full flex items-center justify-center gap-2 p-md rounded-xl bg-error-container/20 text-error font-headline-md active:scale-95 transition-transform" onclick="performLogout()">
+<button class="w-full flex items-center justify-center gap-2 p-md rounded-xl bg-error-container text-error font-headline-md active:scale-95 transition-transform" onclick="performLogout()">
 <span class="material-symbols-outlined">logout</span> Log Out
                 </button>
 </section>
 </div>
 </main>
 <!-- Navigation Footer -->
-<nav class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-40 rounded-t-xl shadow-lg border-t border-outline-variant bg-surface-container-lowest">
+<nav class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-40 rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-outline-variant bg-surface-container-lowest">
 <div class="flex justify-around items-end pb-6 pt-sm px-2 max-w-md mx-auto">
 <!-- Home -->
 <button class="flex flex-col items-center justify-center text-primary font-bold transition-all" id="nav-btn-home" onclick="switchView('home')">
-<span class="material-symbols-outlined active-nav-icon" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
 <span class="text-label-md font-label-md">Home</span>
 </button>
 <!-- Analysis -->
@@ -791,8 +751,8 @@
 </button>
 <!-- Central FAB Add -->
 <div class="relative -top-5">
-<button class="w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform duration-150" onclick="openAddTransactionModal()">
-<span class="material-symbols-outlined text-3xl font-bold">add</span>
+<button class="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform duration-150" onclick="openAddTransactionModal()">
+<span class="material-symbols-outlined text-white text-3xl font-bold">add</span>
 </button>
 </div>
 <!-- Accounts -->
@@ -809,28 +769,28 @@
 </nav>
 <!-- ================= MODALS & BOTTOM SHEETS ================= -->
 <!-- Backdrop Overlay for sheets -->
-<div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[50] opacity-0 pointer-events-none transition-opacity duration-300" id="modal-overlay" onclick="closeAllSheets()"></div>
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[50] opacity-0 pointer-events-none transition-opacity duration-300" id="modal-overlay" onclick="closeAllSheets()"></div>
 <!-- MODAL: ADD TRANSACTION -->
-<div class="fixed bottom-0 left-0 right-0 z-[55] bg-background rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[90vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="modal-add-transaction">
+<div class="fixed bottom-0 left-0 right-0 z-[55] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[90vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="modal-add-transaction">
 <!-- Top App Bar -->
-<header class="flex justify-between items-center px-container-padding py-md w-full bg-background border-b border-outline-variant/10 sticky top-0 z-10">
+<header class="flex justify-between items-center px-container-padding py-md w-full bg-surface border-b border-outline-variant sticky top-0 z-10">
 <div class="flex items-center gap-md">
-<button class="material-symbols-outlined text-on-surface hover:bg-surface-container rounded-full p-2" onclick="closeAddTransactionModal()">close</button>
+<button class="material-symbols-outlined text-on-surface hover:bg-surface-container-high rounded-full p-2" onclick="closeAddTransactionModal()">close</button>
 <h1 class="text-headline-md font-headline-md font-bold text-on-background">Add transaction</h1>
 </div>
-<button class="material-symbols-outlined text-error hover:bg-surface-container rounded-full p-2 hidden" id="header-delete-btn" onclick="deleteCurrentEditingTransaction()">delete</button>
+<button class="material-symbols-outlined text-error hover:bg-surface-container-high rounded-full p-2 hidden" id="header-delete-btn" onclick="deleteCurrentEditingTransaction()">delete</button>
 </header>
 <!-- Form fields -->
 <main class="flex-1 overflow-y-auto px-container-padding py-md space-y-lg pb-24 no-scrollbar">
 <!-- Type switcher -->
 <div>
-<div class="flex bg-surface-container rounded-xl p-1">
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-variant text-on-surface" id="tx-type-expense" onclick="switchTransactionType('expense')">Expense</button>
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high" id="tx-type-income" onclick="switchTransactionType('income')">Income</button>
+<div class="flex bg-surface-container-high rounded-xl p-1">
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-container-lowest text-on-surface shadow-sm" id="tx-type-expense" onclick="switchTransactionType('expense')">Expense</button>
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-highest" id="tx-type-income" onclick="switchTransactionType('income')">Income</button>
 </div>
 </div>
 <!-- Date & Time Selector Trigger -->
-<div class="flex items-center gap-lg py-md border-b border-outline-variant/30 hover:bg-surface-container/20 transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openTxDatePickerSheet()">
+<div class="flex items-center gap-lg py-md border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openTxDatePickerSheet()">
 <span class="material-symbols-outlined text-secondary">calendar_today</span>
 <div class="flex-1 flex flex-col">
 <span class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Date
@@ -840,23 +800,23 @@
 <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
 </div>
 <!-- Amount input -->
-<div class="flex items-end gap-lg py-md group border-b border-outline-variant/30">
+<div class="flex items-end gap-lg py-md group border-b border-outline-variant">
 <span class="material-symbols-outlined text-secondary text-headline-lg pb-1">currency_rupee</span>
 <div class="flex-1 flex flex-col">
 <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Amount</label>
-<input class="bg-transparent border-none p-0 text-display-lg-mobile font-display-lg-mobile text-on-surface w-full focus:ring-0 focus:border-none border-0" id="tx-input-amount" placeholder="" required="" type="number"/>
+<input class="bg-transparent border-none p-0 text-display-lg-mobile font-display-lg-mobile text-on-surface w-full focus:ring-0 focus:border-none border-0" id="tx-input-amount" placeholder="0" required="" type="number"/>
 </div>
 </div>
 <!-- Description -->
-<div class="flex items-start gap-lg py-md border-b border-outline-variant/30">
+<div class="flex items-start gap-lg py-md border-b border-outline-variant">
 <span class="material-symbols-outlined text-secondary mt-1">notes</span>
 <div class="flex-1 flex flex-col">
 <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Description</label>
-<input class="bg-transparent border-none p-0 text-body-lg font-body-lg text-on-surface w-full focus:ring-0" id="tx-input-desc" placeholder="Note" type="text"/>
+<input class="bg-transparent border-none p-0 text-body-lg font-body-lg text-on-surface w-full focus:ring-0" id="tx-input-desc" placeholder="Note (e.g. Lunch with team)" type="text"/>
 </div>
 </div>
 <!-- Category Selector Trigger -->
-<div class="flex items-center gap-lg py-md border-b border-outline-variant/30 hover:bg-surface-container/20 transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openCategorySheet()">
+<div class="flex items-center gap-lg py-md border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openCategorySheet()">
 <span class="material-symbols-outlined text-secondary" id="tx-selected-cat-icon">shopping_basket</span>
 <div class="flex-1 flex flex-col">
 <span class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Category</span>
@@ -865,7 +825,7 @@
 <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
 </div>
 <!-- Payment Mode Trigger -->
-<div class="flex items-center gap-lg py-md border-b border-outline-variant/30 hover:bg-surface-container/20 transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openPaymentSheet()">
+<div class="flex items-center gap-lg py-md border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openPaymentSheet()">
 <span class="material-symbols-outlined text-secondary" id="tx-selected-pay-icon">payments</span>
 <div class="flex-1 flex flex-col">
 <span class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Payment
@@ -875,7 +835,7 @@
 <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
 </div>
 <!-- Tags selector Trigger -->
-<div class="flex items-start gap-lg py-md border-b border-outline-variant/30 hover:bg-surface-container/20 transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openTagsSheet()">
+<div class="flex items-start gap-lg py-md border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2" onclick="openTagsSheet()">
 <span class="material-symbols-outlined text-secondary mt-1">tag</span>
 <div class="flex-1 flex flex-col gap-sm overflow-hidden">
 <label class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Tags</label>
@@ -887,18 +847,18 @@
 </div>
 <!-- Save button -->
 <div class="pt-lg flex flex-col gap-md">
-<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg active:scale-95 transition-transform" onclick="saveTransaction()">
+<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all" onclick="saveTransaction()">
                     Save Transaction
                 </button>
 </div>
 </main>
 </div>
 <!-- BOTTOM SHEET: CATEGORY TRANSACTIONS (Analysis view) -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-cat-transactions">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-cat-transactions">
 <div class="w-full flex justify-center pt-md pb-xs flex-shrink-0">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10 flex-shrink-0">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant flex-shrink-0">
 <div>
 <h2 class="text-headline-md font-headline-md text-on-background" id="cat-tx-sheet-title">Category</h2>
 <p class="text-label-md text-on-surface-variant" id="cat-tx-sheet-subtitle"></p>
@@ -912,13 +872,13 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: MANAGE CATEGORIES -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[92vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-manage-categories">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[92vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-manage-categories">
 <!-- Drag handle -->
 <div class="w-full flex justify-center pt-md pb-xs flex-shrink-0">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
 <!-- Header -->
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10 flex-shrink-0">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant flex-shrink-0">
 <h2 class="text-headline-md font-headline-md text-on-background">Manage Categories</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeManageCategoriesSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -926,8 +886,8 @@
 </div>
 <!-- Spending / Income tab pills -->
 <div class="px-container-padding pt-md pb-sm flex-shrink-0">
-<div class="flex bg-surface-container rounded-xl p-1 border border-outline-variant/10">
-<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-variant text-on-surface" id="mgcat-pill-spending" onclick="setManageCatTab('spending')">Spending</button>
+<div class="flex bg-surface-container-high rounded-xl p-1 border border-outline-variant">
+<button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-surface-container-lowest text-on-surface shadow-sm" id="mgcat-pill-spending" onclick="setManageCatTab('spending')">Spending</button>
 <button class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant" id="mgcat-pill-income" onclick="setManageCatTab('income')">Income</button>
 </div>
 </div>
@@ -936,10 +896,10 @@
 <!-- Current categories list -->
 <div class="space-y-sm" id="mgcat-list"></div>
 <!-- Add new category form -->
-<div class="bg-surface-container rounded-2xl p-md space-y-md border border-outline-variant/20">
+<div class="bg-surface-container rounded-2xl p-md space-y-md border border-outline-variant">
 <h3 class="text-label-lg font-label-lg text-on-surface-variant uppercase tracking-wider">Add New Category</h3>
 <!-- Name input -->
-<div class="flex items-center gap-sm bg-surface-container-high rounded-xl px-md py-sm border border-outline-variant/20">
+<div class="flex items-center gap-sm bg-surface-container-high rounded-xl px-md py-sm border border-outline-variant">
 <span class="material-symbols-outlined text-on-surface-variant text-[20px]">label</span>
 <input class="flex-1 bg-transparent text-body-lg text-on-surface placeholder:text-on-surface-variant/50 outline-none" id="mgcat-new-name" placeholder="Category name…" type="text"/>
 </div>
@@ -955,18 +915,18 @@
 <!-- Populated by JS -->
 </div>
 <!-- Add button -->
-<button class="w-full py-sm bg-primary text-on-primary font-bold rounded-xl active:scale-95 transition-transform text-label-lg" onclick="addNewManagedCategory()">
+<button class="w-full py-sm bg-primary text-on-primary font-bold rounded-xl active:scale-95 transition-transform text-label-lg shadow-sm" onclick="addNewManagedCategory()">
                     Add Category
                 </button>
 </div>
 </div>
 </div>
 <!-- BOTTOM SHEET: CATEGORY SELECTOR -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-categories">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-categories">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Select Category</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeCategorySheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -977,11 +937,11 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: PAYMENT MODE -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-payments">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-payments">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Select Payment Mode</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closePaymentSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -989,7 +949,7 @@
 </div>
 <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-sm">
 <!-- Cash -->
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/10" onclick="selectPaymentMode('Cash', 'payments')">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50" onclick="selectPaymentMode('Cash', 'payments')">
 <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-115 transition-transform">
 <span class="material-symbols-outlined text-[28px]">payments</span>
 </div>
@@ -999,7 +959,7 @@
 </div>
 </button>
 <!-- Bank Account -->
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/10" onclick="selectPaymentMode('Bank Account', 'account_balance')">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50" onclick="selectPaymentMode('Bank Account', 'account_balance')">
 <div class="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:scale-115 transition-transform">
 <span class="material-symbols-outlined text-[28px]">account_balance</span>
 </div>
@@ -1009,7 +969,7 @@
 </div>
 </button>
 <!-- Credit Card -->
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/10" onclick="selectPaymentMode('Credit Card', 'credit_card')">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50" onclick="selectPaymentMode('Credit Card', 'credit_card')">
 <div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center text-secondary group-hover:scale-115 transition-transform">
 <span class="material-symbols-outlined text-[28px]">credit_card</span>
 </div>
@@ -1019,7 +979,7 @@
 </div>
 </button>
 <!-- Digital Wallet -->
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/10" onclick="selectPaymentMode('Digital Wallet', 'account_balance_wallet')">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50" onclick="selectPaymentMode('Digital Wallet', 'account_balance_wallet')">
 <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-background group-hover:scale-115 transition-transform">
 <span class="material-symbols-outlined text-[28px]">account_balance_wallet</span>
 </div>
@@ -1031,11 +991,11 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: TAGS SELECTOR -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-tags">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-tags">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Manage Tags</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeTagsSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1044,8 +1004,8 @@
 <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-md">
 <!-- Custom tag input -->
 <div class="flex gap-sm">
-<input class="flex-1 bg-surface-container border border-outline-variant/40 rounded-xl px-md py-xs text-body-md" id="custom-tag-input" placeholder="Add custom tag..." type="text"/>
-<button class="px-md bg-primary text-on-primary font-bold rounded-xl transition-all active:scale-95" onclick="createCustomTag()">Add</button>
+<input class="flex-1 bg-surface-container-high border border-outline-variant rounded-xl px-md py-xs text-body-md focus:border-primary focus:ring-1 focus:ring-primary" id="custom-tag-input" placeholder="Add custom tag..." type="text"/>
+<button class="px-md bg-primary text-on-primary font-bold rounded-xl transition-all active:scale-95 shadow-sm" onclick="createCustomTag()">Add</button>
 </div>
 <!-- List of available tags to toggle -->
 <div class="space-y-sm">
@@ -1057,17 +1017,17 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: INCOME DETAILS -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-income-details">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-income-details">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Income This Month</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeIncomeDetailsSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </div>
-<div class="px-container-padding py-xs bg-surface-container flex items-center justify-between border-b border-outline-variant/10">
+<div class="px-container-padding py-xs bg-surface-container flex items-center justify-between border-b border-outline-variant">
 <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors" onclick="changeMonth(-1)">
 <span class="material-symbols-outlined">chevron_left</span>
 </button>
@@ -1081,17 +1041,17 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: SPENDING DETAILS -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-spending-details">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-spending-details">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Spending This Month</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeSpendingDetailsSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </div>
-<div class="px-container-padding py-xs bg-surface-container flex items-center justify-between border-b border-outline-variant/10">
+<div class="px-container-padding py-xs bg-surface-container flex items-center justify-between border-b border-outline-variant">
 <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors" onclick="changeMonth(-1)">
 <span class="material-symbols-outlined">chevron_left</span>
 </button>
@@ -1105,11 +1065,11 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: PROFILE & SECURITY -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-profile-security">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-profile-security">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Profile &amp; Security</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeProfileSecuritySheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1121,28 +1081,28 @@
 <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider">Profile Information</h3>
 <div class="space-y-xs">
 <label class="text-label-md font-label-md text-on-surface-variant">Name</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface placeholder-on-surface-variant/50 focus:ring-1 focus:ring-primary focus:border-primary" id="profile-input-name" placeholder="Enter name" type="text"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface placeholder-on-surface-variant/50 focus:ring-1 focus:ring-primary focus:border-primary" id="profile-input-name" placeholder="Enter name" type="text"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-md font-label-md text-on-surface-variant">Email</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface placeholder-on-surface-variant/50 focus:ring-1 focus:ring-primary focus:border-primary" id="profile-input-email" placeholder="Enter email" type="email"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface placeholder-on-surface-variant/50 focus:ring-1 focus:ring-primary focus:border-primary" id="profile-input-email" placeholder="Enter email" type="email"/>
 </div>
 </div>
 <!-- Security Toggles & Settings -->
-<div class="space-y-sm pt-md border-t border-outline-variant/10">
+<div class="space-y-sm pt-md border-t border-outline-variant">
 <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider">Security Settings</h3>
-<div class="flex items-center justify-between p-md bg-surface-container border border-outline-variant/10 rounded-xl">
+<div class="flex items-center justify-between p-md bg-surface-container-high rounded-xl border border-outline-variant">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-primary">fingerprint</span>
 <span class="text-body-lg font-semibold">Biometric Lock</span>
 </div>
 <label class="relative inline-flex items-center cursor-pointer">
 <input class="sr-only peer" id="security-biometric-toggle" onchange="toggleBiometricLock()" type="checkbox"/>
-<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
 </div>
 </label>
 </div>
-<button class="w-full flex items-center justify-between p-md bg-surface-container border border-outline-variant/10 rounded-xl hover:bg-surface-container-high transition-colors" onclick="showToast('Passcode setup coming soon!')">
+<button class="w-full flex items-center justify-between p-md bg-surface-container-high rounded-xl hover:bg-surface-variant transition-colors border border-outline-variant" onclick="showToast('Passcode setup coming soon!')">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-primary">key</span>
 <span class="text-body-lg font-semibold">Change Passcode</span>
@@ -1152,30 +1112,30 @@
 </div>
 <!-- Save Action Button -->
 <div class="pt-md">
-<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg active:scale-95 transition-transform" onclick="saveProfileSecurity()">
+<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-md active:scale-95 transition-transform" onclick="saveProfileSecurity()">
                     Save Changes
                 </button>
 </div>
 </div>
 </div>
 <!-- BOTTOM SHEET: EXPORT DATA -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-export-data">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-export-data">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Export Data</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeExportDataSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </div>
 <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-lg">
-<div class="bg-surface-container p-md rounded-xl border border-outline-variant/10">
+<div class="bg-surface-container p-md rounded-xl border border-outline-variant bg-surface-container-high">
 <p class="text-body-md text-on-surface-variant">Export your transaction history to use in spreadsheets
                     or keep a secure local backup.</p>
 </div>
 <div class="space-y-sm">
-<button class="w-full flex items-center justify-between p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors border border-outline-variant/10" onclick="exportCSV(); closeExportDataSheet();">
+<button class="w-full flex items-center justify-between p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors border border-outline-variant" onclick="exportCSV(); closeExportDataSheet();">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-tertiary text-[28px]">table_chart</span>
 <div class="text-left">
@@ -1186,7 +1146,7 @@
 </div>
 <span class="material-symbols-outlined text-on-surface-variant">download</span>
 </button>
-<button class="w-full flex items-center justify-between p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors border border-outline-variant/10" onclick="exportJSON(); closeExportDataSheet();">
+<button class="w-full flex items-center justify-between p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors border border-outline-variant" onclick="exportJSON(); closeExportDataSheet();">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-tertiary text-[28px]">code</span>
 <div class="text-left">
@@ -1201,11 +1161,11 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: BACKUP & RESTORE -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-backup-restore">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-backup-restore">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Backup &amp; Restore</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeBackupRestoreSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1214,7 +1174,7 @@
 <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-lg">
 <div class="space-y-sm">
 <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider">Cloud Storage</h3>
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant/10" onclick="runCloudBackup();">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant" onclick="runCloudBackup();">
 <div class="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary">
 <span class="material-symbols-outlined text-[28px]">cloud_upload</span>
 </div>
@@ -1226,22 +1186,22 @@
 <span class="material-symbols-outlined text-on-surface-variant">sync</span>
 </button>
 </div>
-<div class="space-y-sm pt-md border-t border-outline-variant/10">
+<div class="space-y-sm pt-md border-t border-outline-variant">
 <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider">Local File</h3>
-<div class="flex items-center justify-between p-md bg-surface-container rounded-xl border border-outline-variant/10">
+<div class="flex items-center justify-between p-md bg-surface-container rounded-xl border border-outline-variant">
 <div class="flex items-center gap-md">
 <span class="material-symbols-outlined text-primary">update</span>
 <span class="text-body-lg font-semibold">Auto-save Backups</span>
 </div>
 <label class="relative inline-flex items-center cursor-pointer">
 <input class="sr-only peer" id="backup-auto-toggle" onchange="toggleAutoBackup()" type="checkbox"/>
-<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
 </div>
 </label>
 </div>
 <div class="relative">
 <input accept=".json" class="hidden" id="import-file-input" onchange="importJSON(this.files[0])" type="file"/>
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant/10" onclick="document.getElementById('import-file-input').click()">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant" onclick="document.getElementById('import-file-input').click()">
 <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
 <span class="material-symbols-outlined text-[28px]">file_upload</span>
 </div>
@@ -1256,11 +1216,11 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: EDIT BUDGETS -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-edit-budget">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-edit-budget">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Edit Budget Limits</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeEditBudgetSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1272,61 +1232,61 @@
 <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider">Total Monthly Limit</h3>
 <div class="space-y-xs">
 <label class="text-label-md font-label-md text-on-surface-variant">Monthly Budget (₹)</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-input-limit" placeholder="e.g. 10000" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-input-limit" placeholder="e.g. 10000" type="number"/>
 </div>
 </div>
 <!-- Category Limits -->
-<div class="space-y-sm pt-md border-t border-outline-variant/10">
+<div class="space-y-sm pt-md border-t border-outline-variant">
 <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider">Category Limits (₹)</h3>
 <div class="grid grid-cols-2 gap-md">
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Groceries</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-groceries" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-groceries" type="number"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Shopping</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-shopping" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-shopping" type="number"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Education</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-education" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-education" type="number"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Transport</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-transport" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-transport" type="number"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Bills &amp; Utilities</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-utilities" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-utilities" type="number"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Entertainment</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-entertainment" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-entertainment" type="number"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Medical</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-medical" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-medical" type="number"/>
 </div>
 <div class="space-y-xs">
 <label class="text-label-sm font-label-sm text-on-surface-variant">Food &amp; Drinks</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-food" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="budget-cat-food" type="number"/>
 </div>
 </div>
 </div>
 <!-- Save Action Button -->
 <div class="pt-md">
-<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg active:scale-95 transition-transform" onclick="saveBudgetSettings()">
+<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-md active:scale-95 transition-transform" onclick="saveBudgetSettings()">
                     Save Limits
                 </button>
 </div>
 </div>
 </div>
 <!-- BOTTOM SHEET: EDIT ACCOUNT BALANCE -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-edit-account">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-edit-account">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background" id="account-sheet-title">Edit Account</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeEditAccountSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1337,23 +1297,23 @@
 <div class="space-y-xs">
 <label class="text-label-md font-label-md text-on-surface-variant" id="account-input-label">Starting
                         Balance (₹)</label>
-<input class="w-full bg-surface-container border border-outline-variant/40 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="account-input-balance" type="number"/>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" id="account-input-balance" type="number"/>
 </div>
 </div>
 <!-- Save Action Button -->
 <div class="pt-md">
-<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg active:scale-95 transition-transform" onclick="saveAccountBalance()">
+<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-md active:scale-95 transition-transform" onclick="saveAccountBalance()">
                     Save Balance
                 </button>
 </div>
 </div>
 </div>
 <!-- BOTTOM SHEET: TRANSACTION OPTIONS -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-transaction-options">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-transaction-options">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Options</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeTransactionOptionsSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1368,19 +1328,19 @@
 </div>
 </div>
 <!-- Options buttons -->
-<div class="space-y-sm pt-md border-t border-outline-variant/10">
+<div class="space-y-sm pt-md border-t border-outline-variant">
 <!-- Duplicate -->
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant/10" onclick="duplicateSelectedTransaction()">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant" onclick="duplicateSelectedTransaction()">
 <span class="material-symbols-outlined text-primary text-[24px]">content_copy</span>
 <span class="text-body-lg font-semibold">Duplicate Transaction</span>
 </button>
 <!-- Create Schedule -->
-<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant/10" onclick="createScheduledTransaction()">
+<button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant" onclick="createScheduledTransaction()">
 <span class="material-symbols-outlined text-tertiary text-[24px]">schedule</span>
 <span class="text-body-lg font-semibold">Create Scheduled Transaction</span>
 </button>
 <!-- Delete -->
-<button class="w-full flex items-center gap-md p-md bg-error-container/10 hover:bg-error-container/20 text-error rounded-xl transition-colors text-left border border-error/20" onclick="deleteSelectedTransaction()">
+<button class="w-full flex items-center gap-md p-md bg-error-container hover:bg-error-container/80 text-error rounded-xl transition-colors text-left" onclick="deleteSelectedTransaction()">
 <span class="material-symbols-outlined text-error text-[24px]">delete</span>
 <span class="text-body-lg font-semibold">Delete Entry</span>
 </button>
@@ -1388,11 +1348,11 @@
 </div>
 </div>
 <!-- BOTTOM SHEET: SCHEDULE TRANSACTION -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-schedule-transaction">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-schedule-transaction">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Schedule Entry</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeScheduleTransactionSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1407,7 +1367,7 @@
 <!-- Day Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Day</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="wheel-day">
@@ -1418,7 +1378,7 @@
 <!-- Month Column -->
 <div class="flex-[1.5] flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Month</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="wheel-month">
@@ -1429,7 +1389,7 @@
 <!-- Year Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Year</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="wheel-year">
@@ -1439,14 +1399,14 @@
 </div>
 </div>
 </div>
-<div class="space-y-md pt-md border-t border-outline-variant/10">
+<div class="space-y-md pt-md border-t border-outline-variant">
 <span class="text-label-md text-on-surface-variant uppercase tracking-wider block text-center font-bold">Select
                     Time</span>
 <div class="flex gap-sm justify-center max-w-[240px] mx-auto">
 <!-- Hour Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Hour</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="wheel-hour">
@@ -1459,7 +1419,7 @@
 <!-- Minute Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Minute</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="wheel-minute">
@@ -1471,18 +1431,18 @@
 </div>
 <!-- Action Button -->
 <div class="pt-md">
-<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg active:scale-95 transition-transform" onclick="confirmScheduleTransaction()">
+<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-md active:scale-95 transition-transform" onclick="confirmScheduleTransaction()">
                     Schedule Transaction
                 </button>
 </div>
 </div>
 </div>
 <!-- BOTTOM SHEET: CONFIRM ACTION -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-confirm-action">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-confirm-action">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background" id="confirm-sheet-title">Confirm Action
             </h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeConfirmActionSheet()">
@@ -1496,21 +1456,21 @@
 </div>
 <!-- Action Buttons -->
 <div class="flex gap-sm pt-md">
-<button class="flex-1 py-md bg-surface-container text-on-surface font-bold rounded-xl border border-outline-variant/20 shadow-sm active:scale-95 transition-transform" onclick="closeConfirmActionSheet()">
+<button class="flex-1 py-md bg-surface-container-high text-on-surface font-bold rounded-xl border border-outline-variant shadow-sm active:scale-95 transition-transform" onclick="closeConfirmActionSheet()">
                     Cancel
                 </button>
-<button class="flex-1 py-md bg-error text-on-error font-bold rounded-xl shadow-lg active:scale-95 transition-transform" id="confirm-action-btn">
+<button class="flex-1 py-md bg-error text-on-error font-bold rounded-xl shadow-md active:scale-95 transition-transform" id="confirm-action-btn">
                     Yes, Confirm
                 </button>
 </div>
 </div>
 </div>
 <!-- BOTTOM SHEET: TRANSACTION DATE TIME PICKER -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-tx-datepicker">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-tx-datepicker">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Select Date &amp; Time</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeTxDatePickerSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1525,7 +1485,7 @@
 <!-- Day Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Day</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="txwheel-day"></div>
@@ -1534,7 +1494,7 @@
 <!-- Month Column -->
 <div class="flex-[1.5] flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Month</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="txwheel-month"></div>
@@ -1543,7 +1503,7 @@
 <!-- Year Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Year</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="txwheel-year"></div>
@@ -1551,14 +1511,14 @@
 </div>
 </div>
 </div>
-<div class="space-y-md pt-md border-t border-outline-variant/10">
+<div class="space-y-md pt-md border-t border-outline-variant">
 <span class="text-label-md text-on-surface-variant uppercase tracking-wider block text-center font-bold">Select
                     Time</span>
 <div class="flex gap-sm justify-center max-w-[240px] mx-auto">
 <!-- Hour Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Hour</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="txwheel-hour"></div>
@@ -1569,7 +1529,7 @@
 <!-- Minute Column -->
 <div class="flex-1 flex flex-col items-center">
 <span class="text-label-xs text-on-surface-variant mb-xs font-semibold">Minute</span>
-<div class="relative w-full h-[120px] bg-surface-container/60 rounded-xl overflow-hidden border border-outline-variant/30">
+<div class="relative w-full h-[120px] bg-surface-container-high rounded-xl overflow-hidden border border-outline-variant">
 <div class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
 </div>
 <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col" id="txwheel-minute"></div>
@@ -1579,18 +1539,18 @@
 </div>
 <!-- Action Button -->
 <div class="pt-md">
-<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-lg active:scale-95 transition-transform" onclick="confirmTxDatePicker()">
+<button class="w-full py-md bg-primary text-on-primary font-bold rounded-xl shadow-md active:scale-95 transition-transform" onclick="confirmTxDatePicker()">
                     Confirm Date &amp; Time
                 </button>
 </div>
 </div>
 </div>
 <!-- BOTTOM SHEET: NET BALANCE DETAILS -->
-<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface-container-lowest rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant/30 max-w-md mx-auto" id="sheet-net-balances">
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sheet-net-balances">
 <div class="w-full flex justify-center pt-md pb-xs">
-<div class="w-10 h-1 rounded-full bg-outline-variant"></div>
+<div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
 </div>
-<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant/10">
+<div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
 <h2 class="text-headline-md font-headline-md text-on-background">Net Balance</h2>
 <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center" onclick="closeNetBalancesSheet()">
 <span class="material-symbols-outlined text-[20px]">close</span>
@@ -1598,7 +1558,7 @@
 </div>
 <div class="flex-grow overflow-y-auto px-container-padding py-md space-y-md">
 <!-- Period Balance -->
-<button class="w-full flex justify-between items-center py-xs border-b border-outline-variant/10 text-left focus:outline-none" onclick="selectDashboardBalanceType('period')">
+<button class="w-full flex justify-between items-center py-xs border-b border-outline-variant text-left focus:outline-none hover:bg-surface-container-high rounded-lg px-2 transition-colors" onclick="selectDashboardBalanceType('period')">
 <div class="flex items-center gap-sm">
 <span class="material-symbols-outlined text-primary text-[20px] invisible" id="tick-balance-period">check</span>
 <div>
@@ -1609,7 +1569,7 @@
 <span class="text-headline-md font-headline-md font-bold text-primary" id="net-balance-period">₹0.00</span>
 </button>
 <!-- Carry Forward Balance -->
-<button class="w-full flex justify-between items-center py-xs border-b border-outline-variant/10 text-left focus:outline-none" onclick="selectDashboardBalanceType('carry')">
+<button class="w-full flex justify-between items-center py-xs border-b border-outline-variant text-left focus:outline-none hover:bg-surface-container-high rounded-lg px-2 transition-colors" onclick="selectDashboardBalanceType('carry')">
 <div class="flex items-center gap-sm">
 <span class="material-symbols-outlined text-primary text-[20px] invisible" id="tick-balance-carry">check</span>
 <div>
@@ -1620,7 +1580,7 @@
 <span class="text-headline-md font-headline-md font-bold text-primary" id="net-balance-carry">₹0.00</span>
 </button>
 <!-- All Time Net Balance -->
-<button class="w-full flex justify-between items-center py-xs text-left focus:outline-none" onclick="selectDashboardBalanceType('alltime')">
+<button class="w-full flex justify-between items-center py-xs text-left focus:outline-none hover:bg-surface-container-high rounded-lg px-2 transition-colors" onclick="selectDashboardBalanceType('alltime')">
 <div class="flex items-center gap-sm">
 <span class="material-symbols-outlined text-primary text-[20px] invisible" id="tick-balance-alltime">check</span>
 <div>
@@ -1633,7 +1593,7 @@
 </div>
 </div>
 <!-- Dynamic Toast Notification -->
-<div class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-surface-container-high text-on-surface px-lg py-sm rounded-full shadow-2xl border border-outline-variant/30 text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-50" id="toast">
+<div class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-surface-container-highest text-on-surface px-lg py-sm rounded-full shadow-lg border border-outline-variant text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-50" id="toast">
 </div>
 <!-- ================== JAVASCRIPT STATE & INTERACTIVE LOGIC ================== -->
 <script src="app.js"></script>
