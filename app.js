@@ -264,6 +264,24 @@ function loadInterfacePreferences() {
 
     if (preferences.categoryLayout === 'grid' || preferences.categoryLayout === 'list') categoryLayout = preferences.categoryLayout;
     if (preferences.budgetPeriod === 'monthly' || preferences.budgetPeriod === 'yearly') budgetPeriod = preferences.budgetPeriod;
+    syncCategoryLayoutUI();
+}
+
+function syncCategoryLayoutUI() {
+    const btnGrid = document.getElementById('btn-cat-layout-grid');
+    const btnList = document.getElementById('btn-cat-layout-list');
+    if (!btnGrid || !btnList) return;
+
+    const activeCls = "p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center transition-all duration-150";
+    const inactiveCls = "p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all duration-150";
+
+    if (categoryLayout === 'list') {
+        btnList.className = activeCls;
+        btnGrid.className = inactiveCls;
+    } else {
+        btnGrid.className = activeCls;
+        btnList.className = inactiveCls;
+    }
 }
 
 // Local Storage Persistence Helpers
@@ -512,6 +530,7 @@ window.addEventListener('DOMContentLoaded', () => {
     history.replaceState({ viewId: 'home' }, '', '');
     loadFromLocalStorage();
     suppressBrowserAutofill();
+    syncCategoryLayoutUI();
 
     const autofillObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
@@ -2029,6 +2048,7 @@ function switchTransactionType(type) {
 // Category Sheet Toggles
 function openCategorySheet() {
     resetScroll('sheet-categories');
+    syncCategoryLayoutUI();
     renderCategories();
     document.getElementById('sheet-categories').classList.remove('translate-y-full');
     showBackdrop();
@@ -2083,18 +2103,7 @@ function renderCategories() {
 function setCategoryLayout(layout) {
     categoryLayout = layout;
     saveInterfacePreferences();
-
-    const btnGrid = document.getElementById('btn-cat-layout-grid');
-    const btnList = document.getElementById('btn-cat-layout-list');
-
-    if (layout === 'grid') {
-        if (btnGrid) btnGrid.className = "p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center transition-all duration-150";
-        if (btnList) btnList.className = "p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all duration-150";
-    } else {
-        if (btnList) btnList.className = "p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center transition-all duration-150";
-        if (btnGrid) btnGrid.className = "p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all duration-150";
-    }
-
+    syncCategoryLayoutUI();
     renderCategories();
 }
 
@@ -2738,10 +2747,8 @@ function openEditTransactionModal(t) {
 
     const modal = document.getElementById('modal-add-transaction');
     modal.classList.remove('translate-y-full');
+    showBackdrop();
 
-    const overlay = document.getElementById('modal-overlay');
-    overlay.classList.remove('opacity-0', 'pointer-events-none');
-    overlay.classList.add('opacity-100', 'pointer-events-auto');
     setTimeout(() => { currentFormContext = { name: 'transaction', snapshot: snapshotFormState('transaction') }; }, 60);
 }
 
@@ -4441,25 +4448,16 @@ function updateAllTransactionsView(loadMore = false) {
         filtered = filtered.filter(t => t.tags && t.tags.includes(tagFilter));
     }
 
-    // Helper to get raw date timestamp from t.date
-    const getTimestamp = (t) => {
-        if (t.date === 'Today') {
-            return new Date().getTime();
-        }
-        if (t.date === 'Yesterday') {
-            const y = new Date();
-            y.setDate(y.getDate() - 1);
-            return y.getTime();
-        }
-        const d = new Date(t.date);
-        return isNaN(d.getTime()) ? 0 : d.getTime();
+    const getTransactionDateValue = (t) => {
+        const d = getTransactionDate(t);
+        return Number.isNaN(d.getTime()) ? 0 : d.getTime();
     };
 
     // 3. Apply Sort
     if (sortVal === 'date-desc') {
-        filtered.sort((a, b) => getTimestamp(b) - getTimestamp(a));
+        filtered.sort((a, b) => getTransactionDateValue(b) - getTransactionDateValue(a));
     } else if (sortVal === 'date-asc') {
-        filtered.sort((a, b) => getTimestamp(a) - getTimestamp(b));
+        filtered.sort((a, b) => getTransactionDateValue(a) - getTransactionDateValue(b));
     } else if (sortVal === 'amount-desc') {
         filtered.sort((a, b) => b.amount - a.amount);
     } else if (sortVal === 'amount-asc') {
@@ -4469,14 +4467,16 @@ function updateAllTransactionsView(loadMore = false) {
     const totalMatching = filtered.length;
     const itemsToRender = filtered.slice(0, allTxRenderLimit);
 
-    // 4. Group by Day
-    const groups = {};
+    // 4. Group by actual day
+    const groups = new Map();
     itemsToRender.forEach(t => {
-        let groupName = t.date;
-        if (!groups[groupName]) {
-            groups[groupName] = [];
+        const txDate = getTransactionDate(t);
+        const safeDate = Number.isNaN(txDate.getTime()) ? new Date() : txDate;
+        const groupName = safeDate.toISOString().slice(0, 10);
+        if (!groups.has(groupName)) {
+            groups.set(groupName, { date: safeDate, items: [] });
         }
-        groups[groupName].push(t);
+        groups.get(groupName).items.push(t);
     });
 
     const container = document.getElementById('all-transactions-grouped-container');
@@ -4487,20 +4487,22 @@ function updateAllTransactionsView(loadMore = false) {
         return;
     }
 
-    for (const day in groups) {
+    [...groups.entries()]
+        .sort((a, b) => b[1].date.getTime() - a[1].date.getTime())
+        .forEach(([groupKey, group]) => {
         const groupCard = document.createElement('div');
         groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md";
 
         // Calculate daily totals for badges
         let dayIn = 0;
         let dayOut = 0;
-        groups[day].forEach(t => {
+        group.items.forEach(t => {
             if (t.type === 'income') dayIn += t.amount;
             else dayOut += t.amount;
         });
         const dayBalance = dayIn - dayOut;
-
-        const safeDayId = day.replace(/[^a-zA-Z0-9]/g, '-');
+        const day = getRelativeDateString(group.date);
+        const safeDayId = groupKey.replace(/[^a-zA-Z0-9]/g, '-');
         groupCard.innerHTML = `
             <div class="border-b border-outline-variant/10 pb-xs flex justify-between items-center flex-wrap gap-xs">
                 <span class="text-label-md font-bold text-primary uppercase tracking-wider">${day}</span>
@@ -4517,7 +4519,7 @@ function updateAllTransactionsView(loadMore = false) {
         container.appendChild(groupCard);
 
         const listContainer = groupCard.querySelector(`#group-list-${safeDayId}`);
-        groups[day].forEach(t => {
+        group.items.forEach(t => {
             const isInc = t.type === 'income';
             const itemEl = document.createElement('div');
             itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
@@ -4547,7 +4549,7 @@ function updateAllTransactionsView(loadMore = false) {
             };
             listContainer.appendChild(itemEl);
         });
-    }
+    });
 
     if (totalMatching > allTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
@@ -4613,12 +4615,15 @@ function getRelativeDateString(d) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const dayBeforeYesterday = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
     const checkDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
     if (checkDate.getTime() === today.getTime()) {
         return 'Today';
     } else if (checkDate.getTime() === yesterday.getTime()) {
         return 'Yesterday';
+    } else if (checkDate.getTime() === dayBeforeYesterday.getTime()) {
+        return 'Day before yesterday';
     } else {
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const day = String(d.getDate()).padStart(2, '0');
@@ -4641,6 +4646,11 @@ function parseTxDate(dateStr) {
     if (dateStr === 'Yesterday') {
         const d = new Date();
         d.setDate(d.getDate() - 1);
+        return d;
+    }
+    if (dateStr === 'Day before yesterday') {
+        const d = new Date();
+        d.setDate(d.getDate() - 2);
         return d;
     }
     const parts = dateStr.split(' ');
@@ -5092,6 +5102,7 @@ function requestDeleteManagedCategory(index) {
     renderDeleteCategoryDestinations(destinationCategories);
     message.innerText = `"${category.name}" has ${categoryPendingDeletion.count} related transaction${categoryPendingDeletion.count === 1 ? '' : 's'}. Choose where to move them before deleting this category.`;
     document.getElementById('sheet-delete-category').classList.remove('translate-y-full');
+    showBackdrop();
 }
 
 function closeDeleteCategorySheet() {
