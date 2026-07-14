@@ -541,21 +541,21 @@
                         class="flex-1 flex flex-col items-center gap-xs py-sm hover:bg-surface-container-high rounded-lg transition-all text-on-surface-variant hover:text-primary active:scale-95"
                         onclick="openStructuredTxView('day')">
                         <span class="material-symbols-outlined text-[22px]">calendar_view_day</span>
-                        <span class="text-[11px] font-semibold">Day-wise</span>
+                        <span class="text-[12px] font-semibold">Day-wise</span>
                     </button>
-                    <div class="h-8 w-[1px] bg-outline-variant/20"></div>
+                    <div class="h-10 w-[1px] bg-outline-variant/20"></div>
                     <button
                         class="flex-1 flex flex-col items-center gap-xs py-sm hover:bg-surface-container-high rounded-lg transition-all text-on-surface-variant hover:text-primary active:scale-95"
                         onclick="openStructuredTxView('month')">
                         <span class="material-symbols-outlined text-[22px]">calendar_view_month</span>
-                        <span class="text-[11px] font-semibold">Month-wise</span>
+                        <span class="text-[12px] font-semibold">Month-wise</span>
                     </button>
-                    <div class="h-8 w-[1px] bg-outline-variant/20"></div>
+                    <div class="h-10 w-[1px] bg-outline-variant/20"></div>
                     <button
                         class="flex-1 flex flex-col items-center gap-xs py-sm hover:bg-surface-container-high rounded-lg transition-all text-on-surface-variant hover:text-primary active:scale-95"
                         onclick="openStructuredTxView('custom')">
                         <span class="material-symbols-outlined text-[22px]">date_range</span>
-                        <span class="text-[11px] font-semibold">Custom</span>
+                        <span class="text-[12px] font-semibold">Custom</span>
                     </button>
                 </div>
             </section>
@@ -737,9 +737,9 @@
                             type="text" name="expenledge_all_transactions_search" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
                     </div>
                     <button
-                        class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center hover:bg-surface-container-high border border-outline-variant/30 text-on-surface-variant active:scale-95 transition-transform shadow-sm"
+                        class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center hover:bg-surface-container-high border border-outline-variant/30 text-on-surface-variant active:scale-95 transition-transform shadow-sm"
                         onclick="openAdvancedSearchSheet()">
-                        <span class="material-symbols-outlined text-[24px]">tune</span>
+                        <span class="material-symbols-outlined text-[22px]">tune</span>
                     </button>
                 </div>
             </div>
@@ -934,21 +934,6 @@
                     </div>
                 </div>
             </section>
-            <!-- Cash in Balance Preference -->
-            <div
-                class="flex items-center justify-between px-3 py-2 bg-surface-container-high rounded-lg border border-outline-variant/20">
-                <div class="flex items-center gap-xs min-w-0">
-                    <span class="material-symbols-outlined text-primary text-[18px]">payments</span>
-                    <span class="text-label-lg font-semibold text-on-surface truncate">Include Cash in Balance</span>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                    <input class="sr-only peer" id="acc-include-cash-toggle" onchange="toggleIncludeCashInBalance()"
-                        type="checkbox" checked />
-                    <div
-                        class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
-                    </div>
-                </label>
-            </div>
             <!-- Dynamic accounts list container -->
             <div class="flex flex-col gap-lg">
                 <!-- Will be populated dynamically by JS -->
@@ -1198,7 +1183,7 @@
     <div class="fixed inset-0 bg-black/35 backdrop-blur-[10px] z-[50] opacity-0 pointer-events-none transition-opacity duration-300"
         id="modal-overlay" onclick="closeAllSheets()"></div>
     <!-- MODAL: ADD TRANSACTION -->
-    <div class="fixed bottom-0 left-0 right-0 z-[70] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition h-[min(92dvh,840px)] max-h-[calc(100dvh-12px)] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]"
+    <div class="fixed bottom-0 left-0 right-0 z-[70] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition h-[min(94dvh,900px)] max-h-[calc(100dvh-12px)] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]"
         id="modal-add-transaction">
         <!-- Top App Bar -->
         <header
@@ -1225,39 +1210,39 @@
             </div>
         </header>
         <!-- Form fields -->
-        <main class="flex-1 min-h-0 overflow-y-auto px-container-padding py-2 space-y-sm pb-4 no-scrollbar">
+        <main class="flex-1 min-h-0 overflow-y-auto px-container-padding py-4 space-y-md pb-8 no-scrollbar">
             <!-- Type switcher -->
             <div class="mb-3">
                 <div class="flex bg-surface-container-high rounded-xl p-0.5">
                     <button
-                        class="flex-1 py-1.5 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm"
+                        class="flex-1 py-2.5 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm"
                         id="tx-type-expense" onclick="switchTransactionType('expense')">Expense</button>
                     <button
-                        class="flex-1 py-1.5 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-highest"
+                        class="flex-1 py-2.5 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-highest"
                         id="tx-type-income" onclick="switchTransactionType('income')">Income</button>
                 </div>
             </div>
             <!-- Date & Time Selector -->
-            <div class="flex items-center gap-md py-1 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
+            <div class="flex items-center gap-md py-2 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
                 onclick="openTxDateTimePicker()">
-                <span class="material-symbols-outlined text-secondary text-[22px]">calendar_today</span>
+                <span class="material-symbols-outlined text-secondary text-[24px]">calendar_today</span>
                 <div class="flex-1 flex flex-col">
-                    <span class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
+                    <span class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
                         Time</span>
-                    <span class="text-body-md font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
+                    <span class="text-body-lg font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
                         PM</span>
                     <input type="hidden" id="tx-input-datetime" />
                 </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
             </div>
             <!-- Amount input -->
-            <div class="flex items-center gap-md py-1 group border-b border-outline-variant">
-                <span class="material-symbols-outlined text-secondary text-headline-md">currency_rupee</span>
+            <div class="flex items-center gap-md py-2 group border-b border-outline-variant">
+                <span class="material-symbols-outlined text-secondary text-headline-lg">currency_rupee</span>
                 <div class="flex-1 flex flex-col">
                     <label
-                        class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
+                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
                     <input
-                        class="bg-transparent border-none p-0 text-headline-lg font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-8"
+                        class="bg-transparent border-none p-0 text-headline-lg font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-10"
                         id="tx-input-amount" placeholder="0" required="" type="number" name="expenledge_transaction_amount" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
                         inputmode="decimal" />
 
@@ -1275,17 +1260,17 @@
             </div>
             <!-- Description -->
             <div class="flex items-center gap-md py-1 border-b border-outline-variant">
-                <span class="material-symbols-outlined text-secondary text-[22px]">notes</span>
+                <span class="material-symbols-outlined text-secondary text-[24px]">notes</span>
                 <div class="flex-1 flex flex-col">
                     <label
-                        class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Description</label>
-                    <input class="bg-transparent border-none p-0 text-body-md text-on-surface w-full focus:ring-0 h-8"
+                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Description</label>
+                    <input class="bg-transparent border-none p-0 text-body-md text-on-surface w-full focus:ring-0 h-10"
                         id="tx-input-desc" placeholder="Note (e.g. Lunch with team)" type="text" name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
                 </div>
             </div>
             <!-- Category Setup Header with Pencil -->
-            <div class="flex justify-between items-center px-1 pt-1 -mb-1">
-                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
+            <div class="flex justify-between items-center px-1 pt-2 -mb-0.5">
+                <span class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
                     Setup</span>
                 <button type="button"
                     class="text-primary hover:bg-surface-container-high rounded-full p-1 transition-colors flex items-center justify-center"
@@ -1299,37 +1284,37 @@
                 </button>
             </div>
             <!-- Category Selector Trigger -->
-            <div class="flex items-center gap-md py-1 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
+            <div class="flex items-center gap-md py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openCategorySheet()">
                 <span class="material-symbols-outlined text-secondary text-[22px]"
                     id="tx-selected-cat-icon">shopping_basket</span>
                 <div class="flex-1 flex flex-col">
                     <span
-                        class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
+                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
                     <span class="text-body-md font-semibold" id="tx-selected-cat-name">Groceries</span>
                 </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
             </div>
             <!-- Payment Mode Trigger -->
-            <div class="flex items-center gap-md py-1 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
+            <div class="flex items-center gap-md py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openPaymentSheet()">
                 <span class="material-symbols-outlined text-secondary text-[22px]"
                     id="tx-selected-pay-icon">payments</span>
                 <div class="flex-1 flex flex-col">
-                    <span class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
+                    <span class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
                         Mode</span>
                     <span class="text-body-md font-semibold" id="tx-selected-pay-name">Cash</span>
                 </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
             </div>
             <!-- Tags selector Trigger -->
-            <div class="flex items-center gap-md py-1 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
+            <div class="flex items-center gap-md py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openTagsSheet()">
                 <span class="material-symbols-outlined text-secondary text-[22px]">tag</span>
                 <div class="flex-1 flex flex-col overflow-hidden">
                     <label
-                        class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Tags</label>
-                    <div class="flex gap-sm overflow-x-auto no-scrollbar pb-0.5" id="tx-selected-tags-container">
+                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Tags</label>
+                    <div class="flex gap-sm overflow-x-auto no-scrollbar pb-1" id="tx-selected-tags-container">
                         <span class="text-label-md text-on-surface-variant">Add tags...</span>
                     </div>
                 </div>
@@ -1350,7 +1335,7 @@
                 <h2 class="text-headline-md font-headline-md text-on-background" id="cat-tx-sheet-title">Category</h2>
                 <p class="text-label-md text-on-surface-variant" id="cat-tx-sheet-subtitle"></p>
             </div>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeCatTransactionsSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1392,7 +1377,7 @@
                         </svg>
                     </button>
                 </div>
-                <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+                <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                     onclick="closeManageCategoriesSheet()">
                     <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
@@ -1453,7 +1438,7 @@
                         </svg>
                     </button>
                 </div>
-                <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+                <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                     onclick="closeCategorySheet()">
                     <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
@@ -1471,7 +1456,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Select Payment Mode</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closePaymentSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1539,7 +1524,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Manage Tags</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeTagsSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1571,7 +1556,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Income This Month</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeIncomeDetailsSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1614,7 +1599,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Spending This Month</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeSpendingDetailsSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1657,7 +1642,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Advanced Search</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeAdvancedSearchSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1770,7 +1755,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Export Range</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeExportRangeSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1864,7 +1849,7 @@
         <div
             class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant flex-shrink-0">
             <h2 class="text-headline-md font-headline-md text-on-background">Add Category</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeAddCategorySheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1914,7 +1899,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-error">Confirm Log Out</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeLogoutConfirmSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -1945,7 +1930,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Profile &amp; Security</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeProfileSecuritySheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2022,7 +2007,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Export & Import Transaction</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeExportDataSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2072,7 +2057,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Backup &amp; Restore</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeBackupRestoreSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2126,7 +2111,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Edit Budget Limits</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeEditBudgetSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2228,7 +2213,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background" id="account-sheet-title">Edit Account</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeEditAccountSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2393,7 +2378,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Options</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeTransactionOptionsSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2440,7 +2425,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Schedule Entry</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeScheduleTransactionSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2553,7 +2538,7 @@
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background" id="confirm-sheet-title">Confirm Action
             </h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeConfirmActionSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2589,7 +2574,7 @@
             class="px-container-padding py-2 flex justify-between items-center border-b border-outline-variant flex-shrink-0">
             <h2 class="text-headline-md font-headline-md text-on-background" id="dtpicker-title">Select Date &amp; Time
             </h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeDateTimePickerSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2619,7 +2604,7 @@
                     <span class="font-bold text-on-surface text-body-lg" id="dtpicker-month-label">January 2050</span>
                     <button class="p-1 hover:bg-surface-container-highest rounded-lg transition-colors"
                         onclick="changePickerMonth(1)">
-                        <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                        <span class="material-symbols-outlined text-[22px]">chevron_right</span>
                     </button>
                 </div>
                 <!-- Calendar Grid -->
@@ -2677,7 +2662,7 @@
                     <!-- Hour Select -->
                     <div class="relative flex-1" id="dtpicker-custom-hour">
                         <label
-                            class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider block mb-0.5 text-center">Hour</label>
+                            class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider block mb-0.5 text-center">Hour</label>
                         <button type="button"
                             class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl py-1.5 px-3 text-md font-bold text-on-surface flex justify-between items-center focus:ring-2 focus:ring-primary focus:outline-none"
                             onclick="togglePickerDropdown('hour')">
@@ -2694,7 +2679,7 @@
                     <!-- Minute Select -->
                     <div class="relative flex-1" id="dtpicker-custom-minute">
                         <label
-                            class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider block mb-0.5 text-center">Minute</label>
+                            class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider block mb-0.5 text-center">Minute</label>
                         <button type="button"
                             class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl py-1.5 px-3 text-md font-bold text-on-surface flex justify-between items-center focus:ring-2 focus:ring-primary focus:outline-none"
                             onclick="togglePickerDropdown('minute')">
@@ -2748,7 +2733,7 @@
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
             <h2 class="text-headline-md font-headline-md text-on-background">Net Balance</h2>
-            <button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeNetBalancesSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2830,7 +2815,7 @@
                 <div class="text-on-surface-variant/70 text-xs font-semibold mb-0.5 tracking-wider h-5"
                     id="calc-expression"></div>
                 <!-- Main result -->
-                <div class="text-on-surface text-2xl font-bold tracking-tight h-8" id="calc-display">0</div>
+                <div class="text-on-surface text-2xl font-bold tracking-tight h-10" id="calc-display">0</div>
             </section>
             <!-- Keypad Area -->
             <section class="flex-grow">
@@ -3051,6 +3036,7 @@
             return '#f4f6f4';
         }
 
+        let themeColorSyncRaf = null;
         function syncThemeColor() {
             const color = getTopLayerColor();
             if (themeColorMeta && themeColorMeta.content !== color) {
@@ -3058,8 +3044,16 @@
             }
         }
 
+        function queueThemeColorSync() {
+            if (themeColorSyncRaf) cancelAnimationFrame(themeColorSyncRaf);
+            themeColorSyncRaf = requestAnimationFrame(() => {
+                themeColorSyncRaf = null;
+                syncThemeColor();
+            });
+        }
+
         // Observe DOM mutations to detect sheet open/close
-        const themeObserver = new MutationObserver(syncThemeColor);
+        const themeObserver = new MutationObserver(queueThemeColorSync);
         themeObserver.observe(document.body, {
             subtree: true,
             attributes: true,
@@ -3067,7 +3061,7 @@
         });
 
         // Initial sync
-        window.addEventListener('DOMContentLoaded', syncThemeColor);
+        window.addEventListener('DOMContentLoaded', queueThemeColorSync);
     </script>
 </body>
 
