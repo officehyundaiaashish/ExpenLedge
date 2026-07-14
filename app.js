@@ -42,8 +42,20 @@ let dashboardFilter = 'month';
 let editingTransactionId = null;
 let selectedTxDateObj = new Date();
 let currentTheme = 'dark';
+const APP_BG_COLOR = '#f4f6f4';
 let autoBackupEnabled = false;
 let lastBackupAt = null;
+
+function syncThemeColor(color = APP_BG_COLOR) {
+    let meta = document.getElementById('meta-theme-color');
+    if (!meta) {
+        meta = document.createElement('meta');
+        meta.id = 'meta-theme-color';
+        meta.name = 'theme-color';
+        document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', color);
+}
 
 let currentView = 'home';
 let isSearching = false;
@@ -533,6 +545,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     history.replaceState({ viewId: 'home' }, '', '');
     loadFromLocalStorage();
+    syncThemeColor(APP_BG_COLOR);
     suppressBrowserAutofill();
     syncCategoryLayoutUI();
     syncManageCategoryLayoutUI();
@@ -712,6 +725,16 @@ function submitOnboarding(event) {
 }
 
 // View router
+function goBack(fallbackView = 'home') {
+    if (history.length > 1) {
+        try {
+            history.back();
+            return;
+        } catch (_e) { }
+    }
+    switchView(fallbackView, true);
+}
+
 function switchView(viewId, isBackNavigation = false) {
     document.querySelectorAll('.page-view').forEach(view => {
         view.classList.remove('active');
@@ -2561,7 +2584,8 @@ function showBackdrop() {
         overlay.classList.remove('opacity-0', 'pointer-events-none');
         overlay.classList.add('opacity-100', 'pointer-events-auto');
     }
-    document.body.classList.add('overflow-hidden');
+    document.body.classList.add('overflow-hidden', 'modal-open');
+    syncThemeColor(APP_BG_COLOR);
 
     // Push only once for the first opened sheet/modal so back navigation stays stable.
     if (wasHidden) {
@@ -2585,7 +2609,8 @@ function performCloseAllSheets() {
     dashboardSearchOpen = false;
     const searchContainer = document.getElementById('search-container');
     if (searchContainer) searchContainer.classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
+    document.body.classList.remove('overflow-hidden', 'modal-open');
+    syncThemeColor(APP_BG_COLOR);
 }
 
 function closeAllSheets() {
@@ -2637,7 +2662,12 @@ window.addEventListener('popstate', (event) => {
     if (event.state && event.state.viewId) {
         switchView(event.state.viewId, true);
     } else {
-        exitApp();
+        performCloseAllSheets();
+        if (currentView !== 'home') {
+            switchView('home', true);
+        } else {
+            exitApp();
+        }
     }
 });
 
@@ -4605,6 +4635,7 @@ function updateAllTransactionsView(loadMore = false) {
 }
 
 function openSearchOnTransactionsPage() {
+    closeAllSheets();
     closeDashboardSearch(false);
     switchView('transactions-all');
     setTimeout(() => {
