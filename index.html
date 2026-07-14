@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual" name="viewport" />
     <title>ExpenLedge - Expense Manager</title>
 
     <!-- PWA Manifest -->
@@ -144,6 +144,8 @@
             color: #1a1c18;
             font-family: 'Nunito Sans', sans-serif;
             overflow-x: hidden;
+            touch-action: pan-x pan-y;
+            -webkit-text-size-adjust: 100%;
         }
 
         html.modal-open,
@@ -2074,12 +2076,53 @@
             </button>
         </div>
         <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-lg">
-            <div class="bg-surface-container p-md rounded-xl border border-outline-variant bg-surface-container-high">
-                <p class="text-body-md text-on-surface-variant">Manage your data locally. Backup your transactions to a
-                    JSON file or restore them from a previous backup.</p>
+            <div class="bg-surface-container p-md rounded-xl border border-outline-variant bg-surface-container-high space-y-sm">
+                <p class="text-body-md text-on-surface-variant">Manage your data locally or sync the full app state to Supabase.</p>
+                <p class="text-label-md text-on-surface-variant" id="supabase-connection-status">Supabase not connected</p>
+                <p class="text-label-md text-on-surface-variant" id="supabase-sync-time">Last sync: Never</p>
             </div>
+
+            <div class="space-y-sm rounded-2xl border border-outline-variant/20 bg-surface-container p-md shadow-sm">
+                <div class="flex items-center gap-md">
+                    <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[28px]">cloud</span>
+                    </div>
+                    <div>
+                        <h3 class="text-body-lg font-bold text-on-surface">Supabase Cloud Sync</h3>
+                        <p class="text-label-md text-on-surface-variant">Connect a project, then sync and receive realtime updates.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-xs">
+                    <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project URL</label>
+                    <input id="supabase-project-url" type="text" inputmode="url" placeholder="https://xxxxx.supabase.co"
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" />
+                </div>
+
+                <div class="space-y-xs">
+                    <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project Anon Key</label>
+                    <textarea id="supabase-anon-key" rows="3" placeholder="Paste anon / publishable key here"
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary resize-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-sm">
+                    <button onclick="connectSupabaseFromSheet()"
+                        class="w-full py-sm rounded-xl bg-primary text-on-primary font-bold active:scale-95 transition-transform">Connect</button>
+                    <button onclick="syncSupabaseNow()"
+                        class="w-full py-sm rounded-xl bg-secondary text-on-primary font-bold active:scale-95 transition-transform">Sync Now</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-sm">
+                    <button onclick="disconnectSupabaseConnection()"
+                        class="w-full py-sm rounded-xl bg-surface-container-high text-on-surface font-bold border border-outline-variant/30 active:scale-95 transition-transform">Disconnect</button>
+                    <button onclick="loadSupabaseCredentialsIntoForm()"
+                        class="w-full py-sm rounded-xl bg-surface-container-high text-on-surface font-bold border border-outline-variant/30 active:scale-95 transition-transform">Load Saved</button>
+                </div>
+
+                <p class="text-label-md text-on-surface-variant">All data and settings are stored in your local app first, then mirrored to Supabase.</p>
+            </div>
+
             <div class="space-y-sm">
-                <!-- Backup Button -->
                 <button
                     class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant mb-3"
                     onclick="downloadBackupFile()">
@@ -2088,25 +2131,20 @@
                     </div>
                     <div class="flex-grow">
                         <span class="block text-body-lg font-semibold">Backup Data File</span>
-                        <span class="block text-label-md text-on-surface-variant">Save transactions, settings,
-                            categories, budgets, and accounts</span>
+                        <span class="block text-label-md text-on-surface-variant">Save transactions, settings, categories, budgets, and accounts</span>
                     </div>
                     <span class="material-symbols-outlined text-on-surface-variant">download</span>
                 </button>
-                <!-- Restore Button -->
                 <div class="relative">
-                    <input accept=".json" class="hidden" id="import-file-input" onchange="importJSON(this.files[0])"
-                        type="file" />
-                    <button
-                        class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant"
+                    <input accept=".json" class="hidden" id="import-file-input" onchange="importJSON(this.files[0])" type="file" />
+                    <button class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant"
                         onclick="document.getElementById('import-file-input').click()">
                         <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                             <span class="material-symbols-outlined text-[28px]">file_upload</span>
                         </div>
                         <div class="flex-grow">
                             <span class="block text-body-lg font-semibold">Restore Data File</span>
-                            <span class="block text-label-md text-on-surface-variant">Upload a previously exported .json
-                                file</span>
+                            <span class="block text-label-md text-on-surface-variant">Upload a previously exported .json file</span>
                         </div>
                         <span class="material-symbols-outlined text-on-surface-variant">upload</span>
                     </button>
@@ -2907,6 +2945,7 @@
     </div>
 
     <!-- ================== JAVASCRIPT STATE & INTERACTIVE LOGIC ================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 
     <!-- ================== PWA: SERVICE WORKER + INSTALL PROMPT ================== -->
