@@ -1800,15 +1800,15 @@ function renderAccountsList() {
         if (cat.type === 'cash') {
             const banner = document.createElement('button');
             banner.type = 'button';
-            banner.className = "mt-1 w-full text-left bg-primary/10 hover:bg-primary/15 border border-primary/15 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 transition-colors active:scale-[0.99]";
+            banner.className = "mt-2 w-full text-left bg-primary/10 hover:bg-primary/15 border border-primary/15 rounded-2xl px-4 py-4 flex items-center justify-between gap-4 transition-colors active:scale-[0.99]";
             banner.onclick = () => toggleIncludeCashInBalance();
 
             banner.innerHTML = `
                 <div class="flex items-center gap-3 min-w-0">
-                    <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+                    <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings: 'FILL' 1;">payments</span>
                     <div class="min-w-0">
-                        <div class="text-label-lg font-bold text-on-surface truncate">Include Cash in Balance</div>
-                        <div class="text-label-sm text-on-surface-variant truncate">
+                        <div class="text-[13px] font-bold text-on-surface truncate">Include Cash in Balance</div>
+                        <div class="text-[11px] text-on-surface-variant truncate">
                             ${includeCashInBalance ? 'Cash wallet is included in totals' : 'Cash wallet is hidden from totals'}
                         </div>
                     </div>
@@ -1817,7 +1817,7 @@ function renderAccountsList() {
                     <input class="sr-only peer" id="acc-include-cash-toggle" onchange="toggleIncludeCashInBalance()"
                         type="checkbox" ${includeCashInBalance ? 'checked' : ''} />
                     <div
-                        class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                        class="w-12 h-7 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary">
                     </div>
                 </label>
             `;
@@ -2072,8 +2072,9 @@ function openAddTransactionModal() {
 
 function originalCloseAddTransactionModal() {
     const modal = document.getElementById('modal-add-transaction');
+    if (!modal) return;
     modal.classList.add('translate-y-full');
-    closeAllSheets();
+    runAfterTransition(modal, checkBackdropNeeded);
 }
 
 function closeAddTransactionModal() {
@@ -2546,11 +2547,19 @@ function renderSpendingTransactions(loadMore = false) {
 
 function syncAllViews() {
     updateDashboard();
-    updateAnalysis();
     updateAccounts();
     updateBudget();
-    if (currentView === 'structured-tx') renderStructuredTx();
-    
+
+    if (currentView === 'analysis') {
+        updateAnalysis();
+    }
+    if (currentView === 'structured-tx') {
+        renderStructuredTx();
+    }
+    if (currentView === 'transactions-all') {
+        updateAllTransactionsView();
+    }
+
     // Also re-render active details sheets if they are open
     const incSheet = document.getElementById('sheet-income-details');
     if (incSheet && !incSheet.classList.contains('translate-y-full')) {
@@ -2564,7 +2573,30 @@ function syncAllViews() {
     if (accSheet && !accSheet.classList.contains('translate-y-full')) {
         renderAccountDetailsTransactions();
     }
-    updateAllTransactionsView();
+}
+
+function runAfterTransition(el, callback, timeoutMs = 380) {
+    if (!el || typeof callback !== 'function') {
+        if (typeof callback === 'function') callback();
+        return;
+    }
+
+    let done = false;
+    const finish = () => {
+        if (done) return;
+        done = true;
+        el.removeEventListener('transitionend', onEnd);
+        callback();
+    };
+
+    const onEnd = (event) => {
+        if (event.target !== el) return;
+        if (event.propertyName && event.propertyName !== 'transform' && event.propertyName !== 'opacity') return;
+        finish();
+    };
+
+    el.addEventListener('transitionend', onEnd);
+    setTimeout(finish, timeoutMs);
 }
 
 // Save Transaction to memory database
@@ -2622,19 +2654,15 @@ function saveTransaction() {
     saveToLocalStorage();
     currentFormContext = null;
 
-    // Close first so the save feels instant, then refresh the rest on the next paint.
     closeAddTransactionModal();
 
-    const postSaveRefresh = () => {
+    const finishSave = () => {
         syncAllViews();
         showToast(toastMessage);
     };
 
-    if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(() => requestAnimationFrame(postSaveRefresh));
-    } else {
-        setTimeout(postSaveRefresh, 0);
-    }
+    const modal = document.getElementById('modal-add-transaction');
+    runAfterTransition(modal, finishSave);
 }
 
 // Helper UI functions and Back Gesture Navigation Support
@@ -2648,6 +2676,7 @@ function showBackdrop() {
         overlay.classList.add('opacity-100', 'pointer-events-auto');
     }
     document.body.classList.add('overflow-hidden');
+    document.documentElement.classList.add('modal-open');
 
     // Push only once for the first opened sheet/modal so back navigation stays stable.
     if (wasHidden) {
@@ -2672,6 +2701,7 @@ function performCloseAllSheets() {
     const searchContainer = document.getElementById('search-container');
     if (searchContainer) searchContainer.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
+    document.documentElement.classList.remove('modal-open');
 }
 
 function closeAllSheets() {
@@ -2810,6 +2840,7 @@ function checkBackdropNeeded() {
             overlay.classList.add('opacity-0', 'pointer-events-none');
         }
         document.body.classList.remove('overflow-hidden');
+        document.documentElement.classList.remove('modal-open');
     }
 }
 
