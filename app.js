@@ -47,6 +47,7 @@ let lastBackupAt = null;
 
 let currentView = 'home';
 let isSearching = false;
+let dashboardSearchOpen = false;
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -251,6 +252,7 @@ function removeLegacyPlaceholderTags() {
 function saveInterfacePreferences() {
     localStorage.setItem('expenledge_interface_preferences', JSON.stringify({
         categoryLayout,
+        manageCategoryLayout,
         budgetPeriod
     }));
 }
@@ -263,8 +265,10 @@ function loadInterfacePreferences() {
     if (!preferences || typeof preferences !== 'object') return;
 
     if (preferences.categoryLayout === 'grid' || preferences.categoryLayout === 'list') categoryLayout = preferences.categoryLayout;
+    if (preferences.manageCategoryLayout === 'grid' || preferences.manageCategoryLayout === 'list') manageCategoryLayout = preferences.manageCategoryLayout;
     if (preferences.budgetPeriod === 'monthly' || preferences.budgetPeriod === 'yearly') budgetPeriod = preferences.budgetPeriod;
     syncCategoryLayoutUI();
+    syncManageCategoryLayoutUI();
 }
 
 function syncCategoryLayoutUI() {
@@ -531,6 +535,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadFromLocalStorage();
     suppressBrowserAutofill();
     syncCategoryLayoutUI();
+    syncManageCategoryLayoutUI();
 
     const autofillObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
@@ -716,6 +721,7 @@ function switchView(viewId, isBackNavigation = false) {
         activeView.classList.add('active');
     }
     currentView = viewId;
+    if (viewId !== 'home') closeDashboardSearch(false);
 
     // Show/hide footer navigation bar and global FAB
     const footerNav = document.querySelector('nav');
@@ -1877,15 +1883,34 @@ function updateBudget() {
 }
 
 // Search trigger
+function closeDashboardSearch(restoreDashboard = true) {
+    const inputContainer = document.getElementById('search-container');
+    const searchInput = document.getElementById('search-input');
+    dashboardSearchOpen = false;
+    if (inputContainer) inputContainer.classList.add('hidden');
+    if (searchInput) searchInput.value = '';
+    if (restoreDashboard) updateDashboard();
+}
+
 function toggleSearch() {
     const inputContainer = document.getElementById('search-container');
-    if (inputContainer.classList.contains('hidden')) {
+    const searchInput = document.getElementById('search-input');
+    if (!inputContainer || !searchInput) return;
+
+    const opening = inputContainer.classList.contains('hidden');
+    if (opening) {
         inputContainer.classList.remove('hidden');
-        document.getElementById('search-input').focus();
+        dashboardSearchOpen = true;
+        if (!history.state || !history.state.isSearch) {
+            history.pushState({ viewId: currentView, isSearch: true }, '', '');
+        }
+        searchInput.focus();
     } else {
-        inputContainer.classList.add('hidden');
-        document.getElementById('search-input').value = '';
-        updateDashboard();
+        if (history.state && history.state.isSearch) {
+            history.back();
+        } else {
+            closeDashboardSearch();
+        }
     }
 }
 
@@ -2531,14 +2556,17 @@ let isManuallyClosing = false;
 
 function showBackdrop() {
     const overlay = document.getElementById('modal-overlay');
+    const wasHidden = !overlay || overlay.classList.contains('opacity-0') || overlay.classList.contains('pointer-events-none');
     if (overlay) {
         overlay.classList.remove('opacity-0', 'pointer-events-none');
         overlay.classList.add('opacity-100', 'pointer-events-auto');
     }
     document.body.classList.add('overflow-hidden');
 
-    // Push modal state to browser history
-    history.pushState({ isModal: true }, '', '');
+    // Push only once for the first opened sheet/modal so back navigation stays stable.
+    if (wasHidden) {
+        history.pushState({ isModal: true }, '', '');
+    }
 }
 
 function performCloseAllSheets() {
@@ -2554,6 +2582,9 @@ function performCloseAllSheets() {
         overlay.classList.remove('opacity-100', 'pointer-events-auto');
         overlay.classList.add('opacity-0', 'pointer-events-none');
     }
+    dashboardSearchOpen = false;
+    const searchContainer = document.getElementById('search-container');
+    if (searchContainer) searchContainer.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
 }
 
@@ -2583,20 +2614,30 @@ window.addEventListener('popstate', (event) => {
         return;
     }
 
-    // Check if a modal is currently open and close it
     const openSheets = Array.from(document.querySelectorAll('.bottom-sheet-transition')).filter(sheet => !sheet.classList.contains('translate-y-full'));
     const txModal = document.getElementById('modal-add-transaction');
     const isTxModalOpen = txModal && !txModal.classList.contains('translate-y-full');
+    const searchContainer = document.getElementById('search-container');
+    const isDashboardSearchOpen = dashboardSearchOpen || (searchContainer && !searchContainer.classList.contains('hidden'));
 
     if (openSheets.length > 0 || isTxModalOpen) {
         performCloseAllSheets();
-    } else {
-        // Handle view change back navigation
+        return;
+    }
+
+    if (isDashboardSearchOpen) {
+        closeDashboardSearch(true);
         if (event.state && event.state.viewId) {
             switchView(event.state.viewId, true);
-        } else {
-            exitApp();
         }
+        return;
+    }
+
+    // Handle view change back navigation
+    if (event.state && event.state.viewId) {
+        switchView(event.state.viewId, true);
+    } else {
+        exitApp();
     }
 });
 
@@ -4564,6 +4605,7 @@ function updateAllTransactionsView(loadMore = false) {
 }
 
 function openSearchOnTransactionsPage() {
+    closeDashboardSearch(false);
     switchView('transactions-all');
     setTimeout(() => {
         const searchInput = document.getElementById('all-tx-search');
@@ -4615,15 +4657,12 @@ function getRelativeDateString(d) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const dayBeforeYesterday = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
     const checkDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
     if (checkDate.getTime() === today.getTime()) {
         return 'Today';
     } else if (checkDate.getTime() === yesterday.getTime()) {
         return 'Yesterday';
-    } else if (checkDate.getTime() === dayBeforeYesterday.getTime()) {
-        return 'Day before yesterday';
     } else {
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const day = String(d.getDate()).padStart(2, '0');
@@ -4857,7 +4896,6 @@ let categoryPendingDeletion = null;
 let deleteCategoryDestination = null;
 
 function openManageCategoriesSheet(startTab = 'spending') {
-    manageCategoryLayout = 'grid';
     selectedManageIcon = 'category';
     const previewIcon = document.getElementById('mgcat-selected-icon-name');
     if (previewIcon) previewIcon.innerText = selectedManageIcon;
@@ -4866,7 +4904,7 @@ function openManageCategoriesSheet(startTab = 'spending') {
     if (nameInput) nameInput.value = '';
 
     setManageCatTab(startTab);
-    setManageCategoryLayout('grid');
+    syncManageCategoryLayoutUI();
     renderManageIconGrid();
     document.getElementById('sheet-manage-categories').classList.remove('translate-y-full');
     showBackdrop();
@@ -4919,15 +4957,20 @@ function setManageCatTab(tab) {
     renderManagedCategories();
 }
 
-function setManageCategoryLayout(layout) {
-    manageCategoryLayout = layout;
+function syncManageCategoryLayoutUI() {
     const gridButton = document.getElementById('mgcat-layout-grid');
     const listButton = document.getElementById('mgcat-layout-list');
     const activeClass = 'p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center transition-all duration-150';
     const inactiveClass = 'p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all duration-150';
 
-    if (gridButton) gridButton.className = layout === 'grid' ? activeClass : inactiveClass;
-    if (listButton) listButton.className = layout === 'list' ? activeClass : inactiveClass;
+    if (gridButton) gridButton.className = manageCategoryLayout === 'grid' ? activeClass : inactiveClass;
+    if (listButton) listButton.className = manageCategoryLayout === 'list' ? activeClass : inactiveClass;
+}
+
+function setManageCategoryLayout(layout) {
+    manageCategoryLayout = layout === 'list' ? 'list' : 'grid';
+    saveInterfacePreferences();
+    syncManageCategoryLayoutUI();
     renderManagedCategories();
 }
 
