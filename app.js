@@ -72,6 +72,7 @@ let selectedPaymentIcon = 'payments';
 let selectedTags = [];
 let allAvailableTags = [];
 let includeCashInBalance = true;
+const CATEGORY_ORDER_PRESET_VERSION = '2';
 
 // Demo tags from older releases are removed the next time saved data is loaded.
 const legacyPlaceholderTags = new Set([
@@ -79,34 +80,69 @@ const legacyPlaceholderTags = new Set([
 ]);
 
 const expenseCategories = [
-    { name: 'Food and Dining', icon: 'restaurant', color: 'bg-primary-container/10 border-primary-container/20 text-primary', fillClass: 'group-hover:bg-primary-container/20 text-primary', builtIn: true },
-    { name: 'Groceries', icon: 'shopping_basket', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
-    { name: 'Shopping', icon: 'shopping_bag', color: 'bg-secondary-container/10 border-secondary-container/20 text-secondary', fillClass: 'group-hover:bg-secondary-container/20 text-secondary', builtIn: true },
-    { name: 'Transport', icon: 'commute', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
+    { name: 'Others', icon: 'more_horiz', color: 'bg-surface-container-high border-outline-variant/30 text-on-surface-variant', fillClass: 'group-hover:bg-surface-container-highest text-on-surface-variant', builtIn: true },
     { name: 'Bills & Utilities', icon: 'receipt_long', color: 'bg-error/10 border-error/20 text-error', fillClass: 'group-hover:bg-error/20 text-error', builtIn: true },
-    { name: 'Entertainment', icon: 'sports_esports', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
+    { name: 'Shopping', icon: 'shopping_bag', color: 'bg-secondary-container/10 border-secondary-container/20 text-secondary', fillClass: 'group-hover:bg-secondary-container/20 text-secondary', builtIn: true },
+    { name: 'Groceries', icon: 'shopping_basket', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
+    { name: 'Food and Dining', icon: 'restaurant', color: 'bg-primary-container/10 border-primary-container/20 text-primary', fillClass: 'group-hover:bg-primary-container/20 text-primary', builtIn: true },
     { name: 'Travelling', icon: 'flight', color: 'bg-secondary-container/10 border-secondary-container/20 text-secondary', fillClass: 'group-hover:bg-secondary-container/20 text-secondary', builtIn: true },
+    { name: 'Veer Auto', icon: 'directions_car', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
+    { name: 'Entertainment', icon: 'sports_esports', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
     { name: 'Medical', icon: 'medical_services', color: 'bg-error-container/20 border-error-container/30 text-error', fillClass: 'group-hover:bg-error-container/40 text-error', builtIn: true },
     { name: 'Education', icon: 'school', color: 'bg-primary-container/10 border-primary-container/20 text-primary', fillClass: 'group-hover:bg-primary-container/20 text-primary', builtIn: true },
+    { name: 'Family', icon: 'family_restroom', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
+    { name: 'Gift & Donations', icon: 'volunteer_activism', color: 'bg-primary-container/10 border-primary-container/20 text-primary', fillClass: 'group-hover:bg-primary-container/20 text-primary', builtIn: true },
+    { name: 'Transport', icon: 'commute', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
     { name: 'Insurance', icon: 'health_and_safety', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
     { name: 'Taxes', icon: 'request_quote', color: 'bg-error/10 border-error/20 text-error', fillClass: 'group-hover:bg-error/20 text-error', builtIn: true },
     { name: 'Investments', icon: 'trending_up', color: 'bg-secondary-container/10 border-secondary-container/20 text-secondary', fillClass: 'group-hover:bg-secondary-container/20 text-secondary', builtIn: true },
-    { name: 'Personal Care', icon: 'spa', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
-    { name: 'Gift & Donations', icon: 'volunteer_activism', color: 'bg-primary-container/10 border-primary-container/20 text-primary', fillClass: 'group-hover:bg-primary-container/20 text-primary', builtIn: true },
-    { name: 'Others', icon: 'more_horiz', color: 'bg-surface-container-high border-outline-variant/30 text-on-surface-variant', fillClass: 'group-hover:bg-surface-container-highest text-on-surface-variant', builtIn: true },
-    { name: 'Family', icon: 'family_restroom', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
-    { name: 'Veer Auto', icon: 'directions_car', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true }
+    { name: 'Personal Care', icon: 'spa', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true }
 ];
 
 const incomeCategories = [
     { name: 'Salary', icon: 'work', color: 'bg-primary-container/10 border-primary-container/20 text-primary', fillClass: 'group-hover:bg-primary-container/20 text-primary', builtIn: true },
-    { name: 'Freelance', icon: 'laptop_mac', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
+    { name: 'Other Income', icon: 'payments', color: 'bg-surface-container-high border-outline-variant/30 text-on-surface-variant', fillClass: 'group-hover:bg-surface-container-highest text-on-surface-variant', builtIn: true },
     { name: 'Investments', icon: 'trending_up', color: 'bg-secondary-container/10 border-secondary-container/20 text-secondary', fillClass: 'group-hover:bg-secondary-container/20 text-secondary', builtIn: true },
     { name: 'Rentals', icon: 'home_work', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
-    { name: 'Sold Items', icon: 'sell', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
-    { name: 'Other Income', icon: 'payments', color: 'bg-surface-container-high border-outline-variant/30 text-on-surface-variant', fillClass: 'group-hover:bg-surface-container-highest text-on-surface-variant', builtIn: true },
-    { name: 'Veer Auto', icon: 'directions_car', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true }
+    { name: 'Veer Auto', icon: 'directions_car', color: 'bg-primary/10 border-primary/20 text-primary', fillClass: 'group-hover:bg-primary/20 text-primary', builtIn: true },
+    { name: 'Freelance', icon: 'laptop_mac', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true },
+    { name: 'Sold Items', icon: 'sell', color: 'bg-tertiary-container/10 border-tertiary-container/20 text-tertiary', fillClass: 'group-hover:bg-tertiary-container/20 text-tertiary', builtIn: true }
 ];
+
+const DEFAULT_EXPENSE_CATEGORY_ORDER = [
+    'Others',
+    'Bills & Utilities',
+    'Shopping',
+    'Groceries',
+    'Food and Dining',
+    'Travelling',
+    'Veer Auto',
+    'Entertainment',
+    'Medical',
+    'Education',
+    'Family',
+    'Gift & Donations',
+    'Transport',
+    'Insurance',
+    'Taxes',
+    'Investments',
+    'Personal Care'
+];
+
+const DEFAULT_INCOME_CATEGORY_ORDER = [
+    'Salary',
+    'Other Income',
+    'Investments',
+    'Rentals',
+    'Veer Auto',
+    'Freelance',
+    'Sold Items'
+];
+
+function applyDefaultCategoryOrder() {
+    applyCategoryOrder(expenseCategories, DEFAULT_EXPENSE_CATEGORY_ORDER);
+    applyCategoryOrder(incomeCategories, DEFAULT_INCOME_CATEGORY_ORDER);
+}
 
 function suppressBrowserAutofill(root = document) {
     const fields = [];
@@ -368,11 +404,19 @@ function loadFromLocalStorage() {
             restoreCustomCategories(incomeCategories, customCategories.income);
         }
 
+        const savedCategoryOrderPreset = localStorage.getItem('expenledge_category_order_preset');
         const savedCategoryOrders = localStorage.getItem('expenledge_category_orders');
-        if (savedCategoryOrders) {
+        if (savedCategoryOrderPreset !== CATEGORY_ORDER_PRESET_VERSION) {
+            applyDefaultCategoryOrder();
+            saveCategoryOrders();
+            localStorage.setItem('expenledge_category_order_preset', CATEGORY_ORDER_PRESET_VERSION);
+        } else if (savedCategoryOrders) {
             const categoryOrders = JSON.parse(savedCategoryOrders);
             applyCategoryOrder(expenseCategories, categoryOrders.expense);
             applyCategoryOrder(incomeCategories, categoryOrders.income);
+        } else {
+            applyDefaultCategoryOrder();
+            saveCategoryOrders();
         }
 
         const savedUA = localStorage.getItem('expenledge_user_accounts');
@@ -1464,12 +1508,15 @@ function updateAnalysis() {
     transactions.forEach(t => {
         if (!transactionBelongsToAnalysisPeriod(t)) return;
 
-        if (t.type === 'income') totalIncome += t.amount;
-        else totalSpending += t.amount;
+        const amt = Number(t.amount) || 0;
+        if (t.type === 'income') totalIncome += amt;
+        else totalSpending += amt;
 
         if (t.type === txType) {
-            total += t.amount;
-            categorySums[t.category] = (categorySums[t.category] || 0) + t.amount;
+            total += amt;
+            if (t.category) {
+                categorySums[t.category] = (categorySums[t.category] || 0) + amt;
+            }
         }
     });
 
@@ -1492,9 +1539,10 @@ function updateAnalysis() {
 
     // Build dynamic list and donut chart
     const listContainer = document.getElementById('analysis-category-list');
-    listContainer.innerHTML = '';
-
     const svg = document.getElementById('donut-svg');
+    if (!listContainer || !svg) return;
+
+    listContainer.innerHTML = '';
     svg.innerHTML = '';
 
     // All known categories per type
@@ -1553,8 +1601,7 @@ function updateAnalysis() {
         const isZero = sum === 0;
 
         const item = document.createElement('div');
-        item.className = `flex items-center justify-between p-md bg-surface-container rounded-xl transition-colors ${isZero ? 'opacity-40' : 'hover:bg-surface-container-high cursor-pointer'
-            }`;
+        item.className = `flex items-center justify-between p-md bg-surface-container rounded-xl transition-colors ${isZero ? 'opacity-40' : 'hover:bg-surface-container-high cursor-pointer'}`;
         if (!isZero) item.onclick = () => openCatTransactionsSheet(cat.name, cat.icon);
         item.innerHTML = `
             <div class="flex items-center gap-md">
@@ -1749,6 +1796,33 @@ function renderAccountsList() {
             `;
             sec.appendChild(card);
         });
+
+        if (cat.type === 'cash') {
+            const banner = document.createElement('button');
+            banner.type = 'button';
+            banner.className = "mt-1 w-full text-left bg-primary/10 hover:bg-primary/15 border border-primary/15 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 transition-colors active:scale-[0.99]";
+            banner.onclick = () => toggleIncludeCashInBalance();
+
+            banner.innerHTML = `
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+                    <div class="min-w-0">
+                        <div class="text-label-lg font-bold text-on-surface truncate">Include Cash in Balance</div>
+                        <div class="text-label-sm text-on-surface-variant truncate">
+                            ${includeCashInBalance ? 'Cash wallet is included in totals' : 'Cash wallet is hidden from totals'}
+                        </div>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0" onclick="event.stopPropagation()">
+                    <input class="sr-only peer" id="acc-include-cash-toggle" onchange="toggleIncludeCashInBalance()"
+                        type="checkbox" ${includeCashInBalance ? 'checked' : ''} />
+                    <div
+                        class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                    </div>
+                </label>
+            `;
+            sec.appendChild(banner);
+        }
 
         listContainer.appendChild(sec);
     });
@@ -2512,6 +2586,7 @@ function saveTransaction() {
         return;
     }
 
+    let toastMessage = "Transaction saved successfully!";
     if (editingTransactionId !== null) {
         const tx = transactions.find(x => x.id === editingTransactionId);
         if (tx) {
@@ -2526,7 +2601,7 @@ function saveTransaction() {
             tx.date = getRelativeDateString(selectedTxDateObj);
         }
         editingTransactionId = null;
-        showToast("Transaction updated successfully!");
+        toastMessage = "Transaction updated successfully!";
     } else {
         const newTx = {
             id: transactions.length + 1,
@@ -2542,13 +2617,24 @@ function saveTransaction() {
         };
 
         transactions.unshift(newTx);
-        showToast("Transaction saved successfully!");
     }
 
     saveToLocalStorage();
-    syncAllViews();
     currentFormContext = null;
+
+    // Close first so the save feels instant, then refresh the rest on the next paint.
     closeAddTransactionModal();
+
+    const postSaveRefresh = () => {
+        syncAllViews();
+        showToast(toastMessage);
+    };
+
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => requestAnimationFrame(postSaveRefresh));
+    } else {
+        setTimeout(postSaveRefresh, 0);
+    }
 }
 
 // Helper UI functions and Back Gesture Navigation Support
