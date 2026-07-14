@@ -44,6 +44,35 @@ let selectedTxDateObj = new Date();
 let currentTheme = 'dark';
 let autoBackupEnabled = false;
 let lastBackupAt = null;
+let lastStateChangeAt = null;
+
+const SUPABASE_APP_ID = 'expenledge';
+const SUPABASE_CONFIG_KEY = 'expenledge_supabase_config';
+const SUPABASE_DEVICE_KEY = 'expenledge_supabase_device_id';
+const SUPABASE_LAST_SYNC_KEY = 'expenledge_last_supabase_sync_at';
+const SUPABASE_LAST_STATE_CHANGE_KEY = 'expenledge_last_state_change_at';
+const SUPABASE_LAST_REMOTE_APPLIED_KEY = 'expenledge_last_remote_applied_at';
+
+let supabaseClient = null;
+let supabaseRealtimeChannel = null;
+let supabaseConfig = {
+    url: '',
+    anonKey: '',
+    appId: SUPABASE_APP_ID,
+    deviceId: localStorage.getItem(SUPABASE_DEVICE_KEY) || (crypto?.randomUUID ? crypto.randomUUID() : `device_${Date.now()}_${Math.random().toString(36).slice(2)}`)
+};
+let supabaseIntegration = {
+    connected: false,
+    connecting: false,
+    pendingSync: false,
+    applyingRemote: false,
+    booting: true,
+    lastError: '',
+    lastSyncAt: null,
+    lastRemoteAppliedAt: null
+};
+let supabaseSyncTimer = null;
+let supabaseInitialLoadDone = false;
 
 let currentView = 'home';
 let isSearching = false;
@@ -341,9 +370,13 @@ function saveToLocalStorage() {
         localStorage.removeItem('expenledge_dashboard_filter');
         localStorage.setItem('expenledge_auto_backup_enabled', autoBackupEnabled.toString());
         localStorage.setItem('expenledge_last_backup_at', lastBackupAt || '');
+        lastStateChangeAt = new Date().toISOString();
+        localStorage.setItem(SUPABASE_LAST_STATE_CHANGE_KEY, lastStateChangeAt);
         saveCategoryOrders();
         saveCustomCategories();
         saveInterfacePreferences();
+        markSupabaseStateDirty();
+        queueSupabaseSync();
     } catch (e) {
         console.error("Local storage save failed: ", e);
     }
@@ -461,6 +494,9 @@ function loadFromLocalStorage() {
         const savedLastBackupAt = localStorage.getItem('expenledge_last_backup_at');
         if (savedLastBackupAt) lastBackupAt = savedLastBackupAt;
 
+        const savedLastStateChangeAt = localStorage.getItem(SUPABASE_LAST_STATE_CHANGE_KEY);
+        if (savedLastStateChangeAt) lastStateChangeAt = savedLastStateChangeAt;
+
         loadInterfacePreferences();
 
     } catch (e) {
@@ -496,23 +532,24 @@ function buildBackupPayload() {
 }
 
 function updateBackupTimeDisplay() {
-    const backupTimeEl = document.getElementById('cloud-backup-time');
-    if (!backupTimeEl) return;
+    const labels = [document.getElementById('cloud-backup-time'), document.getElementById('supabase-sync-time')].filter(Boolean);
+    if (!labels.length) return;
 
-    if (!lastBackupAt) {
-        backupTimeEl.innerText = 'Never backed up';
+    const stamp = supabaseIntegration.lastSyncAt || localStorage.getItem(SUPABASE_LAST_SYNC_KEY) || lastBackupAt;
+    if (!stamp) {
+        labels.forEach(label => label.innerText = 'Last sync: Never');
         return;
     }
 
-    const backupDate = new Date(lastBackupAt);
+    const backupDate = new Date(stamp);
     if (Number.isNaN(backupDate.getTime())) {
-        backupTimeEl.innerText = 'Never backed up';
+        labels.forEach(label => label.innerText = 'Last sync: Never');
         return;
     }
 
     const timeStr = backupDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const dateStr = backupDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    backupTimeEl.innerText = `Last backup: ${dateStr} at ${timeStr}`;
+    labels.forEach(label => label.innerText = `Last sync: ${dateStr} at ${timeStr}`);
 }
 
 function persistBackupMetadata() {
@@ -554,6 +591,356 @@ function restoreBackupPayload(imported) {
     lastBackupAt = imported.exportedAt || new Date().toISOString();
     persistBackupMetadata();
     return true;
+}
+
+
+function getSupabaseStorageSnapshot() {
+    const storage = {};
+    for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('expenledge_')) {
+            storage[key] = localStorage.getItem(key);
+        }
+    }
+    return storage;
+}
+
+function buildCloudSnapshot() {
+    return {
+        app: 'ExpenLedge',
+        type: 'cloud-sync',
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        storage: getSupabaseStorageSnapshot()
+    };
+}
+
+function setSupabaseStatus(message, isConnected = false, isError = false) {
+    const statusEl = document.getElementById('supabase-connection-status');
+    if (statusEl) {
+        statusEl.innerText = message;
+        statusEl.className = isError ? 'text-label-md text-error' : 'text-label-md text-on-surface-variant';
+    }
+    const syncEl = document.getElementById('supabase-sync-time');
+    if (syncEl && !syncEl.innerText) syncEl.innerText = 'Last sync: Never';
+    updateBackupTimeDisplay();
+    const connectBtn = document.querySelector('#sheet-backup-restore button[onclick="connectSupabaseFromSheet()"]');
+    const syncBtn = document.querySelector('#sheet-backup-restore button[onclick="syncSupabaseNow()"]');
+    const disconnectBtn = document.querySelector('#sheet-backup-restore button[onclick="disconnectSupabaseConnection()"]');
+    if (connectBtn) connectBtn.disabled = supabaseIntegration.connecting;
+    if (syncBtn) syncBtn.disabled = !isConnected || supabaseIntegration.connecting;
+    if (disconnectBtn) disconnectBtn.disabled = !isConnected && !supabaseClient;
+}
+
+function persistSupabaseCredentials() {
+    localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify({
+        url: supabaseConfig.url,
+        anonKey: supabaseConfig.anonKey,
+        appId: supabaseConfig.appId,
+        deviceId: supabaseConfig.deviceId
+    }));
+    localStorage.setItem(SUPABASE_DEVICE_KEY, supabaseConfig.deviceId);
+}
+
+function loadSupabaseCredentialsIntoForm() {
+    const saved = localStorage.getItem(SUPABASE_CONFIG_KEY);
+    const urlInput = document.getElementById('supabase-project-url');
+    const keyInput = document.getElementById('supabase-anon-key');
+    if (!saved) {
+        if (urlInput) urlInput.value = '';
+        if (keyInput) keyInput.value = '';
+        showToast('No saved Supabase credentials found.');
+        return;
+    }
+
+    const parsed = JSON.parse(saved);
+    if (urlInput) urlInput.value = parsed.url || '';
+    if (keyInput) keyInput.value = parsed.anonKey || '';
+    showToast('Saved Supabase credentials loaded.');
+}
+
+function markSupabaseStateDirty() {
+    supabaseIntegration.pendingSync = true;
+}
+
+function updateSupabaseSyncTime() {
+    const now = new Date().toISOString();
+    supabaseIntegration.lastSyncAt = now;
+    localStorage.setItem(SUPABASE_LAST_SYNC_KEY, now);
+    updateBackupTimeDisplay();
+}
+
+function disconnectSupabaseRealtime() {
+    if (supabaseRealtimeChannel) {
+        try {
+            supabaseClient?.removeChannel(supabaseRealtimeChannel);
+        } catch (_err) {
+            // ignore cleanup errors
+        }
+    }
+    supabaseRealtimeChannel = null;
+}
+
+function disconnectSupabaseConnection(clearSavedCredentials = true) {
+    disconnectSupabaseRealtime();
+    supabaseClient = null;
+    supabaseIntegration.connected = false;
+    supabaseIntegration.connecting = false;
+    supabaseIntegration.pendingSync = false;
+    supabaseIntegration.lastError = '';
+    supabaseIntegration.lastSyncAt = null;
+    if (clearSavedCredentials) {
+        localStorage.removeItem(SUPABASE_CONFIG_KEY);
+        localStorage.removeItem(SUPABASE_LAST_SYNC_KEY);
+    }
+    setSupabaseStatus('Supabase disconnected', false, false);
+    showToast('Supabase disconnected');
+}
+
+function applySupabasePayloadToApp(payload, options = {}) {
+    if (!payload || typeof payload !== 'object') return false;
+    const storage = payload.storage && typeof payload.storage === 'object' ? payload.storage : null;
+    if (!storage) return false;
+
+    const keepKeys = new Set([SUPABASE_CONFIG_KEY, SUPABASE_DEVICE_KEY]);
+    Object.keys(getSupabaseStorageSnapshot()).forEach(key => {
+        if (!keepKeys.has(key)) localStorage.removeItem(key);
+    });
+    Object.entries(storage).forEach(([key, value]) => {
+        if (key.startsWith('expenledge_')) {
+            localStorage.setItem(key, value ?? '');
+        }
+    });
+
+    const savedStateAt = localStorage.getItem(SUPABASE_LAST_STATE_CHANGE_KEY);
+    if (savedStateAt) lastStateChangeAt = savedStateAt;
+    const savedBackupAt = localStorage.getItem('expenledge_last_backup_at');
+    if (savedBackupAt) lastBackupAt = savedBackupAt;
+
+    loadFromLocalStorage();
+    refreshAppUiFromState();
+    if (options.remoteAt) {
+        supabaseIntegration.lastRemoteAppliedAt = options.remoteAt;
+        localStorage.setItem(SUPABASE_LAST_REMOTE_APPLIED_KEY, options.remoteAt);
+    }
+    return true;
+}
+
+function refreshAppUiFromState() {
+    suppressBrowserAutofill();
+    syncCategoryLayoutUI();
+    syncManageCategoryLayoutUI();
+    toggleBudgetActiveState(budgetEnabled);
+    setBudgetPeriod(budgetPeriod);
+    setAnalysisPeriod(analysisPeriod);
+    setAnalysisCatType(analysisCatType);
+    updateSheetMonthLabels();
+    updateDashboard();
+    updateAnalysis();
+    updateAccounts();
+    updateBudget();
+    applyBackupSheetPreferences();
+
+    const nameDisplay = document.getElementById('profile-name-display');
+    const emailDisplay = document.getElementById('profile-email-display');
+    if (nameDisplay) nameDisplay.innerText = userProfile.name;
+    if (emailDisplay) emailDisplay.innerText = userProfile.email;
+
+    const dbAvatar = document.getElementById('dashboard-user-avatar');
+    const stAvatar = document.getElementById('settings-user-avatar');
+    if (dbAvatar) dbAvatar.innerHTML = getAvatarHtml(userProfile.name, userProfile.avatar);
+    if (stAvatar) stAvatar.innerHTML = getAvatarHtml(userProfile.name, userProfile.avatar);
+
+    const dbName = document.getElementById('dashboard-user-name');
+    if (dbName) dbName.innerText = userProfile.name;
+
+    const hr = new Date().getHours();
+    let greet = 'Good Morning';
+    if (hr >= 12 && hr < 17) greet = 'Good Afternoon';
+    else if (hr >= 17) greet = 'Good Evening';
+    const greetingLabel = document.getElementById('greeting-label');
+    if (greetingLabel) greetingLabel.innerText = greet;
+
+    initAvatars();
+}
+
+function subscribeSupabaseRealtime() {
+    if (!supabaseClient || !supabaseClient.channel) return;
+    disconnectSupabaseRealtime();
+    supabaseRealtimeChannel = supabaseClient
+        .channel(`expenledge-${supabaseConfig.deviceId}`)
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'expenledge_state',
+            filter: `app_id=eq.${SUPABASE_APP_ID}`
+        }, (payload) => {
+            const row = payload?.new || payload?.old;
+            if (!row || row.device_id === supabaseConfig.deviceId) return;
+            if (supabaseIntegration.pendingSync) return;
+            const remoteAt = row.updated_at || row.inserted_at || new Date().toISOString();
+            const localAt = lastStateChangeAt ? new Date(lastStateChangeAt).getTime() : 0;
+            const remoteTime = new Date(remoteAt).getTime();
+            if (Number.isFinite(localAt) && Number.isFinite(remoteTime) && localAt > remoteTime) return;
+            if (applySupabasePayloadToApp(row.payload, { remoteAt })) {
+                setSupabaseStatus('Supabase connected and synced', true, false);
+            }
+        })
+        .subscribe(status => {
+            if (status === 'SUBSCRIBED') {
+                setSupabaseStatus('Supabase connected and listening', true, false);
+            }
+        });
+}
+
+async function pullSupabaseSnapshot() {
+    if (!supabaseClient) return null;
+    const { data, error } = await supabaseClient
+        .from('expenledge_state')
+        .select('payload, updated_at, device_id')
+        .eq('app_id', SUPABASE_APP_ID)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        supabaseIntegration.lastError = error.message || String(error);
+        setSupabaseStatus(`Supabase error: ${supabaseIntegration.lastError}`, false, true);
+        return null;
+    }
+    return data || null;
+}
+
+function queueSupabaseSync() {
+    if (supabaseIntegration.booting || supabaseIntegration.applyingRemote || !supabaseClient || supabaseIntegration.connecting) return;
+    supabaseIntegration.pendingSync = true;
+    if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
+    supabaseSyncTimer = setTimeout(() => {
+        syncSupabaseNow().catch(() => {});
+    }, 1200);
+}
+
+async function syncSupabaseNow() {
+    if (!supabaseClient) {
+        setSupabaseStatus('Supabase is not connected', false, true);
+        showToast('Connect Supabase first');
+        return false;
+    }
+
+    supabaseIntegration.connecting = true;
+    setSupabaseStatus('Syncing to Supabase…', true, false);
+    try {
+        const payload = buildCloudSnapshot();
+        const row = {
+            app_id: SUPABASE_APP_ID,
+            device_id: supabaseConfig.deviceId,
+            payload,
+            updated_at: new Date().toISOString()
+        };
+        const { error } = await supabaseClient
+            .from('expenledge_state')
+            .upsert(row, { onConflict: 'app_id,device_id' });
+
+        if (error) throw error;
+
+        supabaseIntegration.pendingSync = false;
+        supabaseIntegration.lastError = '';
+        updateSupabaseSyncTime();
+        setSupabaseStatus('Supabase synced successfully', true, false);
+        showToast('Synced to Supabase');
+        return true;
+    } catch (error) {
+        supabaseIntegration.lastError = error?.message || String(error);
+        setSupabaseStatus(`Sync failed: ${supabaseIntegration.lastError}`, true, true);
+        showToast('Supabase sync failed');
+        return false;
+    } finally {
+        supabaseIntegration.connecting = false;
+    }
+}
+
+async function connectSupabaseFromSheet() {
+    const urlInput = document.getElementById('supabase-project-url');
+    const keyInput = document.getElementById('supabase-anon-key');
+    const url = urlInput?.value?.trim() || '';
+    const anonKey = keyInput?.value?.trim() || '';
+
+    if (!url || !anonKey) {
+        showToast('Enter both Supabase URL and anon key');
+        return;
+    }
+    if (!window.supabase?.createClient) {
+        showToast('Supabase client script is missing');
+        return;
+    }
+
+    supabaseConfig.url = url;
+    supabaseConfig.anonKey = anonKey;
+    persistSupabaseCredentials();
+
+    try {
+        supabaseIntegration.connecting = true;
+        supabaseClient = window.supabase.createClient(url, anonKey, {
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            }
+        });
+
+        setSupabaseStatus('Connecting to Supabase…', true, false);
+        const latest = await pullSupabaseSnapshot();
+        if (latest?.payload) {
+            const localTime = lastStateChangeAt ? new Date(lastStateChangeAt).getTime() : 0;
+            const remoteTime = new Date(latest.updated_at || latest.payload?.exportedAt || Date.now()).getTime();
+            if (!supabaseIntegration.pendingSync || remoteTime >= localTime) {
+                supabaseIntegration.applyingRemote = true;
+                applySupabasePayloadToApp(latest.payload, { remoteAt: latest.updated_at });
+                supabaseIntegration.applyingRemote = false;
+            }
+        }
+
+        subscribeSupabaseRealtime();
+        supabaseIntegration.connected = true;
+        supabaseIntegration.pendingSync = false;
+        supabaseIntegration.lastError = '';
+        setSupabaseStatus('Supabase connected', true, false);
+        showToast('Supabase connected');
+        if (!latest?.payload) {
+            await syncSupabaseNow();
+        }
+    } catch (error) {
+        supabaseIntegration.connected = false;
+        supabaseIntegration.lastError = error?.message || String(error);
+        setSupabaseStatus(`Connection failed: ${supabaseIntegration.lastError}`, false, true);
+        showToast('Supabase connect failed');
+    } finally {
+        supabaseIntegration.connecting = false;
+    }
+}
+
+function initializeSupabaseFromSavedCredentials() {
+    const saved = localStorage.getItem(SUPABASE_CONFIG_KEY);
+    if (!saved || !window.supabase?.createClient) {
+        setSupabaseStatus('Supabase not connected', false, false);
+        updateBackupTimeDisplay();
+        return;
+    }
+
+    const parsed = JSON.parse(saved);
+    if (!parsed?.url || !parsed?.anonKey) {
+        setSupabaseStatus('Supabase not connected', false, false);
+        return;
+    }
+
+    supabaseConfig = {
+        ...supabaseConfig,
+        ...parsed,
+        appId: SUPABASE_APP_ID,
+        deviceId: parsed.deviceId || supabaseConfig.deviceId
+    };
+    persistSupabaseCredentials();
+    connectSupabaseFromSheet().catch(err => console.error('Supabase init failed:', err));
 }
 
 // Initial setup
@@ -654,6 +1041,10 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!el.hasAttribute('autocomplete')) el.setAttribute('autocomplete', 'off');
         el.setAttribute('data-lpignore', 'true');
     });
+
+    supabaseIntegration.booting = false;
+    supabaseInitialLoadDone = true;
+    initializeSupabaseFromSavedCredentials();
 });
 
 
@@ -3442,6 +3833,9 @@ function openBackupRestoreSheet() {
     resetScroll('sheet-backup-restore');
     document.getElementById('sheet-backup-restore').classList.remove('translate-y-full');
     applyBackupSheetPreferences();
+    loadSupabaseCredentialsIntoForm();
+    updateSupabaseSyncTime();
+    setSupabaseStatus(supabaseClient ? 'Supabase connected' : 'Supabase not connected', !!supabaseClient, false);
     showBackdrop();
 }
 
