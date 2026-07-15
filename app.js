@@ -1110,8 +1110,6 @@ async function processSupabaseSyncQueue() {
 }
 
 function animateFabOnSync(result) {
-    const fab = document.querySelector('#global-structured-fab button');
-    if (!fab) return;
     if (!document.getElementById('fab-sync-keyframes')) {
         const style = document.createElement('style');
         style.id = 'fab-sync-keyframes';
@@ -1122,15 +1120,24 @@ function animateFabOnSync(result) {
         ].join('');
         document.head.appendChild(style);
     }
-    fab.style.animation = 'none';
-    void fab.offsetWidth;
-    if (result === 'success') {
-        fab.style.animation = 'fab-rotate-left 0.6s ease-in-out';
-    } else if (result === 'fail') {
-        fab.style.animation = 'fab-rotate-right 0.6s ease-in-out';
-    } else if (result === 'error') {
-        fab.style.animation = 'fab-nod 0.7s ease-in-out';
-    }
+
+    // Animate FAB if visible (structured-tx view)
+    const fabIcon = document.querySelector('#global-structured-fab button span');
+    // Animate badge always (visible on dashboard)
+    const badge = document.getElementById('supabase-status-badge');
+
+    [fabIcon, badge].forEach(el => {
+        if (!el) return;
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        if (result === 'success') {
+            el.style.animation = 'fab-rotate-left 0.6s ease-in-out';
+        } else if (result === 'fail') {
+            el.style.animation = 'fab-rotate-right 0.6s ease-in-out';
+        } else if (result === 'error') {
+            el.style.animation = 'fab-nod 0.7s ease-in-out';
+        }
+    });
 }
 
 async function syncSupabaseNow() {
@@ -2343,13 +2350,4 @@ function updateAnalysis() {
     });
 }
 
-function openCatTransactionsSheet(catName, catIcon) {
-    const txType = analysisCatType === 'spending' ? 'expense' : 'income';
-    const filtered = transactions.filter(t =>
-        t.type === txType &&
-        t.category === catName &&
-        transactionBelongsToAnalysisPeriod(t)
-    );
-
-    // Header
-   
+function openCatTransactionsSheet(catName, catIc
