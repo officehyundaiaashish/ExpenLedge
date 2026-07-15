@@ -897,18 +897,14 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     // the "syncing" and "success" states are driven by syncSupabaseNow() so
     // they take priority and play their full animation before reverting.
     const icon = document.getElementById('supabase-sync-icon');
-    const dot  = document.getElementById('supabase-sync-dot');
     if (icon && !icon.classList.contains('sync-icon--syncing') && !icon.classList.contains('sync-icon--success')) {
         icon.classList.remove('sync-icon--disconnected', 'sync-icon--connected', 'sync-icon--error');
         if (isConnected && !isError) {
             icon.classList.add('sync-icon--connected');
-            if (dot) dot.style.background = '#4a7c59';
         } else if (isError) {
             icon.classList.add('sync-icon--error');
-            if (dot) dot.style.background = '#b91c1c';
         } else {
             icon.classList.add('sync-icon--disconnected');
-            if (dot) dot.style.background = 'rgba(107, 114, 128, 0.5)';
         }
     }
 }
