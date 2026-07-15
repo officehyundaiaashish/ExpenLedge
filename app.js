@@ -875,7 +875,7 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     if (syncEl && !syncEl.innerText) syncEl.innerText = 'Last sync: Never';
     updateBackupTimeDisplay();
     const connectBtn = document.getElementById('supabase-connect-btn');
-    const syncBtn = document.querySelector('#sheet-supabase-sync button[onclick="syncSupabaseNow()"]');
+    const syncBtn = document.querySelector('#sheet-supabase-sync button[onclick*="syncSupabaseNow"]');
     const disconnectBtn = document.querySelector('#sheet-supabase-sync button[onclick="disconnectSupabaseConnection()"]');
     const loadBtn = document.querySelector('#sheet-supabase-sync button[onclick="loadSupabaseCredentialsIntoForm()"]');
     const urlInput = document.getElementById('supabase-project-url');
@@ -892,18 +892,23 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     if (syncBtn) syncBtn.disabled = !isConnected || supabaseIntegration.connecting;
     if (disconnectBtn) disconnectBtn.disabled = !isConnected && !supabaseClient;
 
-    // Update dashboard header badge
-    const badge = document.getElementById('supabase-status-badge');
-    if (badge) {
-        if (isConnected) {
-            badge.textContent = 'Synced';
-            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border border-primary/30 bg-primary/10 text-primary';
+    // Update dashboard header SVG sync icon.
+    // We only flip the icon to "connected / disconnected / error" here —
+    // the "syncing" and "success" states are driven by syncSupabaseNow() so
+    // they take priority and play their full animation before reverting.
+    const icon = document.getElementById('supabase-sync-icon');
+    const dot  = document.getElementById('supabase-sync-dot');
+    if (icon && !icon.classList.contains('sync-icon--syncing') && !icon.classList.contains('sync-icon--success')) {
+        icon.classList.remove('sync-icon--disconnected', 'sync-icon--connected', 'sync-icon--error');
+        if (isConnected && !isError) {
+            icon.classList.add('sync-icon--connected');
+            if (dot) dot.style.background = '#4a7c59';
         } else if (isError) {
-            badge.textContent = 'Sync Error';
-            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border border-error/30 bg-error-container text-error';
+            icon.classList.add('sync-icon--error');
+            if (dot) dot.style.background = '#b91c1c';
         } else {
-            badge.textContent = 'Disconnected';
-            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border border-outline-variant/30 bg-surface-container-high text-on-surface-variant';
+            icon.classList.add('sync-icon--disconnected');
+            if (dot) dot.style.background = 'rgba(107, 114, 128, 0.5)';
         }
     }
 }
@@ -1093,20 +1098,62 @@ async function processSupabaseSyncQueue() {
     return syncSupabaseNow();
 }
 
-async function syncSupabaseNow() {
+async function syncSupabaseNow(options) {
+    const manual = !!(options && options.manual);
+
     if (!supabaseClient) {
         setSupabaseStatus('Supabase is not connected', false, true);
-        showToast('Connect Supabase first');
+        if (manual) {
+            showSyncErrorOverlay('Supabase is not connected. Please connect first.');
+        } else {
+            showToast('Connect Supabase first');
+        }
         return false;
     }
+
+    // If a sync is already in progress:
+    //   - For AUTO syncs: just queue and return (original behaviour).
+    //   - For MANUAL syncs: show the loading overlay and wait for the
+    //     in-progress sync to finish, then surface its result.
     if (supabaseIntegration.syncInProgress) {
         supabaseIntegration.pendingSync = true;
+        if (manual) {
+            showSyncLoadingOverlay();
+            // Wait for the in-progress sync to finish, then re-call as manual
+            // to either show success/error or start a fresh sync if pending.
+            try {
+                while (supabaseIntegration.syncInProgress) {
+                    await new Promise(r => setTimeout(r, 150));
+                }
+                // After waiting, kick off a fresh manual sync to capture the result.
+                return syncSupabaseNow({ manual: true });
+            } catch (_e) {
+                hideSyncResultOverlay();
+                return false;
+            }
+        }
         return false;
     }
 
     supabaseIntegration.syncInProgress = true;
     supabaseIntegration.pendingSync = true;
+    supabaseIntegration.manualActive = manual;
+
+    // Drive the dashboard SVG icon to its spinning state.
+    const icon = document.getElementById('supabase-sync-icon');
+    if (icon) {
+        icon.classList.remove('sync-icon--disconnected', 'sync-icon--connected',
+                              'sync-icon--success', 'sync-icon--error');
+        // Force a reflow so a fresh `sync-icon--syncing` always restarts the
+        // spin animation cleanly (e.g. when another sync starts immediately
+        // after a previous one).
+        void icon.offsetWidth;
+        icon.classList.add('sync-icon--syncing');
+    }
+
+    if (manual) showSyncLoadingOverlay();
     setSupabaseStatus('Syncing to Supabase…', true, false);
+
     try {
         const latest = await pullSupabaseSnapshot();
         const remoteStorage = latest?.payload?.storage && typeof latest.payload.storage === 'object' ? latest.payload.storage : {};
@@ -1135,21 +1182,137 @@ async function syncSupabaseNow() {
         supabaseIntegration.lastError = '';
         updateSupabaseSyncTime();
         setSupabaseStatus('Supabase synced successfully', true, false);
+
+        // Premium success feedback: animate the badge icon (always) and show
+        // the full-screen overlay only when this was a manual sync.
+        triggerSyncBadgeSuccessAnimation();
+        if (manual) showSyncSuccessOverlay();
         return true;
     } catch (error) {
         supabaseIntegration.lastError = error?.message || String(error);
         setSupabaseStatus(`Sync failed: ${supabaseIntegration.lastError}`, true, true);
-        showToast('Supabase sync failed');
+
+        // Drive the dashboard SVG icon to its error state briefly.
+        if (icon) {
+            icon.classList.remove('sync-icon--syncing', 'sync-icon--success');
+            void icon.offsetWidth;
+            icon.classList.add('sync-icon--error');
+            // Auto-revert to the underlying connected state after the shake.
+            setTimeout(() => {
+                icon.classList.remove('sync-icon--error');
+                if (supabaseIntegration.connected) {
+                    icon.classList.add('sync-icon--connected');
+                }
+            }, 900);
+        }
+
+        if (manual) {
+            showSyncErrorOverlay(supabaseIntegration.lastError || 'Sync failed. Please try again.');
+        } else {
+            showToast('Supabase sync failed');
+        }
         return false;
     } finally {
         supabaseIntegration.syncInProgress = false;
         supabaseIntegration.connecting = false;
+        supabaseIntegration.manualActive = false;
         if (supabaseIntegration.pendingSync && shouldQueueSupabaseSync()) {
             if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
             supabaseSyncTimer = setTimeout(() => {
                 processSupabaseSyncQueue().catch(() => {});
             }, 1200);
         }
+    }
+}
+
+/* ============================================================
+   SYNC BADGE + FULL-SCREEN OVERLAY HELPERS
+   ============================================================ */
+
+/**
+ * Pulse the dashboard SVG sync icon to confirm a successful sync.
+ * Works for both auto-syncs (just the icon pulse) and manual syncs
+ * (icon pulse + full-screen success overlay shown elsewhere).
+ */
+function triggerSyncBadgeSuccessAnimation() {
+    const icon = document.getElementById('supabase-sync-icon');
+    if (!icon) return;
+    icon.classList.remove('sync-icon--syncing', 'sync-icon--error', 'sync-icon--disconnected');
+    // Restart the success-pop animation by forcing a reflow.
+    void icon.offsetWidth;
+    icon.classList.add('sync-icon--success');
+    // After the success pop (~1.25s) settle into the connected idle state.
+    setTimeout(() => {
+        icon.classList.remove('sync-icon--success');
+        if (supabaseIntegration.connected) {
+            icon.classList.add('sync-icon--connected');
+        }
+    }, 1300);
+}
+
+function _setSyncOverlayState(state) {
+    const overlay = document.getElementById('sync-result-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('is-loading', 'is-success', 'is-error');
+    if (state) overlay.classList.add('is-' + state);
+}
+
+/** Show the loading spinner overlay (no auto-dismiss). */
+function showSyncLoadingOverlay() {
+    const overlay = document.getElementById('sync-result-overlay');
+    if (!overlay) return;
+    _setSyncOverlayState('loading');
+    overlay.classList.add('is-visible');
+}
+
+/** Switch the visible overlay to the success state and auto-dismiss after 1.8s. */
+let _syncSuccessDismissTimer = null;
+function showSyncSuccessOverlay() {
+    const overlay = document.getElementById('sync-result-overlay');
+    if (!overlay) return;
+    _setSyncOverlayState('success');
+    overlay.classList.add('is-visible');
+
+    if (_syncSuccessDismissTimer) clearTimeout(_syncSuccessDismissTimer);
+    _syncSuccessDismissTimer = setTimeout(() => {
+        hideSyncResultOverlay();
+        _syncSuccessDismissTimer = null;
+    }, 1800);
+}
+
+/** Switch the visible overlay to the error state. Stays until dismissed. */
+function showSyncErrorOverlay(message) {
+    const overlay = document.getElementById('sync-result-overlay');
+    if (!overlay) return;
+    const msgEl = document.getElementById('sync-result-error-msg');
+    if (msgEl && message) {
+        // Trim very long error messages so the overlay stays readable.
+        const trimmed = String(message).trim();
+        msgEl.textContent = trimmed.length > 220 ? trimmed.slice(0, 220) + '…' : trimmed;
+    }
+    _setSyncOverlayState('error');
+    overlay.classList.add('is-visible');
+
+    if (_syncSuccessDismissTimer) {
+        clearTimeout(_syncSuccessDismissTimer);
+        _syncSuccessDismissTimer = null;
+    }
+}
+
+/** Fade the overlay out and reset its state. Safe to call anytime. */
+function hideSyncResultOverlay() {
+    const overlay = document.getElementById('sync-result-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('is-visible');
+    // Clear the state class after the fade so the next show starts clean.
+    setTimeout(() => {
+        if (!overlay.classList.contains('is-visible')) {
+            overlay.classList.remove('is-loading', 'is-success', 'is-error');
+        }
+    }, 340);
+    if (_syncSuccessDismissTimer) {
+        clearTimeout(_syncSuccessDismissTimer);
+        _syncSuccessDismissTimer = null;
     }
 }
 async function connectSupabaseFromSheet() {
