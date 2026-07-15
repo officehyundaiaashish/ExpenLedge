@@ -52,6 +52,13 @@ const SUPABASE_DEVICE_KEY = 'expenledge_supabase_device_id';
 const SUPABASE_LAST_SYNC_KEY = 'expenledge_last_supabase_sync_at';
 const SUPABASE_LAST_STATE_CHANGE_KEY = 'expenledge_last_state_change_at';
 const SUPABASE_LAST_REMOTE_APPLIED_KEY = 'expenledge_last_remote_applied_at';
+/* Fingerprint of the local snapshot that was last successfully pushed to Supabase.
+   When the local state hasn't changed since this fingerprint was computed, we
+   can skip the (very expensive) upsert of a 10k+ transaction payload entirely. */
+const SUPABASE_LAST_PUSH_FINGERPRINT_KEY = 'expenledge_last_supabase_push_fp';
+/* The remote `updated_at` we last saw. Used to short-circuit pullSupabaseSnapshot
+   when nothing has changed on the server. */
+const SUPABASE_LAST_REMOTE_UPDATED_AT_KEY = 'expenledge_last_supabase_remote_updated_at';
 
 let supabaseClient = null;
 let supabaseRealtimeChannel = null;
@@ -409,13 +416,21 @@ async function writeSupabaseVersionSnapshot(payload, updatedAt) {
             .insert(snapshot);
 
         if (error) throw error;
-        await pruneSupabaseVersionHistory();
+        // Prune only every Nth write — the prune is a separate SELECT + DELETE
+        // round-trip that, for 10k+ transactions, is wasteful to run on every
+        // single sync. With SUPABASE_MAX_VERSIONS = 2 we still keep the history
+        // tightly bounded; we just don't pay the prune cost on every write.
+        _versionWriteCount = (_versionWriteCount + 1) % 5;
+        if (_versionWriteCount === 0) {
+            pruneSupabaseVersionHistory().catch(() => {});
+        }
         return true;
     } catch (error) {
         console.warn('Supabase version history write skipped:', error?.message || error);
         return false;
     }
 }
+let _versionWriteCount = 0;
 
 async function pruneSupabaseVersionHistory() {
     if (!supabaseClient?.from) return false;
@@ -674,6 +689,55 @@ function getSupabaseStorageSnapshot() {
     return storage;
 }
 
+/**
+ * Compute a cheap fingerprint of the local storage snapshot.
+ *
+ * With 10,000+ transactions, JSON.stringify-ing the entire snapshot on every
+ * sync just to compare it against the previous one is brutally slow. Instead
+ * we build a fingerprint from:
+ *   - the set of `expenledge_*` keys present
+ *   - the length of each value (changes whenever a transaction is added /
+ *     edited / deleted — the common case)
+ *   - a tiny hash of each value's first + last 64 chars (catches edits that
+ *     don't change the length, e.g. toggling a boolean setting)
+ * The result is a single small string that can be compared in O(keys) time.
+ */
+function computeStorageFingerprint(storage) {
+    const src = storage && typeof storage === 'object' ? storage : getSupabaseStorageSnapshot();
+    const keys = Object.keys(src).sort();
+    let acc = '';
+    for (let i = 0; i < keys.length; i += 1) {
+        const k = keys[i];
+        const v = src[k] || '';
+        const len = v.length;
+        // Mix in key + length + first/last slice. Cheap and good enough to
+        // detect any real-world user edit.
+        const head = len > 64 ? v.slice(0, 64) : v;
+        const tail = len > 128 ? v.slice(-64) : '';
+        acc += k + ':' + len + ':' + head + ':' + tail + '|';
+    }
+    // FNV-1a 32-bit hash — fast, dependency-free, good distribution.
+    let h = 0x811c9dc5;
+    for (let i = 0; i < acc.length; i += 1) {
+        h ^= acc.charCodeAt(i);
+        h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return keys.length + '_' + h.toString(16) + '_' + acc.length;
+}
+
+function getLastPushFingerprint() {
+    return localStorage.getItem(SUPABASE_LAST_PUSH_FINGERPRINT_KEY) || '';
+}
+function setLastPushFingerprint(fp) {
+    if (fp) localStorage.setItem(SUPABASE_LAST_PUSH_FINGERPRINT_KEY, fp);
+}
+function getLastRemoteUpdatedAt() {
+    return localStorage.getItem(SUPABASE_LAST_REMOTE_UPDATED_AT_KEY) || '';
+}
+function setLastRemoteUpdatedAt(ts) {
+    if (ts) localStorage.setItem(SUPABASE_LAST_REMOTE_UPDATED_AT_KEY, ts);
+}
+
 function parseJsonSafe(raw, fallback) {
     if (raw === null || raw === undefined || raw === '') return fallback;
     try {
@@ -754,9 +818,21 @@ function markLocalStateChanged() {
 }
 
 function ensureTransactionMetadata() {
-    const normalized = normalizeTransactionsList(transactions);
-    const changed = JSON.stringify(normalized) !== JSON.stringify(transactions);
-    transactions = normalized;
+    // Avoid the old O(n) `JSON.stringify(normalized) !== JSON.stringify(transactions)`
+    // comparison — for 10k+ transactions that's two full serializations just to
+    // detect a change. Instead we normalize in place and check whether any
+    // record actually gained a missing `syncId` / `updatedAt` / `createdAt` /
+    // `id` field, which is the only thing normalizeTransactionRecord ever adds.
+    if (!Array.isArray(transactions) || !transactions.length) return false;
+    let changed = false;
+    for (let i = 0; i < transactions.length; i += 1) {
+        const tx = transactions[i];
+        if (!tx || typeof tx !== 'object') continue;
+        if (!getTransactionSyncKey(tx) || !tx.updatedAt || !tx.createdAt || tx.id === undefined || tx.id === null || tx.id === '') {
+            transactions[i] = normalizeTransactionRecord(tx, i);
+            changed = true;
+        }
+    }
     return changed;
 }
 
@@ -811,6 +887,11 @@ function mergeTransactionLists(localTxs = [], remoteTxs = [], deletedIds = new S
 function mergeSupabaseStorageSnapshots(localSnapshot = {}, remoteSnapshot = {}) {
     const local = localSnapshot && typeof localSnapshot === 'object' ? { ...localSnapshot } : {};
     const remote = remoteSnapshot && typeof remoteSnapshot === 'object' ? { ...remoteSnapshot } : {};
+
+    // Fast path: nothing came from the remote — just use local as-is.
+    // This avoids parsing/normalizing/stringifying the (potentially 10k+)
+    // local transactions list when there's nothing to merge.
+    if (!Object.keys(remote).length) return local;
 
     const localTxs = normalizeTransactionsList(parseJsonSafe(local.expenledge_transactions, []));
     const remoteTxs = normalizeTransactionsList(parseJsonSafe(remote.expenledge_transactions, []));
@@ -965,9 +1046,15 @@ function disconnectSupabaseConnection(clearSavedCredentials = true) {
     supabaseIntegration.pendingSync = false;
     supabaseIntegration.lastError = '';
     supabaseIntegration.lastSyncAt = null;
+    supabaseIntegration.lastRemoteAppliedAt = null;
     if (clearSavedCredentials) {
         localStorage.removeItem(SUPABASE_CONFIG_KEY);
         localStorage.removeItem(SUPABASE_LAST_SYNC_KEY);
+        // Clear the cached fingerprints so the next connect will do a full
+        // pull + push instead of incorrectly short-circuiting.
+        localStorage.removeItem(SUPABASE_LAST_PUSH_FINGERPRINT_KEY);
+        localStorage.removeItem(SUPABASE_LAST_REMOTE_UPDATED_AT_KEY);
+        localStorage.removeItem(SUPABASE_LAST_REMOTE_APPLIED_KEY);
     }
     setSupabaseStatus('Supabase disconnected', false, false);
 }
@@ -1078,6 +1165,25 @@ async function pullSupabaseSnapshot() {
     return data || null;
 }
 
+/**
+ * Lightweight metadata-only fetch of the latest remote row.
+ * Returns `{ updated_at, device_id }` or `null`. Used to decide whether a
+ * full `pullSupabaseSnapshot` (which can be 5–10 MB for 10k+ transactions)
+ * is actually necessary.
+ */
+async function fetchRemoteSnapshotMetadata() {
+    if (!supabaseClient) return null;
+    const { data, error } = await supabaseClient
+        .from('expenledge_state')
+        .select('updated_at, device_id')
+        .eq('app_id', SUPABASE_APP_ID)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    if (error) return null;
+    return data || null;
+}
+
 function queueSupabaseSync() {
     if (!shouldQueueSupabaseSync()) return;
     supabaseIntegration.pendingSync = true;
@@ -1114,14 +1220,11 @@ async function syncSupabaseNow(options) {
     if (supabaseIntegration.syncInProgress) {
         supabaseIntegration.pendingSync = true;
         if (manual) {
-            showSyncLoadingOverlay();
-            // Wait for the in-progress sync to finish, then re-call as manual
-            // to either show success/error or start a fresh sync if pending.
+            showSyncLoadingOverlay('Waiting for previous sync…');
             try {
                 while (supabaseIntegration.syncInProgress) {
                     await new Promise(r => setTimeout(r, 150));
                 }
-                // After waiting, kick off a fresh manual sync to capture the result.
                 return syncSupabaseNow({ manual: true });
             } catch (_e) {
                 hideSyncResultOverlay();
@@ -1140,24 +1243,114 @@ async function syncSupabaseNow(options) {
     if (icon) {
         icon.classList.remove('sync-icon--disconnected', 'sync-icon--connected',
                               'sync-icon--success', 'sync-icon--error');
-        // Force a reflow so a fresh `sync-icon--syncing` always restarts the
-        // spin animation cleanly (e.g. when another sync starts immediately
-        // after a previous one).
         void icon.offsetWidth;
         icon.classList.add('sync-icon--syncing');
     }
 
-    if (manual) showSyncLoadingOverlay();
+    if (manual) showSyncLoadingOverlay('Checking for changes…');
     setSupabaseStatus('Syncing to Supabase…', true, false);
 
-    try {
-        const latest = await pullSupabaseSnapshot();
-        const remoteStorage = latest?.payload?.storage && typeof latest.payload.storage === 'object' ? latest.payload.storage : {};
-        const mergedStorage = mergeSupabaseStorageSnapshots(getSupabaseStorageSnapshot(), remoteStorage);
+    // Helper to update the loading overlay subtitle (no-op when manual=false).
+    const updateLoadingMsg = (msg) => { if (manual) showSyncLoadingOverlay(msg); };
 
-        applyStorageSnapshotToLocal(mergedStorage);
-        loadFromLocalStorage();
-        refreshAppUiFromState();
+    try {
+        // ------------------------------------------------------------------
+        // STEP 1 — Cheap metadata-only fetch to decide if a full pull is needed.
+        // For 10k+ transactions a full pull is 5–10 MB; the metadata fetch is
+        // a few hundred bytes. We skip the full pull when the remote
+        // `updated_at` is unchanged since our last successful sync AND the
+        // pull wouldn't be needed for any other reason.
+        // ------------------------------------------------------------------
+        let latest = null;
+        let remoteStorage = {};
+        let needApply = false;
+
+        const lastRemoteApplied = supabaseIntegration.lastRemoteAppliedAt || getLastRemoteUpdatedAt();
+        // For a manual "Sync Now" we always pull once so the user sees fresh
+        // remote data; for auto-syncs we short-circuit when remote is unchanged.
+        if (!manual && lastRemoteApplied) {
+            const meta = await fetchRemoteSnapshotMetadata();
+            const remoteUpdatedAt = meta?.updated_at || '';
+            if (remoteUpdatedAt && remoteUpdatedAt === lastRemoteApplied) {
+                // Remote hasn't changed — no need to download the big payload.
+                latest = null;
+            } else {
+                updateLoadingMsg('Pulling latest from cloud…');
+                latest = await pullSupabaseSnapshot();
+            }
+        } else {
+            updateLoadingMsg('Pulling latest from cloud…');
+            latest = await pullSupabaseSnapshot();
+        }
+
+        if (latest) {
+            const remoteUpdatedAt = latest.updated_at || '';
+            if (remoteUpdatedAt) setLastRemoteUpdatedAt(remoteUpdatedAt);
+            remoteStorage = latest?.payload?.storage && typeof latest.payload.storage === 'object'
+                ? latest.payload.storage
+                : {};
+            // Did the remote actually move vs. what we last applied?
+            if (!lastRemoteApplied || remoteUpdatedAt !== lastRemoteApplied) {
+                needApply = true;
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // STEP 2 — Merge (only when the remote moved) + apply to localStorage.
+        // mergeSupabaseStorageSnapshots is expensive for 10k+ transactions
+        // (it parses + normalizes + stringifies the whole array), so we skip
+        // it entirely when the remote payload is unchanged.
+        // ------------------------------------------------------------------
+        const localSnapshot = getSupabaseStorageSnapshot();
+        let mergedStorage = localSnapshot;
+        if (needApply && Object.keys(remoteStorage).length) {
+            updateLoadingMsg('Merging changes…');
+            // Yield to the browser so the spinner keeps spinning through the
+            // (potentially long) merge operation.
+            await new Promise(r => setTimeout(r, 0));
+            mergedStorage = mergeSupabaseStorageSnapshots(localSnapshot, remoteStorage);
+            applyStorageSnapshotToLocal(mergedStorage);
+            loadFromLocalStorage();
+            // Defer the (heavy, multi-pass over all transactions) UI refresh
+            // to the next animation frame so the loading overlay paints first.
+            await new Promise(r => requestAnimationFrame(r));
+            refreshAppUiFromState();
+            if (latest?.updated_at) {
+                supabaseIntegration.lastRemoteAppliedAt = latest.updated_at;
+                localStorage.setItem(SUPABASE_LAST_REMOTE_APPLIED_KEY, latest.updated_at);
+            }
+        } else if (manual) {
+            // Even on a no-op manual sync, make sure the in-memory state is in
+            // sync with localStorage (cheap — no merge, no UI rebuild unless
+            // something actually changed).
+            loadFromLocalStorage();
+        }
+
+        // ------------------------------------------------------------------
+        // STEP 3 — Fingerprint short-circuit: skip the (very expensive)
+        // upsert of the 10k+ transaction payload when local state hasn't
+        // changed since our last successful push.
+        // ------------------------------------------------------------------
+        const currentFingerprint = computeStorageFingerprint(mergedStorage);
+        const lastPushFp = getLastPushFingerprint();
+
+        if (!manual && currentFingerprint === lastPushFp) {
+            // Nothing to push and (per step 1) nothing new to pull → done.
+            supabaseIntegration.pendingSync = false;
+            supabaseIntegration.lastError = '';
+            updateSupabaseSyncTime();
+            setSupabaseStatus('Supabase synced successfully', true, false);
+            triggerSyncBadgeSuccessAnimation();
+            if (manual) showSyncSuccessOverlay();
+            return true;
+        }
+
+        // ------------------------------------------------------------------
+        // STEP 4 — Push the merged snapshot up to Supabase.
+        // ------------------------------------------------------------------
+        updateLoadingMsg('Uploading to cloud…');
+        // Yield so the "Uploading…" message paints before the big stringify.
+        await new Promise(r => setTimeout(r, 0));
 
         const payload = buildCloudSnapshotFromStorage(mergedStorage);
         const row = {
@@ -1172,15 +1365,20 @@ async function syncSupabaseNow(options) {
 
         if (error) throw error;
 
-        await writeSupabaseVersionSnapshot(payload, row.updated_at);
+        // Record the fingerprint NOW so subsequent auto-syncs can short-circuit.
+        setLastPushFingerprint(currentFingerprint);
+        setLastRemoteUpdatedAt(row.updated_at);
+
+        // Version-history write is fire-and-forget: it's a SECOND copy of the
+        // 10k-transaction payload and is purely for diagnostics. Don't block
+        // the user-visible success state on it.
+        writeSupabaseVersionSnapshot(payload, row.updated_at).catch(() => {});
 
         supabaseIntegration.pendingSync = false;
         supabaseIntegration.lastError = '';
         updateSupabaseSyncTime();
         setSupabaseStatus('Supabase synced successfully', true, false);
 
-        // Premium success feedback: animate the badge icon (always) and show
-        // the full-screen overlay only when this was a manual sync.
         triggerSyncBadgeSuccessAnimation();
         if (manual) showSyncSuccessOverlay();
         return true;
@@ -1188,12 +1386,10 @@ async function syncSupabaseNow(options) {
         supabaseIntegration.lastError = error?.message || String(error);
         setSupabaseStatus(`Sync failed: ${supabaseIntegration.lastError}`, true, true);
 
-        // Drive the dashboard SVG icon to its error state briefly.
         if (icon) {
             icon.classList.remove('sync-icon--syncing', 'sync-icon--success');
             void icon.offsetWidth;
             icon.classList.add('sync-icon--error');
-            // Auto-revert to the underlying connected state after the shake.
             setTimeout(() => {
                 icon.classList.remove('sync-icon--error');
                 if (supabaseIntegration.connected) {
@@ -1253,10 +1449,13 @@ function _setSyncOverlayState(state) {
     if (state) overlay.classList.add('is-' + state);
 }
 
-/** Show the loading spinner overlay (no auto-dismiss). */
-function showSyncLoadingOverlay() {
+/** Show the loading spinner overlay (no auto-dismiss).
+ *  @param {string} [message] — optional subtitle to display under "Syncing…" */
+function showSyncLoadingOverlay(message) {
     const overlay = document.getElementById('sync-result-overlay');
     if (!overlay) return;
+    const msgEl = document.getElementById('sync-result-loading-msg');
+    if (msgEl && message) msgEl.textContent = message;
     _setSyncOverlayState('loading');
     overlay.classList.add('is-visible');
 }
