@@ -956,7 +956,7 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     if (syncEl && !syncEl.innerText) syncEl.innerText = 'Last sync: Never';
     updateBackupTimeDisplay();
     const connectBtn = document.getElementById('supabase-connect-btn');
-    const syncBtn = document.querySelector('#sheet-supabase-sync button[onclick*="syncSupabaseNow"]');
+    const syncBtn = document.getElementById('supabase-sync-now-btn');
     const disconnectBtn = document.querySelector('#sheet-supabase-sync button[onclick="disconnectSupabaseConnection()"]');
     const loadBtn = document.querySelector('#sheet-supabase-sync button[onclick="loadSupabaseCredentialsIntoForm()"]');
     const urlInput = document.getElementById('supabase-project-url');
@@ -1247,6 +1247,11 @@ async function syncSupabaseNow(options) {
         icon.classList.add('sync-icon--syncing');
     }
 
+    // Show an inline spinning indicator on the "Sync Now" button itself so
+    // the user gets feedback in the sheet too (not just the full-screen overlay).
+    const syncNowBtn = document.getElementById('supabase-sync-now-btn');
+    if (syncNowBtn) syncNowBtn.classList.add('is-loading');
+
     if (manual) showSyncLoadingOverlay('Checking for changes…');
     setSupabaseStatus('Syncing to Supabase…', true, false);
 
@@ -1408,6 +1413,9 @@ async function syncSupabaseNow(options) {
         supabaseIntegration.syncInProgress = false;
         supabaseIntegration.connecting = false;
         supabaseIntegration.manualActive = false;
+        // Clear the inline spinning indicator on the "Sync Now" button.
+        const syncNowBtn = document.getElementById('supabase-sync-now-btn');
+        if (syncNowBtn) syncNowBtn.classList.remove('is-loading');
         if (supabaseIntegration.pendingSync && shouldQueueSupabaseSync()) {
             if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
             supabaseSyncTimer = setTimeout(() => {
