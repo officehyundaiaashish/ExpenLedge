@@ -61,10 +61,14 @@ let supabaseConfig = {
     appId: SUPABASE_APP_ID,
     deviceId: localStorage.getItem(SUPABASE_DEVICE_KEY) || (crypto?.randomUUID ? crypto.randomUUID() : `device_${Date.now()}_${Math.random().toString(36).slice(2)}`)
 };
+const SUPABASE_VERSION_TABLE = 'expenledge_state_versions';
+const SUPABASE_MAX_VERSIONS = 2;
+
 let supabaseIntegration = {
     connected: false,
     connecting: false,
     pendingSync: false,
+    syncInProgress: false,
     applyingRemote: false,
     booting: true,
     lastError: '',
@@ -370,15 +374,73 @@ function saveToLocalStorage() {
         localStorage.removeItem('expenledge_dashboard_filter');
         localStorage.setItem('expenledge_auto_backup_enabled', autoBackupEnabled.toString());
         localStorage.setItem('expenledge_last_backup_at', lastBackupAt || '');
-        lastStateChangeAt = new Date().toISOString();
-        localStorage.setItem(SUPABASE_LAST_STATE_CHANGE_KEY, lastStateChangeAt);
+        saveDeletedTransactionLogSnapshot();
         saveCategoryOrders();
         saveCustomCategories();
         saveInterfacePreferences();
-        markSupabaseStateDirty();
+        markLocalStateChanged();
         queueSupabaseSync();
     } catch (e) {
         console.error("Local storage save failed: ", e);
+    }
+}
+
+function shouldQueueSupabaseSync() {
+    return !!supabaseClient && supabaseIntegration.connected && !supabaseIntegration.booting && !supabaseIntegration.applyingRemote;
+}
+
+function getSupabaseVersionTable() {
+    return SUPABASE_VERSION_TABLE;
+}
+
+async function writeSupabaseVersionSnapshot(payload, updatedAt) {
+    if (!supabaseClient?.from) return false;
+
+    const snapshot = {
+        app_id: SUPABASE_APP_ID,
+        device_id: supabaseConfig.deviceId,
+        payload,
+        updated_at: updatedAt || new Date().toISOString()
+    };
+
+    try {
+        const { error } = await supabaseClient
+            .from(getSupabaseVersionTable())
+            .insert(snapshot);
+
+        if (error) throw error;
+        await pruneSupabaseVersionHistory();
+        return true;
+    } catch (error) {
+        console.warn('Supabase version history write skipped:', error?.message || error);
+        return false;
+    }
+}
+
+async function pruneSupabaseVersionHistory() {
+    if (!supabaseClient?.from) return false;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from(getSupabaseVersionTable())
+            .select('id')
+            .eq('app_id', SUPABASE_APP_ID)
+            .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+        const idsToDelete = (data || []).slice(SUPABASE_MAX_VERSIONS).map(row => row.id).filter(Boolean);
+        if (!idsToDelete.length) return true;
+
+        const { error: deleteError } = await supabaseClient
+            .from(getSupabaseVersionTable())
+            .delete()
+            .in('id', idsToDelete);
+
+        if (deleteError) throw deleteError;
+        return true;
+    } catch (error) {
+        console.warn('Supabase version history prune skipped:', error?.message || error);
+        return false;
     }
 }
 
@@ -494,8 +556,16 @@ function loadFromLocalStorage() {
         const savedLastBackupAt = localStorage.getItem('expenledge_last_backup_at');
         if (savedLastBackupAt) lastBackupAt = savedLastBackupAt;
 
-        const savedLastStateChangeAt = localStorage.getItem(SUPABASE_LAST_STATE_CHANGE_KEY);
-        if (savedLastStateChangeAt) lastStateChangeAt = savedLastStateChangeAt;
+        const deletedLog = getDeletedTransactionLogSnapshot();
+        if (deletedLog.length) {
+            saveDeletedTransactionLogSnapshot(deletedLog);
+        }
+
+        const txMetadataChanged = ensureTransactionMetadata();
+        const pruneChanged = pruneDeletedTransactionsFromCurrentState();
+        if ((txMetadataChanged || pruneChanged) && !supabaseIntegration.applyingRemote) {
+            saveToLocalStorage();
+        }
 
         loadInterfacePreferences();
 
@@ -503,7 +573,6 @@ function loadFromLocalStorage() {
         console.error("Local storage load failed: ", e);
     }
 }
-
 function getBackupStorageKeys() {
     const backupKeys = [];
     for (let i = 0; i < localStorage.length; i += 1) {
@@ -605,14 +674,195 @@ function getSupabaseStorageSnapshot() {
     return storage;
 }
 
-function buildCloudSnapshot() {
+function parseJsonSafe(raw, fallback) {
+    if (raw === null || raw === undefined || raw === '') return fallback;
+    try {
+        return JSON.parse(raw);
+    } catch (_error) {
+        return fallback;
+    }
+}
+
+function getTransactionSyncKey(tx) {
+    return String(tx?.syncId || tx?.id || '').trim();
+}
+
+function generateTransactionSyncId() {
+    return `tx_${crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2)}`}`;
+}
+
+function getTransactionFreshness(tx) {
+    const stamp = tx?.updatedAt || tx?.rawDate || tx?.createdAt || '';
+    const time = new Date(stamp).getTime();
+    return Number.isFinite(time) ? time : 0;
+}
+
+function normalizeTransactionRecord(tx, index = 0) {
+    if (!tx || typeof tx !== 'object') return tx;
+    const next = { ...tx };
+    if (!getTransactionSyncKey(next)) {
+        next.syncId = generateTransactionSyncId();
+    }
+    if (!next.updatedAt) {
+        next.updatedAt = next.rawDate || new Date().toISOString();
+    }
+    if (!next.createdAt) {
+        next.createdAt = next.updatedAt;
+    }
+    if (next.id === undefined || next.id === null || next.id === '') {
+        next.id = index + 1;
+    }
+    return next;
+}
+
+function normalizeTransactionsList(list) {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    return list.map((tx, index) => {
+        const next = normalizeTransactionRecord(tx, index);
+        let key = getTransactionSyncKey(next);
+        if (!key || seen.has(key)) {
+            next.syncId = generateTransactionSyncId();
+            key = next.syncId;
+        }
+        seen.add(key);
+        return next;
+    });
+}
+
+function getDeletedTransactionLogSnapshot(storage = localStorage) {
+    const raw = storage.getItem('expenledge_deleted_transaction_log');
+    const parsed = parseJsonSafe(raw, []);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+        .map(item => ({
+            syncId: String(item?.syncId || item?.id || '').trim(),
+            deletedAt: item?.deletedAt || new Date().toISOString(),
+            deletedBy: item?.deletedBy || ''
+        }))
+        .filter(item => item.syncId);
+}
+
+function saveDeletedTransactionLogSnapshot(log = null) {
+    const entries = log || getDeletedTransactionLogSnapshot();
+    localStorage.setItem('expenledge_deleted_transaction_log', JSON.stringify(entries));
+}
+
+function markLocalStateChanged() {
+    lastStateChangeAt = new Date().toISOString();
+    localStorage.setItem(SUPABASE_LAST_STATE_CHANGE_KEY, lastStateChangeAt);
+}
+
+function ensureTransactionMetadata() {
+    const normalized = normalizeTransactionsList(transactions);
+    const changed = JSON.stringify(normalized) !== JSON.stringify(transactions);
+    transactions = normalized;
+    return changed;
+}
+
+function pruneDeletedTransactionsFromCurrentState() {
+    const deletedIds = new Set(getDeletedTransactionLogSnapshot().map(item => item.syncId));
+    const before = transactions.length;
+    transactions = transactions.filter(tx => !deletedIds.has(getTransactionSyncKey(tx)));
+    return before !== transactions.length;
+}
+
+function mergeDeletionLogs(localLog = [], remoteLog = []) {
+    const merged = new Map();
+    [...localLog, ...remoteLog].forEach(entry => {
+        const syncId = String(entry?.syncId || entry?.id || '').trim();
+        if (!syncId) return;
+        const deletedAt = entry?.deletedAt || new Date().toISOString();
+        const existing = merged.get(syncId);
+        const candidateTime = new Date(deletedAt).getTime();
+        const existingTime = existing ? new Date(existing.deletedAt).getTime() : -1;
+        if (!existing || candidateTime >= existingTime) {
+            merged.set(syncId, { syncId, deletedAt, deletedBy: entry?.deletedBy || '' });
+        }
+    });
+    return [...merged.values()];
+}
+
+function mergeTransactionLists(localTxs = [], remoteTxs = [], deletedIds = new Set()) {
+    const merged = new Map();
+
+    const put = (tx) => {
+        const next = normalizeTransactionRecord(tx);
+        const syncId = getTransactionSyncKey(next);
+        if (!syncId || deletedIds.has(syncId)) return;
+
+        const current = merged.get(syncId);
+        if (!current) {
+            merged.set(syncId, next);
+            return;
+        }
+
+        if (getTransactionFreshness(next) >= getTransactionFreshness(current)) {
+            merged.set(syncId, { ...current, ...next });
+        }
+    };
+
+    localTxs.forEach(put);
+    remoteTxs.forEach(put);
+
+    return [...merged.values()].sort((a, b) => getTransactionFreshness(b) - getTransactionFreshness(a));
+}
+
+function mergeSupabaseStorageSnapshots(localSnapshot = {}, remoteSnapshot = {}) {
+    const local = localSnapshot && typeof localSnapshot === 'object' ? { ...localSnapshot } : {};
+    const remote = remoteSnapshot && typeof remoteSnapshot === 'object' ? { ...remoteSnapshot } : {};
+
+    const localTxs = normalizeTransactionsList(parseJsonSafe(local.expenledge_transactions, []));
+    const remoteTxs = normalizeTransactionsList(parseJsonSafe(remote.expenledge_transactions, []));
+    const localDeleted = parseJsonSafe(local.expenledge_deleted_transaction_log, []);
+    const remoteDeleted = parseJsonSafe(remote.expenledge_deleted_transaction_log, []);
+
+    const mergedDeleted = mergeDeletionLogs(Array.isArray(localDeleted) ? localDeleted : [], Array.isArray(remoteDeleted) ? remoteDeleted : []);
+    const deletedIds = new Set(mergedDeleted.map(item => item.syncId));
+    const mergedTransactions = mergeTransactionLists(localTxs, remoteTxs, deletedIds);
+
+    const merged = { ...local };
+
+    Object.entries(remote).forEach(([key, value]) => {
+        if (key === 'expenledge_transactions' || key === 'expenledge_deleted_transaction_log') return;
+        if (value !== undefined && value !== null && value !== '') {
+            merged[key] = value;
+        }
+    });
+
+    merged.expenledge_transactions = JSON.stringify(mergedTransactions);
+    merged.expenledge_deleted_transaction_log = JSON.stringify(mergedDeleted);
+
+    return merged;
+}
+
+function applyStorageSnapshotToLocal(storage, preserveKeys = new Set([SUPABASE_CONFIG_KEY, SUPABASE_DEVICE_KEY])) {
+    const current = getSupabaseStorageSnapshot();
+    Object.keys(current).forEach(key => {
+        if (!preserveKeys.has(key) && !Object.prototype.hasOwnProperty.call(storage, key)) {
+            localStorage.removeItem(key);
+        }
+    });
+
+    Object.entries(storage || {}).forEach(([key, value]) => {
+        if (key.startsWith('expenledge_')) {
+            localStorage.setItem(key, value ?? '');
+        }
+    });
+}
+
+function buildCloudSnapshotFromStorage(storage) {
     return {
         app: 'ExpenLedge',
         type: 'cloud-sync',
-        version: 2,
+        version: 3,
         exportedAt: new Date().toISOString(),
-        storage: getSupabaseStorageSnapshot()
+        storage
     };
+}
+
+function buildCloudSnapshot() {
+    return buildCloudSnapshotFromStorage(getSupabaseStorageSnapshot());
 }
 
 function setSupabaseStatus(message, isConnected = false, isError = false) {
@@ -624,14 +874,39 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     const syncEl = document.getElementById('supabase-sync-time');
     if (syncEl && !syncEl.innerText) syncEl.innerText = 'Last sync: Never';
     updateBackupTimeDisplay();
-    const connectBtn = document.querySelector('#sheet-backup-restore button[onclick="connectSupabaseFromSheet()"]');
-    const syncBtn = document.querySelector('#sheet-backup-restore button[onclick="syncSupabaseNow()"]');
-    const disconnectBtn = document.querySelector('#sheet-backup-restore button[onclick="disconnectSupabaseConnection()"]');
+    const connectBtn = document.getElementById('supabase-connect-btn');
+    const syncBtn = document.querySelector('#sheet-supabase-sync button[onclick="syncSupabaseNow()"]');
+    const disconnectBtn = document.querySelector('#sheet-supabase-sync button[onclick="disconnectSupabaseConnection()"]');
+    const loadBtn = document.querySelector('#sheet-supabase-sync button[onclick="loadSupabaseCredentialsIntoForm()"]');
+    const urlInput = document.getElementById('supabase-project-url');
+    const keyInput = document.getElementById('supabase-anon-key');
+
+    if (connectBtn) connectBtn.classList.toggle('hidden', isConnected);
+    if (syncBtn) syncBtn.classList.toggle('hidden', !isConnected);
+    if (disconnectBtn) disconnectBtn.classList.toggle('hidden', !isConnected);
+    if (loadBtn) loadBtn.classList.toggle('hidden', isConnected);
+    if (urlInput) urlInput.classList.toggle('hidden', isConnected);
+    if (keyInput) keyInput.classList.toggle('hidden', isConnected);
+
     if (connectBtn) connectBtn.disabled = supabaseIntegration.connecting;
     if (syncBtn) syncBtn.disabled = !isConnected || supabaseIntegration.connecting;
     if (disconnectBtn) disconnectBtn.disabled = !isConnected && !supabaseClient;
-}
 
+    // Update dashboard header badge
+    const badge = document.getElementById('supabase-status-badge');
+    if (badge) {
+        if (isConnected) {
+            badge.textContent = 'Synced';
+            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border border-primary/30 bg-primary/10 text-primary';
+        } else if (isError) {
+            badge.textContent = 'Sync Error';
+            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border border-error/30 bg-error-container text-error';
+        } else {
+            badge.textContent = 'Disconnected';
+            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border border-outline-variant/30 bg-surface-container-high text-on-surface-variant';
+        }
+    }
+}
 function persistSupabaseCredentials() {
     localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify({
         url: supabaseConfig.url,
@@ -694,7 +969,6 @@ function disconnectSupabaseConnection(clearSavedCredentials = true) {
         localStorage.removeItem(SUPABASE_LAST_SYNC_KEY);
     }
     setSupabaseStatus('Supabase disconnected', false, false);
-    showToast('Supabase disconnected');
 }
 
 function applySupabasePayloadToApp(payload, options = {}) {
@@ -702,15 +976,8 @@ function applySupabasePayloadToApp(payload, options = {}) {
     const storage = payload.storage && typeof payload.storage === 'object' ? payload.storage : null;
     if (!storage) return false;
 
-    const keepKeys = new Set([SUPABASE_CONFIG_KEY, SUPABASE_DEVICE_KEY]);
-    Object.keys(getSupabaseStorageSnapshot()).forEach(key => {
-        if (!keepKeys.has(key)) localStorage.removeItem(key);
-    });
-    Object.entries(storage).forEach(([key, value]) => {
-        if (key.startsWith('expenledge_')) {
-            localStorage.setItem(key, value ?? '');
-        }
-    });
+    const mergedStorage = mergeSupabaseStorageSnapshots(getSupabaseStorageSnapshot(), storage);
+    applyStorageSnapshotToLocal(mergedStorage);
 
     const savedStateAt = localStorage.getItem(SUPABASE_LAST_STATE_CHANGE_KEY);
     if (savedStateAt) lastStateChangeAt = savedStateAt;
@@ -725,7 +992,6 @@ function applySupabasePayloadToApp(payload, options = {}) {
     }
     return true;
 }
-
 function refreshAppUiFromState() {
     suppressBrowserAutofill();
     syncCategoryLayoutUI();
@@ -812,12 +1078,19 @@ async function pullSupabaseSnapshot() {
 }
 
 function queueSupabaseSync() {
-    if (supabaseIntegration.booting || supabaseIntegration.applyingRemote || !supabaseClient || supabaseIntegration.connecting) return;
+    if (!shouldQueueSupabaseSync()) return;
     supabaseIntegration.pendingSync = true;
+    if (supabaseIntegration.syncInProgress) return;
     if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
     supabaseSyncTimer = setTimeout(() => {
-        syncSupabaseNow().catch(() => {});
-    }, 1200);
+        processSupabaseSyncQueue().catch(() => {});
+    }, 900);
+}
+
+async function processSupabaseSyncQueue() {
+    if (!shouldQueueSupabaseSync() || supabaseIntegration.syncInProgress || supabaseIntegration.connecting) return false;
+    if (!supabaseIntegration.pendingSync) return false;
+    return syncSupabaseNow();
 }
 
 async function syncSupabaseNow() {
@@ -826,11 +1099,24 @@ async function syncSupabaseNow() {
         showToast('Connect Supabase first');
         return false;
     }
+    if (supabaseIntegration.syncInProgress) {
+        supabaseIntegration.pendingSync = true;
+        return false;
+    }
 
-    supabaseIntegration.connecting = true;
+    supabaseIntegration.syncInProgress = true;
+    supabaseIntegration.pendingSync = true;
     setSupabaseStatus('Syncing to Supabase…', true, false);
     try {
-        const payload = buildCloudSnapshot();
+        const latest = await pullSupabaseSnapshot();
+        const remoteStorage = latest?.payload?.storage && typeof latest.payload.storage === 'object' ? latest.payload.storage : {};
+        const mergedStorage = mergeSupabaseStorageSnapshots(getSupabaseStorageSnapshot(), remoteStorage);
+
+        applyStorageSnapshotToLocal(mergedStorage);
+        loadFromLocalStorage();
+        refreshAppUiFromState();
+
+        const payload = buildCloudSnapshotFromStorage(mergedStorage);
         const row = {
             app_id: SUPABASE_APP_ID,
             device_id: supabaseConfig.deviceId,
@@ -843,11 +1129,12 @@ async function syncSupabaseNow() {
 
         if (error) throw error;
 
+        await writeSupabaseVersionSnapshot(payload, row.updated_at);
+
         supabaseIntegration.pendingSync = false;
         supabaseIntegration.lastError = '';
         updateSupabaseSyncTime();
         setSupabaseStatus('Supabase synced successfully', true, false);
-        showToast('Synced to Supabase');
         return true;
     } catch (error) {
         supabaseIntegration.lastError = error?.message || String(error);
@@ -855,18 +1142,24 @@ async function syncSupabaseNow() {
         showToast('Supabase sync failed');
         return false;
     } finally {
+        supabaseIntegration.syncInProgress = false;
         supabaseIntegration.connecting = false;
+        if (supabaseIntegration.pendingSync && shouldQueueSupabaseSync()) {
+            if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
+            supabaseSyncTimer = setTimeout(() => {
+                processSupabaseSyncQueue().catch(() => {});
+            }, 1200);
+        }
     }
 }
-
 async function connectSupabaseFromSheet() {
     const urlInput = document.getElementById('supabase-project-url');
     const keyInput = document.getElementById('supabase-anon-key');
-    const url = urlInput?.value?.trim() || '';
-    const anonKey = keyInput?.value?.trim() || '';
+    // Fall back to saved supabaseConfig when called from auto-init (sheet not open)
+    const url = (urlInput?.value?.trim() || supabaseConfig.url || '');
+    const anonKey = (keyInput?.value?.trim() || supabaseConfig.anonKey || '');
 
     if (!url || !anonKey) {
-        showToast('Enter both Supabase URL and anon key');
         return;
     }
     if (!window.supabase?.createClient) {
@@ -888,27 +1181,24 @@ async function connectSupabaseFromSheet() {
             }
         });
 
-        setSupabaseStatus('Connecting to Supabase…', true, false);
+        setSupabaseStatus('Connecting…', false, false);
         const latest = await pullSupabaseSnapshot();
-        if (latest?.payload) {
-            const localTime = lastStateChangeAt ? new Date(lastStateChangeAt).getTime() : 0;
-            const remoteTime = new Date(latest.updated_at || latest.payload?.exportedAt || Date.now()).getTime();
-            if (!supabaseIntegration.pendingSync || remoteTime >= localTime) {
-                supabaseIntegration.applyingRemote = true;
-                applySupabasePayloadToApp(latest.payload, { remoteAt: latest.updated_at });
-                supabaseIntegration.applyingRemote = false;
-            }
-        }
+        const localStorageSnapshot = getSupabaseStorageSnapshot();
+        const remoteStorage = latest?.payload?.storage && typeof latest.payload.storage === 'object' ? latest.payload.storage : {};
+        const mergedStorage = mergeSupabaseStorageSnapshots(localStorageSnapshot, remoteStorage);
+
+        supabaseIntegration.applyingRemote = true;
+        applyStorageSnapshotToLocal(mergedStorage);
+        loadFromLocalStorage();
+        refreshAppUiFromState();
+        supabaseIntegration.applyingRemote = false;
 
         subscribeSupabaseRealtime();
         supabaseIntegration.connected = true;
-        supabaseIntegration.pendingSync = false;
+        supabaseIntegration.pendingSync = true;
         supabaseIntegration.lastError = '';
-        setSupabaseStatus('Supabase connected', true, false);
-        showToast('Supabase connected');
-        if (!latest?.payload) {
-            await syncSupabaseNow();
-        }
+        setSupabaseStatus('Connected', true, false);
+        await syncSupabaseNow();
     } catch (error) {
         supabaseIntegration.connected = false;
         supabaseIntegration.lastError = error?.message || String(error);
@@ -916,9 +1206,9 @@ async function connectSupabaseFromSheet() {
         showToast('Supabase connect failed');
     } finally {
         supabaseIntegration.connecting = false;
+        supabaseIntegration.applyingRemote = false;
     }
 }
-
 function initializeSupabaseFromSavedCredentials() {
     const saved = localStorage.getItem(SUPABASE_CONFIG_KEY);
     if (!saved || !window.supabase?.createClient) {
@@ -2999,7 +3289,7 @@ function saveTransaction() {
     const amtVal = parseFloat(document.getElementById('tx-input-amount').value);
     const descVal = document.getElementById('tx-input-desc').value.trim();
 
-    if (isNaN(amtVal) || amtVal <= 0) {
+    if (isNaN(amtVal) || amtVal < 0) {
         showToast("Please enter a valid amount");
         return;
     }
@@ -3021,6 +3311,7 @@ function saveTransaction() {
             tx.paymentMode = selectedPaymentMode;
             tx.tags = [...selectedTags];
             tx.rawDate = selectedTxDateObj.toISOString();
+            tx.updatedAt = new Date().toISOString();
             tx.date = getRelativeDateString(selectedTxDateObj);
         }
         editingTransactionId = null;
@@ -3028,8 +3319,11 @@ function saveTransaction() {
     } else {
         const newTx = {
             id: transactions.length + 1,
+            syncId: generateTransactionSyncId(),
             amount: amtVal,
             rawDate: selectedTxDateObj.toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             date: getRelativeDateString(selectedTxDateObj),
             category: selectedCategory,
             categoryIcon: selectedCategoryIcon,
@@ -3675,8 +3969,11 @@ function importCSV(event) {
 
             newTransactions.push({
                 id: transactions.length + newTransactions.length + 1,
+                syncId: generateTransactionSyncId(),
                 amount: amount,
                 rawDate: validDate.toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
                 date: getRelativeDateString(validDate),
                 category: category,
                 categoryIcon: matchedIcon,
@@ -3833,14 +4130,27 @@ function openBackupRestoreSheet() {
     resetScroll('sheet-backup-restore');
     document.getElementById('sheet-backup-restore').classList.remove('translate-y-full');
     applyBackupSheetPreferences();
-    loadSupabaseCredentialsIntoForm();
     updateSupabaseSyncTime();
-    setSupabaseStatus(supabaseClient ? 'Supabase connected' : 'Supabase not connected', !!supabaseClient, false);
+    setSupabaseStatus(supabaseClient ? 'Connected' : 'Not connected', !!supabaseClient, false);
     showBackdrop();
 }
 
 function closeBackupRestoreSheet() {
     document.getElementById('sheet-backup-restore').classList.add('translate-y-full');
+    checkBackdropNeeded();
+}
+
+function openSupabaseSyncSheet() {
+    resetScroll('sheet-supabase-sync');
+    document.getElementById('sheet-supabase-sync').classList.remove('translate-y-full');
+    loadSupabaseCredentialsIntoForm();
+    updateSupabaseSyncTime();
+    setSupabaseStatus(supabaseClient ? 'Connected' : 'Not connected', !!supabaseClient, false);
+    showBackdrop();
+}
+
+function closeSupabaseSyncSheet() {
+    document.getElementById('sheet-supabase-sync').classList.add('translate-y-full');
     checkBackdropNeeded();
 }
 
@@ -4514,6 +4824,9 @@ function duplicateSelectedTransaction() {
     const copied = {
         ...selectedTransactionForOptions,
         id: transactions.length + 1,
+        syncId: generateTransactionSyncId(),
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         date: 'Today'
     };
     transactions.unshift(copied);
@@ -4529,7 +4842,19 @@ function duplicateSelectedTransaction() {
 
 function deleteSelectedTransaction() {
     if (!selectedTransactionForOptions) return;
-    transactions = transactions.filter(tx => tx.id !== selectedTransactionForOptions.id);
+    const deleteKey = getTransactionSyncKey(selectedTransactionForOptions);
+    if (deleteKey) {
+        const tombstones = getDeletedTransactionLogSnapshot();
+        const existing = tombstones.find(item => item.syncId === deleteKey);
+        const now = new Date().toISOString();
+        if (existing) {
+            existing.deletedAt = now;
+        } else {
+            tombstones.push({ syncId: deleteKey, deletedAt: now, deletedBy: supabaseConfig.deviceId || 'local' });
+        }
+        saveDeletedTransactionLogSnapshot(tombstones);
+    }
+    transactions = transactions.filter(tx => getTransactionSyncKey(tx) !== getTransactionSyncKey(selectedTransactionForOptions));
     saveToLocalStorage();
     updateDashboard();
     updateAnalysis();
@@ -4666,6 +4991,9 @@ function confirmScheduleTransaction() {
         transaction: {
             ...selectedTransactionForOptions,
             id: transactions.length + 1,
+            syncId: generateTransactionSyncId(),
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             date: 'Today'
         }
     };
@@ -4682,7 +5010,12 @@ function checkScheduledTransactions() {
 
     scheduledTransactions = scheduledTransactions.filter(item => {
         if (item.scheduledTime <= now) {
-            transactions.unshift(item.transaction);
+            transactions.unshift({
+                ...item.transaction,
+                syncId: item.transaction.syncId || generateTransactionSyncId(),
+                updatedAt: new Date().toISOString(),
+                createdAt: item.transaction.createdAt || new Date().toISOString()
+            });
             showToast(`Auto-Executed Scheduled: ${item.transaction.category} (₹${item.transaction.amount})`);
             executedAny = true;
             return false;
@@ -6607,4 +6940,3 @@ function unsavedDialogSave() {
     // Successful save handlers clear the context before closing their sheet.
     currentFormContext.saveFn();
 }
-
