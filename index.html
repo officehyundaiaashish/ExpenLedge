@@ -467,6 +467,10 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-xs">
+                    <span id="supabase-status-badge"
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border border-outline-variant/30 bg-surface-container-high text-on-surface-variant">
+                        Disconnected
+                    </span>
                     <button class="p-xs hover:bg-surface-container-high rounded-full animate-hover"
                         onclick="openSearchOnTransactionsPage()">
                         <span class="material-symbols-outlined text-on-surface-variant text-[28px]">search</span>
@@ -2083,40 +2087,52 @@
             </div>
 
             <div class="space-y-sm rounded-2xl border border-outline-variant/20 bg-surface-container p-md shadow-sm">
-                <div class="flex items-center gap-md">
-                    <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <span class="material-symbols-outlined text-[28px]">cloud</span>
+                <button type="button" onclick="toggleSupabaseSyncPanel()"
+                    class="w-full flex items-center justify-between gap-md rounded-2xl bg-primary/10 border border-primary/15 px-md py-sm active:scale-[0.99] transition-transform">
+                    <div class="flex items-center gap-md text-left min-w-0">
+                        <div class="w-11 h-11 rounded-full bg-primary/15 flex items-center justify-center text-primary flex-shrink-0">
+                            <span class="material-symbols-outlined text-[26px]">cloud_sync</span>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="text-body-lg font-bold text-on-surface truncate">Supabase Sync</h3>
+                            <p class="text-label-md text-on-surface-variant truncate">Connect, sync now, or disconnect from your cloud project.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-body-lg font-bold text-on-surface">Supabase Cloud Sync</h3>
-                        <p class="text-label-md text-on-surface-variant">Connect a project, then sync and receive realtime updates.</p>
+                    <span class="material-symbols-outlined text-on-surface-variant" id="supabase-sync-panel-caret">expand_more</span>
+                </button>
+
+                <div id="supabase-sync-panel" class="space-y-sm pt-xs">
+                    <div class="space-y-xs">
+                        <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project URL</label>
+                        <input id="supabase-project-url" type="text" inputmode="url" placeholder="https://xxxxx.supabase.co"
+                            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" />
                     </div>
-                </div>
 
-                <div class="space-y-xs">
-                    <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project URL</label>
-                    <input id="supabase-project-url" type="text" inputmode="url" placeholder="https://xxxxx.supabase.co"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" />
-                </div>
+                    <div class="space-y-xs">
+                        <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project Anon Key</label>
+                        <textarea id="supabase-anon-key" rows="3" placeholder="Paste anon / publishable key here"
+                            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary resize-none"></textarea>
+                    </div>
 
-                <div class="space-y-xs">
-                    <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project Anon Key</label>
-                    <textarea id="supabase-anon-key" rows="3" placeholder="Paste anon / publishable key here"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary resize-none"></textarea>
-                </div>
+                    <div class="space-y-xs">
+                        <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Cloud Sync Code</label>
+                        <input id="supabase-sync-key" type="text" placeholder="Same code on every device"
+                            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" />
+                    </div>
 
-                <div class="grid grid-cols-2 gap-sm">
-                    <button onclick="connectSupabaseFromSheet()"
-                        class="w-full py-sm rounded-xl bg-primary text-on-primary font-bold active:scale-95 transition-transform">Connect</button>
-                    <button onclick="syncSupabaseNow()"
-                        class="w-full py-sm rounded-xl bg-secondary text-on-primary font-bold active:scale-95 transition-transform">Sync Now</button>
-                </div>
+                    <div class="grid grid-cols-2 gap-sm">
+                        <button id="supabase-connect-btn" onclick="connectSupabaseFromSheet()"
+                            class="w-full py-sm rounded-xl bg-primary text-on-primary font-bold active:scale-95 transition-transform">Connect</button>
+                        <button onclick="syncSupabaseNow()"
+                            class="w-full py-sm rounded-xl bg-secondary text-on-primary font-bold active:scale-95 transition-transform">Sync Now</button>
+                    </div>
 
-                <div class="grid grid-cols-2 gap-sm">
-                    <button onclick="disconnectSupabaseConnection()"
-                        class="w-full py-sm rounded-xl bg-surface-container-high text-on-surface font-bold border border-outline-variant/30 active:scale-95 transition-transform">Disconnect</button>
-                    <button onclick="loadSupabaseCredentialsIntoForm()"
-                        class="w-full py-sm rounded-xl bg-surface-container-high text-on-surface font-bold border border-outline-variant/30 active:scale-95 transition-transform">Load Saved</button>
+                    <div class="grid grid-cols-2 gap-sm">
+                        <button onclick="disconnectSupabaseConnection()"
+                            class="w-full py-sm rounded-xl bg-surface-container-high text-on-surface font-bold border border-outline-variant/30 active:scale-95 transition-transform">Disconnect</button>
+                        <button onclick="loadSupabaseCredentialsIntoForm()"
+                            class="w-full py-sm rounded-xl bg-surface-container-high text-on-surface font-bold border border-outline-variant/30 active:scale-95 transition-transform">Load Saved</button>
+                    </div>
                 </div>
 
                 <p class="text-label-md text-on-surface-variant">All data and settings are stored in your local app first, then mirrored to Supabase.</p>
