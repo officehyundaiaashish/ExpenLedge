@@ -192,8 +192,24 @@ function suppressBrowserAutofill(root = document) {
     fields.forEach((el) => {
         if (!el || el.disabled) return;
 
-        const type = (el.getAttribute('type') || el.type || '').toLowerCase();
+        let type = (el.getAttribute('type') || el.type || '').toLowerCase();
         if (['hidden', 'checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range', 'color'].includes(type)) return;
+
+        // CRITICAL FIX: Convert type="number" to text + inputmode to block payment overlay
+        // Google Payment Manager is triggered by type="number" fields.
+        if (type === 'number') {
+            el.type = 'text';
+            el.setAttribute('type', 'text');
+            el.setAttribute('inputmode', 'decimal');
+            type = 'text'; // update variable for subsequent checks
+        } else if (type === 'text' && !el.getAttribute('inputmode')) {
+            // For text fields, set numeric inputmode if it looks like an amount field
+            const isAmount = el.id && (el.id.toLowerCase().includes('amount') || el.id.toLowerCase().includes('balance'));
+            const hasNumericAttr = el.getAttribute('inputmode') === 'decimal' || el.getAttribute('inputmode') === 'numeric';
+            if (isAmount || hasNumericAttr) {
+                el.setAttribute('inputmode', 'decimal');
+            }
+        }
 
         // Force autocomplete off - some password managers ignore "off" but respect "new-password"
         // We use a combination: set to "off" and also set data-lpignore etc.
@@ -217,10 +233,6 @@ function suppressBrowserAutofill(root = document) {
         if (!el.name || el.name.startsWith('expenledge_')) {
             const safeId = (el.id || 'field').replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
             el.setAttribute('name', `expenledge_${safeId}_${Date.now()}`);
-        }
-
-        if (type === 'number' && !el.getAttribute('inputmode')) {
-            el.setAttribute('inputmode', 'decimal');
         }
 
         // Remove any payment-related attributes that Chrome might use
