@@ -423,7 +423,7 @@ async function writeSupabaseVersionSnapshot(payload, updatedAt) {
         // tightly bounded; we just don't pay the prune cost on every write.
         _versionWriteCount = (_versionWriteCount + 1) % 5;
         if (_versionWriteCount === 0) {
-            pruneSupabaseVersionHistory().catch(() => {});
+            pruneSupabaseVersionHistory().catch(() => { });
         }
         return true;
     } catch (error) {
@@ -617,7 +617,7 @@ function buildBackupPayload() {
 }
 
 function updateBackupTimeDisplay() {
-    const labels = [document.getElementById('cloud-backup-time'), document.getElementById('supabase-sync-time')].filter(Boolean);
+    const labels = [document.getElementById('cloud-backup-time'), document.getElementById('supabase-sync-time'), document.getElementById('supabase-header-sync-time')].filter(Boolean);
     if (!labels.length) return;
 
     const stamp = supabaseIntegration.lastSyncAt || localStorage.getItem(SUPABASE_LAST_SYNC_KEY) || lastBackupAt;
@@ -1061,6 +1061,12 @@ function disconnectSupabaseConnection(clearSavedCredentials = true) {
         localStorage.removeItem(SUPABASE_LAST_REMOTE_APPLIED_KEY);
     }
     setSupabaseStatus('Supabase disconnected', false, false);
+
+    // Hide connected status in sheet
+    const connectedStatus = document.getElementById('supabase-connected-status');
+    const credentialsInputs = document.getElementById('supabase-credentials-inputs');
+    if (connectedStatus) connectedStatus.classList.add('hidden');
+    if (credentialsInputs) credentialsInputs.classList.remove('hidden');
 }
 
 function applySupabasePayloadToApp(payload, options = {}) {
@@ -1194,7 +1200,7 @@ function queueSupabaseSync() {
     if (supabaseIntegration.syncInProgress) return;
     if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
     supabaseSyncTimer = setTimeout(() => {
-        processSupabaseSyncQueue().catch(() => {});
+        processSupabaseSyncQueue().catch(() => { });
     }, 900);
 }
 
@@ -1271,7 +1277,7 @@ async function _syncSupabaseNowInternal(options) {
     if (animatedIcon) {
         animatedIcon.style.display = '';
         animatedIcon.classList.remove('sync-icon--disconnected', 'sync-icon--connected',
-                                      'sync-icon--success', 'sync-icon--error');
+            'sync-icon--success', 'sync-icon--error');
         void animatedIcon.offsetWidth;
         animatedIcon.classList.add('sync-icon--syncing');
     }
@@ -1401,7 +1407,7 @@ async function _syncSupabaseNowInternal(options) {
         // Version-history write is fire-and-forget: it's a SECOND copy of the
         // 10k-transaction payload and is purely for diagnostics. Don't block
         // the user-visible success state on it.
-        writeSupabaseVersionSnapshot(payload, row.updated_at).catch(() => {});
+        writeSupabaseVersionSnapshot(payload, row.updated_at).catch(() => { });
 
         supabaseIntegration.pendingSync = false;
         supabaseIntegration.lastError = '';
@@ -1450,7 +1456,7 @@ async function _syncSupabaseNowInternal(options) {
         if (supabaseIntegration.pendingSync && shouldQueueSupabaseSync()) {
             if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
             supabaseSyncTimer = setTimeout(() => {
-                processSupabaseSyncQueue().catch(() => {});
+                processSupabaseSyncQueue().catch(() => { });
             }, 1200);
         }
     }
@@ -1564,12 +1570,24 @@ async function connectSupabaseFromSheet() {
     const url = (urlInput?.value?.trim() || supabaseConfig.url || '');
     const anonKey = (keyInput?.value?.trim() || supabaseConfig.anonKey || '');
 
+    // Check if this is a manual connect - only true when user clicks the Connect button
+    // The sheet is open when user is viewing it, so we check if the sheet is visible
+    const sheet = document.getElementById('sheet-supabase-sync');
+    const isManual = sheet && !sheet.classList.contains('translate-y-full') &&
+        (urlInput && !urlInput.closest('.hidden'));
+
     if (!url || !anonKey) {
+        if (isManual) showToast('Please enter Project URL and Anon Key');
         return;
     }
     if (!window.supabase?.createClient) {
         showToast('Supabase client script is missing');
         return;
+    }
+
+    // Show loading overlay only for manual connect (user clicked Connect button)
+    if (isManual) {
+        showSyncLoadingOverlay('Connecting to Supabase…');
     }
 
     supabaseConfig.url = url;
@@ -1603,12 +1621,29 @@ async function connectSupabaseFromSheet() {
         supabaseIntegration.pendingSync = true;
         supabaseIntegration.lastError = '';
         setSupabaseStatus('Connected', true, false);
+
+        // Update UI to show connected status in sheet
+        const connectedStatus = document.getElementById('supabase-connected-status');
+        const credentialsInputs = document.getElementById('supabase-credentials-inputs');
+        if (connectedStatus) connectedStatus.classList.remove('hidden');
+        if (credentialsInputs) credentialsInputs.classList.add('hidden');
+
         await syncSupabaseNow();
+
+        // Show success overlay only for manual connect
+        if (isManual) {
+            showSyncSuccessOverlay();
+        }
     } catch (error) {
         supabaseIntegration.connected = false;
         supabaseIntegration.lastError = error?.message || String(error);
         setSupabaseStatus(`Connection failed: ${supabaseIntegration.lastError}`, false, true);
-        showToast('Supabase connect failed');
+        if (isManual) {
+            showSyncErrorOverlay(supabaseIntegration.lastError || 'Connection failed. Please check your credentials.');
+        } else {
+            // Silent fail for auto-connect - only show toast
+            showToast('Supabase connect failed');
+        }
     } finally {
         supabaseIntegration.connecting = false;
         supabaseIntegration.applyingRemote = false;
@@ -1640,41 +1675,41 @@ function initializeSupabaseFromSavedCredentials() {
 
 // Initial setup
 window.addEventListener('DOMContentLoaded', () => {
-// Setup color theming for both sync icons (static and animated)
-const staticSyncIconEl = document.getElementById('supabase-sync-icon-static');
-const animatedSyncIconEl = document.getElementById('supabase-sync-icon-animated');
+    // Setup color theming for both sync icons (static and animated)
+    const staticSyncIconEl = document.getElementById('supabase-sync-icon-static');
+    const animatedSyncIconEl = document.getElementById('supabase-sync-icon-animated');
 
-const updateSyncIconColor = (iconEl) => {
-    if (!iconEl) return;
-    // Force green color for connected state regardless of theme
-    if (iconEl.classList.contains('sync-icon--connected')) {
-        iconEl.style.color = '#22c55e'; // Green-500
-    } else if (iconEl.classList.contains('sync-icon--syncing')) {
-        iconEl.style.color = 'var(--primary)';
-    } else if (iconEl.classList.contains('sync-icon--success')) {
-        iconEl.style.color = 'var(--tertiary)';
-    } else if (iconEl.classList.contains('sync-icon--error')) {
-        iconEl.style.color = 'var(--error)';
-    } else {
-        iconEl.style.color = 'var(--on-surface-variant)';
+    const updateSyncIconColor = (iconEl) => {
+        if (!iconEl) return;
+        // Force green color for connected state regardless of theme
+        if (iconEl.classList.contains('sync-icon--connected')) {
+            iconEl.style.color = '#22c55e'; // Green-500
+        } else if (iconEl.classList.contains('sync-icon--syncing')) {
+            iconEl.style.color = 'var(--primary)';
+        } else if (iconEl.classList.contains('sync-icon--success')) {
+            iconEl.style.color = 'var(--tertiary)';
+        } else if (iconEl.classList.contains('sync-icon--error')) {
+            iconEl.style.color = 'var(--error)';
+        } else {
+            iconEl.style.color = 'var(--on-surface-variant)';
+        }
+    };
+
+    // Observe class changes to update color for static icon
+    if (staticSyncIconEl) {
+        const staticObserver = new MutationObserver(() => updateSyncIconColor(staticSyncIconEl));
+        staticObserver.observe(staticSyncIconEl, { attributes: true, attributeFilter: ['class'] });
+        updateSyncIconColor(staticSyncIconEl); // Initial call
     }
-};
 
-// Observe class changes to update color for static icon
-if (staticSyncIconEl) {
-    const staticObserver = new MutationObserver(() => updateSyncIconColor(staticSyncIconEl));
-    staticObserver.observe(staticSyncIconEl, { attributes: true, attributeFilter: ['class'] });
-    updateSyncIconColor(staticSyncIconEl); // Initial call
-}
-
-// Observe class changes to update color for animated icon
-if (animatedSyncIconEl) {
-    const animatedObserver = new MutationObserver(() => updateSyncIconColor(animatedSyncIconEl));
-    animatedObserver.observe(animatedSyncIconEl, { attributes: true, attributeFilter: ['class'] });
-    updateSyncIconColor(animatedSyncIconEl); // Initial call
-}
-// Capitalize first letter of every text input
-document.addEventListener('input', function(e) {
+    // Observe class changes to update color for animated icon
+    if (animatedSyncIconEl) {
+        const animatedObserver = new MutationObserver(() => updateSyncIconColor(animatedSyncIconEl));
+        animatedObserver.observe(animatedSyncIconEl, { attributes: true, attributeFilter: ['class'] });
+        updateSyncIconColor(animatedSyncIconEl); // Initial call
+    }
+    // Capitalize first letter of every text input
+    document.addEventListener('input', function (e) {
         const target = e.target;
         if (target.tagName === 'INPUT' && target.type === 'text') {
             const val = target.value;
@@ -4303,7 +4338,7 @@ function importCSV(event) {
                 } else {
                     const catLower = category.toLowerCase();
                     const isIncomeCat = ['income', 'salary', 'freelance', 'rentals', 'sold items', 'other income'].includes(catLower) ||
-                                        incomeCategories.some(c => c.name.toLowerCase() === catLower);
+                        incomeCategories.some(c => c.name.toLowerCase() === catLower);
                     typeVal = isIncomeCat ? 'income' : 'expense';
                 }
             }
@@ -5813,20 +5848,20 @@ function updateAllTransactionsView(loadMore = false) {
     [...groups.entries()]
         .sort((a, b) => b[1].date.getTime() - a[1].date.getTime())
         .forEach(([groupKey, group]) => {
-        const groupCard = document.createElement('div');
-        groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md";
+            const groupCard = document.createElement('div');
+            groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md";
 
-        // Calculate daily totals for badges
-        let dayIn = 0;
-        let dayOut = 0;
-        group.items.forEach(t => {
-            if (t.type === 'income') dayIn += t.amount;
-            else dayOut += t.amount;
-        });
-        const dayBalance = dayIn - dayOut;
-        const day = getRelativeDateString(group.date);
-        const safeDayId = groupKey.replace(/[^a-zA-Z0-9]/g, '-');
-        groupCard.innerHTML = `
+            // Calculate daily totals for badges
+            let dayIn = 0;
+            let dayOut = 0;
+            group.items.forEach(t => {
+                if (t.type === 'income') dayIn += t.amount;
+                else dayOut += t.amount;
+            });
+            const dayBalance = dayIn - dayOut;
+            const day = getRelativeDateString(group.date);
+            const safeDayId = groupKey.replace(/[^a-zA-Z0-9]/g, '-');
+            groupCard.innerHTML = `
             <div class="border-b border-outline-variant/10 pb-xs flex justify-between items-center flex-wrap gap-xs">
                 <span class="text-label-md font-bold text-primary uppercase tracking-wider">${day}</span>
                 <div class="flex flex-wrap gap-xs text-[10px] font-semibold">
@@ -5839,19 +5874,19 @@ function updateAllTransactionsView(loadMore = false) {
             </div>
         `;
 
-        container.appendChild(groupCard);
+            container.appendChild(groupCard);
 
-        const listContainer = groupCard.querySelector(`#group-list-${safeDayId}`);
-        group.items.forEach(t => {
-            const isInc = t.type === 'income';
-            const itemEl = document.createElement('div');
-            itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
-            bindLongPress(itemEl, t);
+            const listContainer = groupCard.querySelector(`#group-list-${safeDayId}`);
+            group.items.forEach(t => {
+                const isInc = t.type === 'income';
+                const itemEl = document.createElement('div');
+                itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+                bindLongPress(itemEl, t);
 
-            let colorClass = "text-secondary bg-secondary-container/20";
-            if (isInc) colorClass = "text-primary bg-primary-container/20";
+                let colorClass = "text-secondary bg-secondary-container/20";
+                if (isInc) colorClass = "text-primary bg-primary-container/20";
 
-            itemEl.innerHTML = `
+                itemEl.innerHTML = `
                 <div class="w-10 h-10 rounded-full flex items-center justify-center ${colorClass}">
                     <span class="material-symbols-outlined text-[20px]">${t.categoryIcon || 'payments'}</span>
                 </div>
@@ -5865,14 +5900,14 @@ function updateAllTransactionsView(loadMore = false) {
                     </div>
                 </div>
             `;
-            // Add click to edit
-            itemEl.onclick = (e) => {
-                if (longPressTriggered) return;
-                openEditTransactionModal(t);
-            };
-            listContainer.appendChild(itemEl);
+                // Add click to edit
+                itemEl.onclick = (e) => {
+                    if (longPressTriggered) return;
+                    openEditTransactionModal(t);
+                };
+                listContainer.appendChild(itemEl);
+            });
         });
-    });
 
     if (totalMatching > allTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
@@ -6285,8 +6320,8 @@ function renderManagedCategories() {
                 <div class="flex justify-between items-center w-full px-1 text-[10px] text-on-surface-variant flex-shrink-0">
                     <span class="material-symbols-outlined text-[14px] touch-none cursor-move" data-drag-handle title="Drag to reorder">drag_indicator</span>
                     ${cat.builtIn
-                        ? '<span class="text-[9px] text-on-surface-variant opacity-60">Built-in</span>'
-                        : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[14px] p-0.5 rounded-full" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
+                    ? '<span class="text-[9px] text-on-surface-variant opacity-60">Built-in</span>'
+                    : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[14px] p-0.5 rounded-full" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                     <span class="material-symbols-outlined text-[20px]">${cat.icon}</span>
@@ -6305,8 +6340,8 @@ function renderManagedCategories() {
                 </div>
                 <div class="flex-shrink-0">
                     ${cat.builtIn
-                        ? '<span class="text-[10px] text-on-surface-variant opacity-60 px-2">Built-in</span>'
-                        : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[18px] p-1 rounded-full" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
+                    ? '<span class="text-[10px] text-on-surface-variant opacity-60 px-2">Built-in</span>'
+                    : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[18px] p-1 rounded-full" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
                 </div>
             `;
         }
