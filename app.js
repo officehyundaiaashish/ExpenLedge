@@ -195,8 +195,9 @@ function suppressBrowserAutofill(root = document) {
         const type = (el.getAttribute('type') || el.type || '').toLowerCase();
         if (['hidden', 'checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range', 'color'].includes(type)) return;
 
-        // Chrome may ignore "off" for fields it mistakes for login or card data.
-        el.setAttribute('autocomplete', type === 'search' ? 'off' : 'new-password');
+        // Force autocomplete off - some password managers ignore "off" but respect "new-password"
+        // We use a combination: set to "off" and also set data-lpignore etc.
+        el.setAttribute('autocomplete', 'off');
         el.setAttribute('autocapitalize', type === 'email' || type === 'search' ? 'none' : 'off');
         el.setAttribute('autocorrect', 'off');
         el.setAttribute('spellcheck', 'false');
@@ -206,14 +207,42 @@ function suppressBrowserAutofill(root = document) {
         el.setAttribute('data-bwignore', 'true');
         el.setAttribute('data-protonpass-ignore', 'true');
 
-        if (!el.name) {
-            // Match Tasker's stable, non-semantic names so Chrome cannot infer a payment or login field.
+        // Additional attributes to block Google Payment Manager and autofill
+        el.setAttribute('aria-autocomplete', 'none');
+        el.setAttribute('x-autocompletetype', 'none');
+        el.setAttribute('x-webkit-autofill', 'off');
+        el.setAttribute('x-moz-autofill', 'off');
+
+        // Set a random, non-semantic name attribute to avoid pattern matching
+        if (!el.name || el.name.startsWith('expenledge_')) {
             const safeId = (el.id || 'field').replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
-            el.setAttribute('name', `expenledge_${safeId}`);
+            el.setAttribute('name', `expenledge_${safeId}_${Date.now()}`);
         }
 
         if (type === 'number' && !el.getAttribute('inputmode')) {
             el.setAttribute('inputmode', 'decimal');
+        }
+
+        // Remove any payment-related attributes that Chrome might use
+        el.removeAttribute('payment');
+        el.removeAttribute('payment-request');
+        el.removeAttribute('cc-number');
+        el.removeAttribute('cc-exp');
+        el.removeAttribute('cc-csc');
+        el.removeAttribute('cc-name');
+
+        // Ensure the field is not treated as a payment field
+        const form = el.closest('form');
+        if (form) {
+            form.setAttribute('autocomplete', 'off');
+            form.setAttribute('x-autocompletetype', 'none');
+            form.setAttribute('data-lpignore', 'true');
+        }
+
+        // CRITICAL: Set readonly to block password managers completely
+        // (will be removed on focus via global listener)
+        if (!el.hasAttribute('readonly')) {
+            el.setAttribute('readonly', 'readonly');
         }
     });
 }
@@ -1803,6 +1832,18 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!el.hasAttribute('autocomplete')) el.setAttribute('autocomplete', 'off');
         el.setAttribute('data-lpignore', 'true');
     });
+
+    // Remove readonly attribute on focus so user can type (password managers ignore readonly fields)
+    document.addEventListener('focusin', function (e) {
+        const target = e.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+            // Only remove readonly if it was set by our script (we can check if it has the attribute)
+            if (target.hasAttribute('readonly')) {
+                target.removeAttribute('readonly');
+                // Optionally reapply after blur? We'll not reapply to avoid annoyance.
+            }
+        }
+    }, { passive: true });
 
     supabaseIntegration.booting = false;
     supabaseInitialLoadDone = true;
@@ -4007,10 +4048,12 @@ function showToast(msg) {
     const isSuccess = msg.toLowerCase().includes('success') || msg.toLowerCase().includes('saved') || msg.toLowerCase().includes('updated') || msg.toLowerCase().includes('created') || msg.toLowerCase().includes('deleted') || msg.toLowerCase().includes('welcome');
 
     if (isSuccess) {
-        // Show tick.svg for success
-        toast.innerHTML = '<img src="tick.svg" alt="Success" class="w-8 h-8" />';
+        // Show tick.svg for success - remove black background
+        toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-transparent backdrop-blur-none px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center';
+        toast.innerHTML = '<img src="tick.svg" alt="Success" class="w-12 h-12" />';
     } else {
-        // Show text for other messages
+        // Show text for other messages - keep dark background
+        toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center text-white';
         toast.innerText = msg;
     }
 
