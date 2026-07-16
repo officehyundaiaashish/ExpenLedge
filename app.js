@@ -1,4 +1,3 @@
-
 // State storage
 let transactions = [];
 let userProfile = {
@@ -3812,15 +3811,14 @@ function saveTransaction() {
     saveToLocalStorage();
     currentFormContext = null;
 
+    // Sync all views immediately BEFORE closing modal to avoid flicker
+    syncAllViews();
+
+    // Show tick animation instead of toast
+    showTickAnimation();
+
+    // Then close the modal smoothly
     closeAddTransactionModal();
-
-    const finishSave = () => {
-        syncAllViews();
-        showToast(toastMessage);
-    };
-
-    const modal = document.getElementById('modal-add-transaction');
-    runAfterTransition(modal, finishSave);
 }
 
 // Helper UI functions and Back Gesture Navigation Support
@@ -4004,13 +4002,48 @@ function checkBackdropNeeded() {
 
 function showToast(msg) {
     const toast = document.getElementById('toast');
-    toast.innerText = msg;
+
+    // Check if this is a success message
+    const isSuccess = msg.toLowerCase().includes('success') || msg.toLowerCase().includes('saved') || msg.toLowerCase().includes('updated') || msg.toLowerCase().includes('created') || msg.toLowerCase().includes('deleted') || msg.toLowerCase().includes('welcome');
+
+    if (isSuccess) {
+        // Show tick.svg for success
+        toast.innerHTML = '<img src="tick.svg" alt="Success" class="w-8 h-8" />';
+    } else {
+        // Show text for other messages
+        toast.innerText = msg;
+    }
+
     toast.classList.remove('opacity-0');
     toast.classList.add('opacity-100');
     setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
     }, 2500);
+}
+
+// Show tick animation overlay for transaction save/update
+function showTickAnimation() {
+    const overlay = document.getElementById('tick-overlay');
+    if (!overlay) return;
+
+    // Force SVG animation restart by reloading the image
+    const img = overlay.querySelector('img');
+    if (img) {
+        img.src = 'tick.svg?' + Date.now();
+    }
+
+    overlay.classList.remove('hidden', 'opacity-0');
+    overlay.classList.add('opacity-100');
+
+    // Auto-hide after 1.5 seconds
+    setTimeout(() => {
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 300);
+    }, 1500);
 }
 
 function resetScroll(elementId) {
