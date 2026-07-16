@@ -1218,6 +1218,23 @@ async function syncSupabaseNow(options) {
         }
         return false;
     }
+}
+
+// Expose to global scope for inline onclick handlers
+window.syncSupabaseNow = syncSupabaseNow;
+
+async function _syncSupabaseNowInternal(options) {
+    const manual = !!(options && options.manual);
+
+    if (!supabaseClient) {
+        setSupabaseStatus('Supabase is not connected', false, true);
+        if (manual) {
+            showSyncErrorOverlay('Supabase is not connected. Please connect first.');
+        } else {
+            showToast('Connect Supabase first');
+        }
+        return false;
+    }
 
     // If a sync is already in progress:
     //   - For AUTO syncs: just queue and return (original behaviour).
