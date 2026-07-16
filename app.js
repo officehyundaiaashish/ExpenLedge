@@ -192,29 +192,13 @@ function suppressBrowserAutofill(root = document) {
     fields.forEach((el) => {
         if (!el || el.disabled) return;
 
-        let type = (el.getAttribute('type') || el.type || '').toLowerCase();
+        const type = (el.getAttribute('type') || el.type || '').toLowerCase();
         if (['hidden', 'checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range', 'color'].includes(type)) return;
-
-        // CRITICAL FIX: Convert type="number" to text + inputmode to block payment overlay
-        // Google Payment Manager is triggered by type="number" fields.
-        if (type === 'number') {
-            el.type = 'text';
-            el.setAttribute('type', 'text');
-            el.setAttribute('inputmode', 'decimal');
-            type = 'text'; // update variable for subsequent checks
-        } else if (type === 'text' && !el.getAttribute('inputmode')) {
-            // For text fields, set numeric inputmode if it looks like an amount field
-            const isAmount = el.id && (el.id.toLowerCase().includes('amount') || el.id.toLowerCase().includes('balance'));
-            const hasNumericAttr = el.getAttribute('inputmode') === 'decimal' || el.getAttribute('inputmode') === 'numeric';
-            if (isAmount || hasNumericAttr) {
-                el.setAttribute('inputmode', 'decimal');
-            }
-        }
 
         // Force autocomplete off - some password managers ignore "off" but respect "new-password"
         // We use a combination: set to "off" and also set data-lpignore etc.
-        el.setAttribute('autocomplete', 'off');
-        el.setAttribute('autocapitalize', type === 'email' || type === 'search' ? 'none' : 'off');
+        el.setAttribute('autocomplete', 'new-password');
+        el.setAttribute('autocapitalize', 'none');
         el.setAttribute('autocorrect', 'off');
         el.setAttribute('spellcheck', 'false');
         el.setAttribute('data-form-type', 'other');
@@ -235,6 +219,16 @@ function suppressBrowserAutofill(root = document) {
             el.setAttribute('name', `expenledge_${safeId}_${Date.now()}`);
         }
 
+        // For number fields, switch to text + inputmode decimal to block payment detection
+        if (type === 'number') {
+            el.setAttribute('type', 'text');
+            el.setAttribute('inputmode', 'decimal');
+        } else if (type === 'email') {
+            el.setAttribute('inputmode', 'email');
+        } else if (!el.getAttribute('inputmode')) {
+            el.setAttribute('inputmode', 'text');
+        }
+
         // Remove any payment-related attributes that Chrome might use
         el.removeAttribute('payment');
         el.removeAttribute('payment-request');
@@ -252,9 +246,24 @@ function suppressBrowserAutofill(root = document) {
         }
 
         // CRITICAL: Set readonly to block password managers completely
-        // (will be removed on focus via global listener)
+        // Remove on first pointer interaction (before focus) so Payment Manager never triggers
         if (!el.hasAttribute('readonly')) {
             el.setAttribute('readonly', 'readonly');
+            // Remove readonly on first pointer/tap interaction (happens BEFORE focus)
+            el.addEventListener('pointerdown', function onFirstInteraction(e) {
+                if (this.hasAttribute('readonly')) {
+                    this.removeAttribute('readonly');
+                    this.focus();
+                }
+                this.removeEventListener('pointerdown', onFirstInteraction);
+            }, { once: true });
+            // Fallback for keyboard-only users
+            el.addEventListener('keydown', function onFirstKeydown(e) {
+                if (this.hasAttribute('readonly') && !e.ctrlKey && !e.metaKey && e.key !== 'Tab') {
+                    this.removeAttribute('readonly');
+                    this.removeEventListener('keydown', onFirstKeydown);
+                }
+            }, { once: true });
         }
     });
 }
@@ -1845,17 +1854,8 @@ window.addEventListener('DOMContentLoaded', () => {
         el.setAttribute('data-lpignore', 'true');
     });
 
-    // Remove readonly attribute on focus so user can type (password managers ignore readonly fields)
-    document.addEventListener('focusin', function (e) {
-        const target = e.target;
-        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-            // Only remove readonly if it was set by our script (we can check if it has the attribute)
-            if (target.hasAttribute('readonly')) {
-                target.removeAttribute('readonly');
-                // Optionally reapply after blur? We'll not reapply to avoid annoyance.
-            }
-        }
-    }, { passive: true });
+    // focusin listener removed - readonly is now removed on pointerdown/keydown instead
+    // This prevents Google Payment Manager from appearing above the keyboard
 
     supabaseIntegration.booting = false;
     supabaseInitialLoadDone = true;
@@ -2145,240 +2145,168 @@ function getTransactionRenderBatchSize() {
     return isMobile || deviceMemory <= 4 || cpuCores <= 4 ? 20 : 50;
 }
 
-function renderStructuredTx(loadMore = false) {
-    const wasStructured = (currentView === 'structured-tx');
-    const scrollPos = wasStructured ? window.scrollY : 0;
-
+function updateAllTransactionsView(loadMore = false) {
     if (!loadMore) {
-        structuredTxRenderLimit = 50;
+        allTxRenderLimit = 50;
     }
-    const listContainer = document.getElementById('structured-tx-list');
-    if (!listContainer) return;
-    listContainer.innerHTML = '';
+    renderAllTxFilters();
 
-    const navContainer = document.getElementById('structured-period-nav');
-    const labelEl = document.getElementById('structured-period-label');
-    const sublabelEl = document.getElementById('structured-period-sublabel');
+    const searchVal = document.getElementById('all-tx-search').value;
+    const typeFilter = allTxTypeFilter;
+    const sortVal = allTxSort;
+    const accountFilter = allTxAccountFilter;
+    const categoryFilter = allTxCategoryFilter;
+    const tagFilter = allTxTagFilter;
 
-    if (structuredTxMode === 'custom') {
-        if (navContainer) navContainer.classList.add('hidden');
-    } else {
-        if (navContainer) navContainer.classList.remove('hidden');
-        if (structuredTxMode === 'day') {
-            const todayStr = getRelativeDateString(new Date());
-            const selectedStr = getRelativeDateString(structuredSelectedDate);
+    let filtered = [...transactions];
 
-            if (labelEl) {
-                labelEl.innerText = selectedStr;
-            }
-            if (sublabelEl) {
-                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                sublabelEl.innerText = days[structuredSelectedDate.getDay()];
-            }
-        } else if (structuredTxMode === 'month') {
-            if (labelEl) {
-                labelEl.innerText = `${monthNames[structuredSelectedDate.getMonth()]} ${structuredSelectedDate.getFullYear()}`;
-            }
-            if (sublabelEl) {
-                sublabelEl.innerText = 'Monthly Summary';
-            }
-        }
+    // 1. Apply Search
+    if (searchVal) {
+        filtered = filtered.filter(t => matchTransaction(t, searchVal));
     }
 
-    const customContainer = document.getElementById('structured-custom-date-container');
-    if (customContainer) {
-        if (structuredTxMode === 'custom') {
-            customContainer.classList.remove('hidden');
-        } else {
-            customContainer.classList.add('hidden');
-        }
+    // 2. Apply Type Filter
+    if (typeFilter !== 'all') {
+        filtered = filtered.filter(t => t.type === typeFilter);
     }
 
-    let filtered = [];
-    if (structuredTxMode === 'day') {
-        filtered = transactions.filter(t => {
-            const txDate = getTransactionDate(t);
-            return txDate.getDate() === structuredSelectedDate.getDate() &&
-                txDate.getMonth() === structuredSelectedDate.getMonth() &&
-                txDate.getFullYear() === structuredSelectedDate.getFullYear();
-        });
-    } else if (structuredTxMode === 'month') {
-        filtered = transactions.filter(t => {
-            const txDate = getTransactionDate(t);
-            return txDate.getMonth() === structuredSelectedDate.getMonth() &&
-                txDate.getFullYear() === structuredSelectedDate.getFullYear();
-        });
-    } else if (structuredTxMode === 'custom') {
-        const fromEl = document.getElementById('structured-date-from');
-        const toEl = document.getElementById('structured-date-to');
-        const fromVal = fromEl ? fromEl.value : '';
-        const toVal = toEl ? toEl.value : '';
-        if (fromVal && toVal) {
-            const fromDate = new Date(fromVal); fromDate.setHours(0, 0, 0, 0);
-            const toDate = new Date(toVal); toDate.setHours(23, 59, 59, 999);
-            filtered = transactions.filter(t => {
-                const txDate = getTransactionDate(t);
-                const checkDate = new Date(txDate.getFullYear(), txDate.getMonth(), txDate.getDate());
-                return checkDate >= fromDate && checkDate <= toDate;
-            });
-        }
+    // 3. Apply Account Filter
+    if (accountFilter !== 'all') {
+        filtered = filtered.filter(t => t.paymentMode === accountFilter);
     }
 
-    // Update compact totals cards (always, including zero state, based on date filter only)
-    const totalSpendingEl = document.getElementById('structured-total-spending');
-    const totalIncomeEl = document.getElementById('structured-total-income');
-    const totalBalanceEl = document.getElementById('structured-total-balance');
-    const txCountEl = document.getElementById('structured-tx-count');
-    {
-        let sumSpend = 0, sumInc = 0;
-        filtered.forEach(t => {
-            if (t.type === 'income') sumInc += t.amount;
-            else sumSpend += t.amount;
-        });
-        const bal = sumInc - sumSpend;
-        if (totalSpendingEl) totalSpendingEl.innerText = `₹${sumSpend.toFixed(2)}`;
-        if (totalIncomeEl) totalIncomeEl.innerText = `₹${sumInc.toFixed(2)}`;
-        if (totalBalanceEl) {
-            const prefix = bal >= 0 ? '+' : '-';
-            totalBalanceEl.innerText = `${prefix}₹${Math.abs(bal).toFixed(2)}`;
-            const balCard = document.getElementById('structured-balance-card');
-            if (balCard) {
-                balCard.className = `px-4 py-1.5 rounded-full ${bal >= 0 ? 'bg-primary/15 text-primary' : 'bg-secondary/15 text-secondary'}`;
-            }
-        }
+    // 4. Apply Category Filter
+    if (categoryFilter !== 'all') {
+        filtered = filtered.filter(t => t.category === categoryFilter);
     }
 
-    const periodTransactions = filtered;
-
-    // Apply mini search bar filter
-    const queryVal = document.getElementById('structured-search-input') ? document.getElementById('structured-search-input').value : '';
-    if (queryVal) {
-        filtered = filtered.filter(t => matchTransaction(t, queryVal));
+    // 5. Apply Tag Filter
+    if (tagFilter !== 'all') {
+        filtered = filtered.filter(t => t.tags && t.tags.includes(tagFilter));
     }
 
-    // Apply tab spent/income filters
-    if (structuredTypeFilter) {
-        filtered = filtered.filter(t => t.type === (structuredTypeFilter === 'expense' ? 'expense' : 'income'));
-    }
+    const getTransactionDateValue = (t) => {
+        const d = getTransactionDate(t);
+        return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+    };
 
-    if (txCountEl) {
-        txCountEl.innerText = `${filtered.length} transaction${filtered.length !== 1 ? 's' : ''}`;
-    }
-
-    if (filtered.length === 0) {
-        listContainer.innerHTML = `<p class="text-center text-on-surface-variant py-lg">No transactions found</p>`;
-        // Restore scroll even for zero state if user had scrolled
-        if (wasStructured && scrollPos > 0) {
-            window.scrollTo(0, scrollPos);
-        }
-        return;
+    // 3. Apply Sort
+    if (sortVal === 'date-desc') {
+        filtered.sort((a, b) => getTransactionDateValue(b) - getTransactionDateValue(a));
+    } else if (sortVal === 'date-asc') {
+        filtered.sort((a, b) => getTransactionDateValue(a) - getTransactionDateValue(b));
+    } else if (sortVal === 'amount-desc') {
+        filtered.sort((a, b) => b.amount - a.amount);
+    } else if (sortVal === 'amount-asc') {
+        filtered.sort((a, b) => a.amount - b.amount);
     }
 
     const totalMatching = filtered.length;
-    const itemsToRender = filtered.slice(0, structuredTxRenderLimit);
+    const itemsToRender = filtered.slice(0, allTxRenderLimit);
 
-    const getStructuredGroupName = (transaction) => {
-        if (structuredTxMode === 'month') {
-            const txDate = getTransactionDate(transaction);
-            return `${monthNames[txDate.getMonth()]} ${txDate.getFullYear()}`;
+    // 4. Group by actual day
+    const groups = new Map();
+    itemsToRender.forEach(t => {
+        const txDate = getTransactionDate(t);
+        const safeDate = Number.isNaN(txDate.getTime()) ? new Date() : txDate;
+        const groupName = safeDate.toISOString().slice(0, 10);
+        if (!groups.has(groupName)) {
+            groups.set(groupName, { date: safeDate, items: [] });
         }
-        return transaction.date;
-    };
-
-    // Keep group totals accurate even when the card initially renders only one batch.
-    // Like the header totals, these stay based on the selected date period, not search text.
-    const groupTotals = {};
-    periodTransactions.forEach(transaction => {
-        const groupName = getStructuredGroupName(transaction);
-        if (!groupTotals[groupName]) groupTotals[groupName] = { income: 0, spending: 0 };
-        if (transaction.type === 'income') groupTotals[groupName].income += transaction.amount;
-        else groupTotals[groupName].spending += transaction.amount;
+        groups.get(groupName).items.push(t);
     });
 
-    // Now group the currently visible transaction items.
-    const groups = {};
-    itemsToRender.forEach(transaction => {
-        const groupName = getStructuredGroupName(transaction);
-        if (!groups[groupName]) groups[groupName] = [];
-        groups[groupName].push(transaction);
-    });
+    const container = document.getElementById('all-transactions-grouped-container');
+    container.innerHTML = '';
 
-    for (const groupName in groups) {
-        const groupCard = document.createElement('div');
-        groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm";
+    if (totalMatching === 0) {
+        container.innerHTML = `<p class="text-center text-on-surface-variant py-lg">No transactions found matching your filters</p>`;
+        return;
+    }
 
-        const safeId = groupName.replace(/[^a-zA-Z0-9]/g, '-');
+    // Use a document fragment to batch all group cards
+    const fragment = document.createDocumentFragment();
 
-        const totals = groupTotals[groupName] || { income: 0, spending: 0 };
-        const balance = totals.income - totals.spending;
-        const balanceClass = balance >= 0 ? 'bg-primary/15 text-primary' : 'bg-secondary/15 text-secondary';
+    [...groups.entries()]
+        .sort((a, b) => b[1].date.getTime() - a[1].date.getTime())
+        .forEach(([groupKey, group]) => {
+            const groupCard = document.createElement('div');
+            groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md";
 
-        groupCard.innerHTML = `
-            <div class="border-b border-outline-variant/10 pb-sm space-y-sm">
-                <span class="text-label-md font-bold text-primary uppercase tracking-wider">${groupName}</span>
-                <div class="flex flex-wrap gap-xs text-[11px] font-semibold">
-                    <span class="bg-secondary/10 text-secondary px-3 py-1 rounded-full">Out: ₹${totals.spending.toFixed(2)}</span>
-                    <span class="bg-primary/10 text-primary px-3 py-1 rounded-full">In: ₹${totals.income.toFixed(2)}</span>
-                    <span class="${balanceClass} px-3 py-1 rounded-full">Bal: ${balance >= 0 ? '+' : '-'}₹${Math.abs(balance).toFixed(2)}</span>
+            // Calculate daily totals for badges
+            let dayIn = 0;
+            let dayOut = 0;
+            group.items.forEach(t => {
+                if (t.type === 'income') dayIn += t.amount;
+                else dayOut += t.amount;
+            });
+            const dayBalance = dayIn - dayOut;
+            const day = getRelativeDateString(group.date);
+            const safeDayId = groupKey.replace(/[^a-zA-Z0-9]/g, '-');
+            groupCard.innerHTML = `
+            <div class="border-b border-outline-variant/10 pb-xs flex justify-between items-center flex-wrap gap-xs">
+                <span class="text-label-md font-bold text-primary uppercase tracking-wider">${day}</span>
+                <div class="flex flex-wrap gap-xs text-[10px] font-semibold">
+                    <span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded-full">Out: ₹${dayOut.toFixed(2)}</span>
+                    <span class="bg-primary/10 text-primary px-2 py-0.5 rounded-full">In: ₹${dayIn.toFixed(2)}</span>
+                    <span class="px-2 py-0.5 rounded-full ${dayBalance >= 0 ? 'bg-primary/15 text-primary' : 'bg-secondary/15 text-secondary'}">Bal: ${dayBalance >= 0 ? '+' : '-'}₹${Math.abs(dayBalance).toFixed(2)}</span>
                 </div>
             </div>
-            <div class="space-y-sm" id="structured-group-list-${safeId}">
+            <div class="space-y-sm" id="group-list-${safeDayId}">
             </div>
         `;
 
-        listContainer.appendChild(groupCard);
+            // Build inner items into a fragment
+            const listContainer = groupCard.querySelector(`#group-list-${safeDayId}`);
+            const itemsFragment = document.createDocumentFragment();
+            group.items.forEach(t => {
+                const isInc = t.type === 'income';
+                const itemEl = document.createElement('div');
+                itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+                bindLongPress(itemEl, t);
 
-        const subContainer = groupCard.querySelector(`#structured-group-list-${safeId}`);
-        groups[groupName].forEach(t => {
-            const isInc = t.type === 'income';
-            const itemEl = document.createElement('div');
-            itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
-            bindLongPress(itemEl, t);
+                let colorClass = "text-secondary bg-secondary-container/20";
+                if (isInc) colorClass = "text-primary bg-primary-container/20";
 
-            let colorClass = "text-secondary bg-secondary-container/20";
-            if (isInc) colorClass = "text-primary bg-primary-container/20";
-
-            itemEl.innerHTML = `
-                <div class="w-10 h-10 rounded-full flex items-center justify-center ${colorClass} flex-shrink-0">
+                itemEl.innerHTML = `
+                <div class="w-10 h-10 rounded-full flex items-center justify-center ${colorClass}">
                     <span class="material-symbols-outlined text-[20px]">${t.categoryIcon || 'payments'}</span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-center gap-sm">
-                        <p class="text-body-md font-semibold text-on-surface break-words whitespace-normal">${t.note || t.category}</p>
-                        <p class="text-body-md font-bold flex-shrink-0 ${isInc ? 'text-primary' : 'text-secondary'}">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
-                    </div>
-                    <div class="flex justify-between items-center mt-1">
-                        <p class="text-label-md text-on-surface-variant">${t.date}</p>
+                <div class="flex-1">
+                    <div class="flex justify-between items-center">
+                        <p class="text-body-md font-bold text-on-surface">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
                         <span class="flex-shrink-0">${getTxAccountBadge(t)}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <p class="text-label-md text-on-surface-variant">${t.note || t.category}</p>
                     </div>
                 </div>
             `;
-            // Add click to edit
-            itemEl.onclick = (e) => {
-                if (longPressTriggered) return;
-                openEditTransactionModal(t);
-            };
-            subContainer.appendChild(itemEl);
-        });
-    }
+                // Add click to edit
+                itemEl.onclick = (e) => {
+                    if (longPressTriggered) return;
+                    openEditTransactionModal(t);
+                };
+                itemsFragment.appendChild(itemEl);
+            });
+            listContainer.appendChild(itemsFragment);
 
-    if (totalMatching > structuredTxRenderLimit) {
+            // Append the complete group card to the main fragment
+            fragment.appendChild(groupCard);
+        });
+
+    // Append all group cards at once
+    container.appendChild(fragment);
+
+    if (totalMatching > allTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
         loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md active:scale-[0.98]";
-        loadMoreBtn.innerText = `Load More (${totalMatching - structuredTxRenderLimit} remaining)`;
+        loadMoreBtn.innerText = `Load More (${totalMatching - allTxRenderLimit} remaining)`;
         loadMoreBtn.onclick = () => {
-            structuredTxRenderLimit += 50;
-            renderStructuredTx(true);
+            allTxRenderLimit += 50;
+            updateAllTransactionsView(true);
         };
-        listContainer.appendChild(loadMoreBtn);
-    }
-
-    // Restore scroll position
-    if (wasStructured && scrollPos > 0) {
-        window.scrollTo(0, scrollPos);
-        setTimeout(() => {
-            window.scrollTo(0, scrollPos);
-        }, 0);
+        container.appendChild(loadMoreBtn);
     }
 }
 
