@@ -3881,7 +3881,7 @@
             return '#f4f6f4';
         }
 
-        let themeColorSyncRaf = null;
+        let themeColorSyncTimer = null;
         function syncThemeColor() {
             const color = getTopLayerColor();
             if (themeColorMeta && themeColorMeta.content !== color) {
@@ -3890,11 +3890,12 @@
         }
 
         function queueThemeColorSync() {
-            if (themeColorSyncRaf) cancelAnimationFrame(themeColorSyncRaf);
-            themeColorSyncRaf = requestAnimationFrame(() => {
-                themeColorSyncRaf = null;
+            // Debounce with a 200ms delay to let modal/sheet transitions complete before updating status bar
+            if (themeColorSyncTimer) clearTimeout(themeColorSyncTimer);
+            themeColorSyncTimer = setTimeout(() => {
+                themeColorSyncTimer = null;
                 syncThemeColor();
-            });
+            }, 200);
         }
 
         // Observe DOM mutations to detect sheet open/close
