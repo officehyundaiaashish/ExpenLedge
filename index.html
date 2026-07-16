@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -368,15 +369,15 @@
 
         .sync-icon {
             transform-origin: 50% 50%;
-            transition: filter 0.4s ease,
+            transition: filter 0.3s ease,
                         opacity 0.3s ease;
             will-change: filter;
         }
 
         /* ---- DISCONNECTED (idle, muted) ---- */
         .sync-icon--disconnected {
-            opacity: 0.7;
-            filter: grayscale(100%) brightness(0.9);
+            opacity: 0.6;
+            filter: grayscale(100%) brightness(0.85);
         }
 
         /* ---- CONNECTED (calm, normal) ---- */
@@ -389,15 +390,29 @@
             opacity: 1;
         }
 
-        /* ---- ERROR (red tint + shake) ---- */
+        /* ---- ERROR (red cross overlay) ---- */
         .sync-icon--error {
-            animation: sync-icon-shake 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-            filter: sepia(1) saturate(5) hue-rotate(-50deg) brightness(0.8);
+            position: relative;
+            opacity: 1;
+        }
+        .sync-icon--error::after {
+            content: '✕';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #dc2626;
+            text-shadow: 0 0 2px rgba(255,255,255,0.9);
+            animation: sync-icon-error-pop 0.4s ease-out both;
         }
 
         /* ---- SUCCESS (green tick overlay) ---- */
         .sync-icon--success {
             position: relative;
+            opacity: 1;
         }
         .sync-icon--success::after {
             content: '✓';
@@ -406,31 +421,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
-            color: var(--primary, #4a7c59);
-            text-shadow: 0 0 2px rgba(255,255,255,0.8);
-            animation: sync-icon-success-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-        }
-
-        @keyframes sync-icon-shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-3px); }
-            40% { transform: translateX(3px); }
-            60% { transform: translateX(-2px); }
-            80% { transform: translateX(2px); }
+            color: #22c55e;
+            text-shadow: 0 0 2px rgba(255,255,255,0.9);
+            animation: sync-icon-success-pop 0.4s ease-out both;
         }
 
         @keyframes sync-icon-success-pop {
             0%   { transform: scale(0); opacity: 0; }
-            50%  { transform: scale(1.2); opacity: 1; }
+            60%  { transform: scale(1.15); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
 
-        @keyframes sync-tip-glow {
-            0%   { filter: drop-shadow(0 0 0   rgba(74, 124, 89, 0)); }
-            42%  { filter: drop-shadow(0 0 8px rgba(74, 124, 89, 0.9)); }
-            100% { filter: drop-shadow(0 0 2px rgba(74, 124, 89, 0.3)); }
+        @keyframes sync-icon-error-pop {
+            0%   { transform: scale(0); opacity: 0; }
+            60%  { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* ============================================================
@@ -733,7 +740,6 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .sync-icon--syncing { animation-duration: 2.5s; }
             .sync-icon--success,
             .sync-icon--error { animation: none; }
             .sync-result-burst span { animation: none !important; opacity: 0 !important; }
