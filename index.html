@@ -1891,50 +1891,46 @@
                     class="material-symbols-outlined text-error hover:bg-surface-container-high rounded-full p-2 hidden"
                     id="header-delete-btn" onclick="deleteCurrentEditingTransaction()">delete</button>
                 <button
-                    class="text-primary hover:bg-surface-container-high rounded-full p-2 transition-colors flex items-center justify-center"
+                    class="hover:bg-surface-container-high rounded-full p-2 transition-colors flex items-center justify-center"
                     id="header-save-btn" onclick="saveTransaction()">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7">
-                        </path>
-                    </svg>
+                    <img src="tick.svg" alt="Save" class="h-6 w-6" />
                 </button>
             </div>
         </header>
         <!-- Form fields -->
-        <main class="flex-1 min-h-0 overflow-y-auto px-container-padding py-6 space-y-lg pb-14 no-scrollbar">
+        <main class="flex-1 min-h-0 overflow-y-auto px-container-padding py-3 space-y-sm pb-14 no-scrollbar">
             <!-- Type switcher -->
-            <div class="mb-4">
+            <div class="mb-2">
                 <div class="flex bg-surface-container-high rounded-xl p-0.5">
                     <button
-                        class="flex-1 py-3 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm"
+                        class="flex-1 py-2 rounded-lg text-label-md font-label-lg transition-all bg-primary text-on-primary shadow-sm"
                         id="tx-type-expense" onclick="switchTransactionType('expense')">Expense</button>
                     <button
-                        class="flex-1 py-3 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-highest"
+                        class="flex-1 py-2 rounded-lg text-label-md font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-highest"
                         id="tx-type-income" onclick="switchTransactionType('income')">Income</button>
                 </div>
             </div>
             <!-- Date & Time Selector -->
-            <div class="flex items-center gap-md py-3 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
+            <div class="flex items-center gap-sm py-2 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
                 onclick="openTxDateTimePicker()">
-                <span class="material-symbols-outlined text-secondary text-[26px]">calendar_today</span>
+                <span class="material-symbols-outlined text-secondary text-[22px]">calendar_today</span>
                 <div class="flex-1 flex flex-col">
-                    <span class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
+                    <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
                         Time</span>
-                    <span class="text-body-lg font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
+                    <span class="text-body-md font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
                         PM</span>
                     <input type="hidden" id="tx-input-datetime" />
                 </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
             </div>
             <!-- Amount input -->
-            <div class="flex items-center gap-md py-3 group border-b border-outline-variant">
-                <span class="material-symbols-outlined text-secondary text-[26px]">currency_rupee</span>
+            <div class="flex items-center gap-sm py-2 group border-b border-outline-variant">
+                <span class="material-symbols-outlined text-secondary text-[22px]">currency_rupee</span>
                 <div class="flex-1 flex flex-col">
                     <label
-                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
+                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
                     <input
-                        class="bg-transparent border-none p-0 text-headline-lg font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-10"
+                        class="bg-transparent border-none p-0 text-headline-md font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-8"
                         id="tx-input-amount" placeholder="0" required="" type="number"
                         name="expenledge_transaction_amount" autocomplete="new-password" autocorrect="off"
                         autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
@@ -1943,9 +1939,9 @@
                 </div>
                 <!-- Calculator Button -->
                 <button type="button"
-                    class="text-primary hover:bg-surface-container-high rounded-full p-2 transition-colors flex items-center justify-center self-end mb-1"
+                    class="text-primary hover:bg-surface-container-high rounded-full p-1.5 transition-colors flex items-center justify-center self-end"
                     onclick="openCalculatorSheet()">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <rect x="4" y="4" width="16" height="16" rx="2" stroke-linejoin="round"></rect>
                         <path d="M9 9h6M9 13h2M13 13h2M9 17h2M13 17h2" stroke-linecap="round"></path>
@@ -1953,12 +1949,12 @@
                 </button>
             </div>
             <!-- Description -->
-            <div class="flex items-center gap-md py-3 border-b border-outline-variant">
-                <span class="material-symbols-outlined text-secondary text-[26px]">notes</span>
+            <div class="flex items-center gap-sm py-2 border-b border-outline-variant">
+                <span class="material-symbols-outlined text-secondary text-[22px]">notes</span>
                 <div class="flex-1 flex flex-col">
                     <label
-                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Description</label>
-                    <input class="bg-transparent border-none p-0 text-body-md text-on-surface w-full focus:ring-0 h-10"
+                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Description</label>
+                    <input class="bg-transparent border-none p-0 text-body-md text-on-surface w-full focus:ring-0 h-8"
                         id="tx-input-desc" placeholder="Note (e.g. Lunch with team)" type="text"
                         name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
                         autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
@@ -1966,13 +1962,13 @@
                 </div>
             </div>
             <!-- Category Setup Header with Pencil -->
-            <div class="flex justify-between items-center px-1 pt-3 -mb-0.5">
-                <span class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
+            <div class="flex justify-between items-center px-1 pt-1 -mb-0.5">
+                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
                     Setup</span>
                 <button type="button"
-                    class="text-primary hover:bg-surface-container-high rounded-full p-1 transition-colors flex items-center justify-center"
+                    class="text-primary hover:bg-surface-container-high rounded-full p-0.5 transition-colors flex items-center justify-center"
                     onclick="openManageCategoriesFromTx()">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
@@ -1981,42 +1977,42 @@
                 </button>
             </div>
             <!-- Category Selector Trigger -->
-            <div class="flex items-center gap-md py-3 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
+            <div class="flex items-center gap-sm py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openCategorySheet()">
-                <span class="material-symbols-outlined text-secondary text-[24px]"
+                <span class="material-symbols-outlined text-secondary text-[20px]"
                     id="tx-selected-cat-icon">shopping_basket</span>
                 <div class="flex-1 flex flex-col">
                     <span
-                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
+                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
                     <span class="text-body-md font-semibold" id="tx-selected-cat-name">Groceries</span>
                 </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
             </div>
             <!-- Payment Mode Trigger -->
-            <div class="flex items-center gap-md py-3 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
+            <div class="flex items-center gap-sm py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openPaymentSheet()">
-                <span class="material-symbols-outlined text-secondary text-[24px]"
+                <span class="material-symbols-outlined text-secondary text-[20px]"
                     id="tx-selected-pay-icon">payments</span>
                 <div class="flex-1 flex flex-col">
-                    <span class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
+                    <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
                         Mode</span>
                     <span class="text-body-md font-semibold" id="tx-selected-pay-name">Cash</span>
                 </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
+                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
             </div>
             <!-- Tags selector Trigger -->
-            <div class="flex items-center gap-md py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
+            <div class="flex items-center gap-sm py-1.5 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openTagsSheet()">
-                <span class="material-symbols-outlined text-secondary text-[24px]">tag</span>
+                <span class="material-symbols-outlined text-secondary text-[20px]">tag</span>
                 <div class="flex-1 flex flex-col overflow-hidden">
                     <label
-                        class="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Tags</label>
+                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Tags</label>
                     <div class="flex gap-sm overflow-x-auto no-scrollbar pb-1" id="tx-selected-tags-container">
                         <span class="text-label-md text-on-surface-variant">Add tags...</span>
                     </div>
                 </div>
                 <span
-                    class="material-symbols-outlined text-on-surface-variant text-[20px] self-center">chevron_right</span>
+                    class="material-symbols-outlined text-on-surface-variant text-[18px] self-center">chevron_right</span>
             </div>
         </main>
     </div>
@@ -3709,8 +3705,14 @@
     </div>
 
     <!-- Dynamic Toast Notification -->
-    <div class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-primary text-on-primary px-lg py-sm rounded-full shadow-lg border border-primary/20 text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100]"
+    <div class="fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center"
         id="toast">
+    </div>
+
+    <!-- Tick Animation Overlay for Transaction Save -->
+    <div id="tick-overlay"
+        class="fixed inset-0 z-[150] flex items-center justify-center pointer-events-none hidden opacity-0 transition-opacity duration-300">
+        <img src="tick.svg" alt="Success" class="w-24 h-24" />
     </div>
 
     <!-- PWA Install Banner -->
