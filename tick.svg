@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <style>
+    .circle {
+      stroke: #4a7c59;
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 226;
+      stroke-dashoffset: 226;
+      animation: drawCircle 0.4s cubic-bezier(0.65, 0, 0.35, 1) 0s forwards;
+    }
+
+    .tick {
+      stroke: #4a7c59;
+      stroke-width: 4.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 60;
+      stroke-dashoffset: 60;
+      animation: drawTick 0.3s cubic-bezier(0.65, 0, 0.35, 1) 0.35s forwards;
+    }
+
+    .bg {
+      fill: #4a7c59;
+      opacity: 0;
+      animation: fillBg 0.25s ease 0.32s forwards;
+    }
+
+    .tick-white {
+      stroke: #ffffff;
+      stroke-width: 4.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 60;
+      stroke-dashoffset: 60;
+      animation: drawTick 0.3s cubic-bezier(0.65, 0, 0.35, 1) 0.35s forwards;
+    }
+
+    @keyframes drawCircle {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes fillBg {
+      to { opacity: 1; }
+    }
+
+    @keyframes drawTick {
+      to { stroke-dashoffset: 0; }
+    }
+  </style>
+
+  <!-- Background fill circle (fades in after outline) -->
+  <circle class="bg" cx="40" cy="40" r="36"/>
+
+  <!-- Animated outline circle -->
+  <circle class="circle" cx="40" cy="40" r="36" transform="rotate(-90 40 40)"/>
+
+  <!-- White tick on top -->
+  <polyline class="tick-white" points="22,41 35,54 58,28"/>
+</svg>
