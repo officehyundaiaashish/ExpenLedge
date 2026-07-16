@@ -378,11 +378,13 @@
         .sync-icon--disconnected {
             opacity: 0.6;
             filter: grayscale(100%) brightness(0.85);
+            color: #78909c !important; /* Blue-grey-300 for subtle look */
         }
 
-        /* ---- CONNECTED (calm, normal) ---- */
+        /* ---- CONNECTED (calm, green) ---- */
         .sync-icon--connected {
             opacity: 1;
+            color: #22c55e !important; /* Green-500 */
         }
 
         /* ---- SYNCING (show animated SVG as-is) ---- */
@@ -909,10 +911,10 @@
                         onclick="openSupabaseSyncSheet()">
                         <!-- Static Supabase icon (shown when not syncing) -->
                         <img id="supabase-sync-icon-static" src="supabase-icon.svg" alt="Sync"
-                            class="sync-icon sync-icon--disconnected w-[26px] h-[26px]" />
+                            class="sync-icon sync-icon--connected w-[28px] h-[28px]" />
                         <!-- Animated sync icon (shown only when syncing) -->
                         <img id="supabase-sync-icon-animated" src="sync.svg" alt="Syncing"
-                            class="sync-icon sync-icon--syncing w-[26px] h-[26px]" style="display: none;" />
+                            class="sync-icon sync-icon--syncing w-[28px] h-[28px]" style="display: none;" />
                     </button>
                     <button class="p-xs hover:bg-surface-container-high rounded-full animate-hover"
                         onclick="openSearchOnTransactionsPage()">
@@ -2596,17 +2598,17 @@
                 <div class="space-y-xs">
                     <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project URL</label>
                     <input id="supabase-project-url" type="text" inputmode="url" placeholder="https://xxxxx.supabase.co"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" />
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary font-mono" />
                 </div>
                 <div class="space-y-xs">
                     <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Anon Key</label>
                     <textarea id="supabase-anon-key" rows="2" placeholder="Paste anon / publishable key here"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary resize-none"></textarea>
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary resize-none font-mono"></textarea>
                 </div>
                 <div class="space-y-xs">
                     <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Sync Code</label>
                     <input id="supabase-sync-key" type="text" placeholder="Same code on every device"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" />
+                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary font-mono" />
                 </div>
             </div>
             <!-- Actions -->
@@ -2616,12 +2618,8 @@
                     <span class="material-symbols-outlined text-[18px]">link</span> Connect
                 </button>
                 <div class="grid grid-cols-2 gap-sm">
-                    <button onclick="syncSupabaseNow({ manual: true })"
-                        class="w-full py-sm rounded-xl bg-surface-container-high text-on-surface font-bold border border-outline-variant/30 active:scale-95 transition-transform flex items-center justify-center gap-xs">
-                        <span class="material-symbols-outlined text-[16px]">sync</span> Sync Now
-                    </button>
                     <button onclick="disconnectSupabaseConnection()"
-                        class="w-full py-sm rounded-xl bg-error-container text-error font-bold active:scale-95 transition-transform flex items-center justify-center gap-xs">
+                        class="w-full py-sm rounded-xl bg-error-container text-error font-bold active:scale-95 transition-transform flex items-center justify-center gap-xs col-span-2">
                         <span class="material-symbols-outlined text-[16px]">link_off</span> Disconnect
                     </button>
                 </div>
