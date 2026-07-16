@@ -980,7 +980,7 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     // they take priority and play their full animation before reverting.
     const staticIcon = document.getElementById('supabase-sync-icon-static');
     const animatedIcon = document.getElementById('supabase-sync-icon-animated');
-    
+
     // Hide animated icon, show static icon when not syncing
     if (animatedIcon) animatedIcon.style.display = 'none';
     if (staticIcon) {
@@ -1012,14 +1012,12 @@ function loadSupabaseCredentialsIntoForm() {
     if (!saved) {
         if (urlInput) urlInput.value = '';
         if (keyInput) keyInput.value = '';
-        showToast('No saved Supabase credentials found.');
         return;
     }
 
     const parsed = JSON.parse(saved);
     if (urlInput) urlInput.value = parsed.url || '';
     if (keyInput) keyInput.value = parsed.anonKey || '';
-    showToast('Saved Supabase credentials loaded.');
 }
 
 function markSupabaseStateDirty() {
@@ -1219,6 +1217,26 @@ async function syncSupabaseNow(options) {
         return false;
     }
 
+    // Call the internal implementation
+    return _syncSupabaseNowInternal(options);
+}
+
+// Expose to global scope for inline onclick handlers
+window.syncSupabaseNow = syncSupabaseNow;
+
+async function _syncSupabaseNowInternal(options) {
+    const manual = !!(options && options.manual);
+
+    if (!supabaseClient) {
+        setSupabaseStatus('Supabase is not connected', false, true);
+        if (manual) {
+            showSyncErrorOverlay('Supabase is not connected. Please connect first.');
+        } else {
+            showToast('Connect Supabase first');
+        }
+        return false;
+    }
+
     // If a sync is already in progress:
     //   - For AUTO syncs: just queue and return (original behaviour).
     //   - For MANUAL syncs: show the loading overlay and wait for the
@@ -1247,7 +1265,7 @@ async function syncSupabaseNow(options) {
     // Drive the dashboard SVG icon to its spinning state.
     const staticIcon = document.getElementById('supabase-sync-icon-static');
     const animatedIcon = document.getElementById('supabase-sync-icon-animated');
-    
+
     // Show animated icon, hide static icon during syncing
     if (staticIcon) staticIcon.style.display = 'none';
     if (animatedIcon) {
@@ -1399,7 +1417,7 @@ async function syncSupabaseNow(options) {
 
         const staticIcon = document.getElementById('supabase-sync-icon-static');
         const animatedIcon = document.getElementById('supabase-sync-icon-animated');
-        
+
         if (animatedIcon) {
             animatedIcon.classList.remove('sync-icon--syncing', 'sync-icon--success');
             void animatedIcon.offsetWidth;
@@ -1450,9 +1468,9 @@ async function syncSupabaseNow(options) {
 function triggerSyncBadgeSuccessAnimation() {
     const staticIcon = document.getElementById('supabase-sync-icon-static');
     const animatedIcon = document.getElementById('supabase-sync-icon-animated');
-    
+
     if (!animatedIcon) return;
-    
+
     animatedIcon.classList.remove('sync-icon--syncing', 'sync-icon--error', 'sync-icon--disconnected');
     void animatedIcon.offsetWidth;
     animatedIcon.classList.add('sync-icon--success');
