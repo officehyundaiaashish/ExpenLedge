@@ -2680,6 +2680,30 @@ function transactionBelongsToAnalysisPeriod(t) {
     }
 }
 
+function getDaysInAnalysisPeriod() {
+    if (analysisPeriod === 'week') {
+        return 7;
+    } else if (analysisPeriod === 'month') {
+        const year = analysisYear;
+        const month = analysisMonth;
+        return new Date(year, month + 1, 0).getDate();
+    } else if (analysisPeriod === 'year') {
+        const year = analysisYear;
+        const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        return isLeap ? 366 : 365;
+    } else if (analysisPeriod === 'custom') {
+        const fromEl = document.getElementById('analysis-custom-from');
+        const toEl = document.getElementById('analysis-custom-to');
+        if (!fromEl || !toEl || !fromEl.value || !toEl.value) return 1;
+        const from = new Date(fromEl.value);
+        const to = new Date(toEl.value);
+        const diffTime = Math.abs(to - from);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        return diffDays;
+    }
+    return 30; // fallback
+}
+
 // Analysis view rendering
 function updateAnalysis() {
     // Sync nav label on render
@@ -2698,13 +2722,20 @@ function updateAnalysis() {
     let totalIncome = 0;
     let totalSpending = 0;
     let total = 0;
+    let incomeCount = 0;
+    let spendingCount = 0;
     const categorySums = {};
     transactions.forEach(t => {
         if (!transactionBelongsToAnalysisPeriod(t)) return;
 
         const amt = Number(t.amount) || 0;
-        if (t.type === 'income') totalIncome += amt;
-        else totalSpending += amt;
+        if (t.type === 'income') {
+            totalIncome += amt;
+            incomeCount++;
+        } else {
+            totalSpending += amt;
+            spendingCount++;
+        }
 
         if (t.type === txType) {
             total += amt;
@@ -2730,6 +2761,18 @@ function updateAnalysis() {
     const totalLabelSub = totalLabel && totalLabel.previousElementSibling;
     if (totalLabel) totalLabel.innerText = `₹${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     if (totalLabelSub) totalLabelSub.innerText = isSpending ? 'Total Spent' : 'Total Earned';
+
+    // Compute averages
+    const days = getDaysInAnalysisPeriod();
+    const spendAvgDay = days > 0 ? totalSpending / days : 0;
+    const spendAvgTx = spendingCount > 0 ? totalSpending / spendingCount : 0;
+    const incomeAvgDay = days > 0 ? totalIncome / days : 0;
+    const incomeAvgTx = incomeCount > 0 ? totalIncome / incomeCount : 0;
+
+    document.getElementById('analysis-spend-avg-day').innerText = `₹${spendAvgDay.toFixed(2)}`;
+    document.getElementById('analysis-spend-avg-tx').innerText = `₹${spendAvgTx.toFixed(2)}`;
+    document.getElementById('analysis-income-avg-day').innerText = `₹${incomeAvgDay.toFixed(2)}`;
+    document.getElementById('analysis-income-avg-tx').innerText = `₹${incomeAvgTx.toFixed(2)}`;
 
     // Build dynamic list and donut chart
     const listContainer = document.getElementById('analysis-category-list');
