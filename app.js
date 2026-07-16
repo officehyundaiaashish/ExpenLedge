@@ -1,4 +1,3 @@
-
 // State storage
 let transactions = [];
 let userProfile = {
