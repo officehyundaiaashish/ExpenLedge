@@ -1,3 +1,4 @@
+
 // State storage
 let transactions = [];
 let userProfile = {
@@ -1395,7 +1396,7 @@ async function syncSupabaseNow(options) {
                 if (supabaseIntegration.connected) {
                     icon.classList.add('sync-icon--connected');
                 }
-            }, 800);
+            }, 1200);
         }
 
         if (manual) {
@@ -1430,16 +1431,14 @@ function triggerSyncBadgeSuccessAnimation() {
     const icon = document.getElementById('supabase-sync-icon');
     if (!icon) return;
     icon.classList.remove('sync-icon--syncing', 'sync-icon--error', 'sync-icon--disconnected');
-    // Restart the success-pop animation by forcing a reflow.
     void icon.offsetWidth;
     icon.classList.add('sync-icon--success');
-    // After the success pop (~0.6s) settle into the connected idle state.
     setTimeout(() => {
         icon.classList.remove('sync-icon--success');
         if (supabaseIntegration.connected) {
             icon.classList.add('sync-icon--connected');
         }
-    }, 800);
+    }, 1200);
 }
 
 function _setSyncOverlayState(state) {
