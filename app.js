@@ -1395,7 +1395,7 @@ async function syncSupabaseNow(options) {
                 if (supabaseIntegration.connected) {
                     icon.classList.add('sync-icon--connected');
                 }
-            }, 900);
+            }, 800);
         }
 
         if (manual) {
@@ -1433,13 +1433,13 @@ function triggerSyncBadgeSuccessAnimation() {
     // Restart the success-pop animation by forcing a reflow.
     void icon.offsetWidth;
     icon.classList.add('sync-icon--success');
-    // After the success pop (~1.25s) settle into the connected idle state.
+    // After the success pop (~0.6s) settle into the connected idle state.
     setTimeout(() => {
         icon.classList.remove('sync-icon--success');
         if (supabaseIntegration.connected) {
             icon.classList.add('sync-icon--connected');
         }
-    }, 1300);
+    }, 800);
 }
 
 function _setSyncOverlayState(state) {
@@ -1913,17 +1913,17 @@ function updateStructuredFilterUI() {
     const spentCard = document.getElementById('structured-spent-card');
     const incomeCard = document.getElementById('structured-income-card');
     if (!spentCard || !incomeCard) return;
-    
+
     if (structuredTypeFilter === 'expense') {
         spentCard.classList.remove('opacity-50');
         spentCard.classList.add('border-secondary', 'border-2');
-        
+
         incomeCard.classList.add('opacity-50');
         incomeCard.classList.remove('border-primary', 'border-2');
     } else if (structuredTypeFilter === 'income') {
         incomeCard.classList.remove('opacity-50');
         incomeCard.classList.add('border-primary', 'border-2');
-        
+
         spentCard.classList.add('opacity-50');
         spentCard.classList.remove('border-secondary', 'border-2');
     } else {
@@ -4177,18 +4177,18 @@ function importCSV(event) {
         const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
         const dateIdx = headers.indexOf('Date');
         const amtIdx = headers.indexOf('Amount');
-        
+
         let catIdx = headers.indexOf('Category');
-        
+
         let pmIdx = headers.indexOf('Payment Mode');
         if (pmIdx === -1) pmIdx = headers.indexOf('Payment Method');
-        
+
         const typeIdx = headers.indexOf('Type');
         const toPmIdx = headers.indexOf('To Payment Mode');
-        
+
         let noteIdx = headers.indexOf('Note');
         if (noteIdx === -1) noteIdx = headers.indexOf('Description');
-        
+
         const timeIdx = headers.indexOf('Time');
 
         if (dateIdx === -1 || amtIdx === -1) {
@@ -4230,7 +4230,7 @@ function importCSV(event) {
             const baseDateStr = row[dateIdx];
             const timeStr = timeIdx !== -1 && timeIdx < row.length ? row[timeIdx] : '';
             const dateStr = timeStr ? `${baseDateStr} ${timeStr}` : baseDateStr;
-            
+
             const rawAmtStr = row[amtIdx];
             const amount = Math.abs(parseFloat(rawAmtStr)) || 0;
             const category = catIdx !== -1 && catIdx < row.length && row[catIdx] ? row[catIdx] : 'Others';
@@ -4257,7 +4257,7 @@ function importCSV(event) {
             if (dateStr) {
                 // Try parsing directly first (browser natively parses M/D/YYYY H:MM:SS AM/PM)
                 dateObj = new Date(dateStr.trim());
-                
+
                 if (isNaN(dateObj.getTime())) {
                     // Try replacing space with T for ISO format (if date has hyphens)
                     if (dateStr.includes('-')) {
@@ -4265,19 +4265,19 @@ function importCSV(event) {
                         dateObj = new Date(normalizedDateStr);
                     }
                 }
-                
+
                 if (isNaN(dateObj.getTime())) {
                     // Manual parser fallback
                     const parts = dateStr.trim().split(/\s+/);
                     const datePartsStr = parts[0];
                     const dateParts = datePartsStr.includes('/') ? datePartsStr.split('/') : datePartsStr.split('-');
-                    
+
                     if (dateParts.length === 3) {
                         let year, month, day;
                         const p0 = parseInt(dateParts[0], 10);
                         const p1 = parseInt(dateParts[1], 10);
                         const p2 = parseInt(dateParts[2], 10);
-                        
+
                         if (dateParts[0].length === 4) {
                             // YYYY-MM-DD or YYYY/MM/DD
                             year = p0;
@@ -4305,7 +4305,7 @@ function importCSV(event) {
                                 }
                             }
                         }
-                        
+
                         let hours = 0, minutes = 0, seconds = 0;
                         if (parts.length > 1) {
                             const timePart = parts[1];
@@ -4317,7 +4317,7 @@ function importCSV(event) {
                                     seconds = parseInt(timeParts[2], 10);
                                 }
                             }
-                            
+
                             // Check for AM/PM in parts or timePart
                             let ampm = '';
                             if (parts.length > 2) {
@@ -4327,7 +4327,7 @@ function importCSV(event) {
                             } else if (timePart.toUpperCase().includes('AM')) {
                                 ampm = 'AM';
                             }
-                            
+
                             if (ampm === 'PM' && hours < 12) {
                                 hours += 12;
                             } else if (ampm === 'AM' && hours === 12) {
@@ -5615,7 +5615,7 @@ function onChartTapped() {
     // 1. Identify filter based on Income or Spending
     // analysisCatType is 'spending' (expense) or 'income' (income)
     structuredTypeFilter = (analysisCatType === 'spending') ? 'expense' : 'income';
-    
+
     // 2. Identify the selected period and set it on the structured view
     if (analysisPeriod === 'week') {
         // Week maps to custom date range
@@ -5623,7 +5623,7 @@ function onChartTapped() {
         const fromDate = new Date(analysisWeekStart);
         const toDate = new Date(fromDate);
         toDate.setDate(toDate.getDate() + 6);
-        
+
         const fromEl = document.getElementById('structured-date-from');
         const toEl = document.getElementById('structured-date-to');
         if (fromEl) fromEl.value = fromDate.toISOString().slice(0, 10);
@@ -5637,7 +5637,7 @@ function onChartTapped() {
         structuredTxMode = 'custom';
         const fromDate = new Date(analysisYear, 0, 1);
         const toDate = new Date(analysisYear, 11, 31);
-        
+
         const fromEl = document.getElementById('structured-date-from');
         const toEl = document.getElementById('structured-date-to');
         if (fromEl) fromEl.value = fromDate.toISOString().slice(0, 10);
@@ -5652,11 +5652,11 @@ function onChartTapped() {
         if (analysisFrom && fromEl) fromEl.value = analysisFrom.value;
         if (analysisTo && toEl) toEl.value = analysisTo.value;
     }
-    
+
     // 3. Update title/subtitles for structured-tx view based on the mode
     const titleEl = document.getElementById('structured-tx-title');
     const subtitleEl = document.getElementById('structured-tx-subtitle');
-    
+
     if (structuredTxMode === 'month') {
         if (titleEl) titleEl.innerText = "Month-wise";
         if (subtitleEl) subtitleEl.innerText = "All transactions grouped by month";
@@ -5664,14 +5664,14 @@ function onChartTapped() {
         if (titleEl) titleEl.innerText = "Custom Range";
         if (subtitleEl) subtitleEl.innerText = "Transactions in a specific range";
     }
-    
+
     // Update the Spent/Income cards UI
     updateStructuredFilterUI();
-    
+
     // Clear search input on structured view
     const searchInput = document.getElementById('structured-search-input');
     if (searchInput) searchInput.value = '';
-    
+
     // 4. Switch to view-structured-tx
     switchView('structured-tx');
 }
@@ -6223,7 +6223,7 @@ function renderManagedCategories() {
     list.forEach((cat, index) => {
         const item = document.createElement('div');
         item.dataset.categoryIndex = index;
-        
+
         if (manageCategoryLayout === 'grid') {
             item.className = "relative flex flex-col items-center p-xs bg-surface-container-high rounded-xl border border-outline-variant/30 cursor-grab active:cursor-grabbing w-full overflow-hidden text-center gap-xs";
             item.innerHTML = `
@@ -7151,7 +7151,7 @@ function stopClockTicking() {
 window.addEventListener('DOMContentLoaded', () => {
     // Suppress browser/Google auto-fill manager on all input fields
     suppressBrowserAutofill();
-    
+
     // Watch for dynamic DOM changes to apply suppression to any newly added/modified inputs
     const observer = new MutationObserver(() => {
         suppressBrowserAutofill();
