@@ -2594,12 +2594,18 @@
         <!-- Credentials -->
         <div class="space-y-sm" id="supabase-credentials-section">
             <div class="space-y-xs">
-                <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project URL</label>
+                <div class="flex items-center justify-between">
+                    <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Project URL</label>
+                    <span class="text-label-sm text-on-surface-variant" id="supabase-url-status">⋯</span>
+                </div>
                 <input id="supabase-project-url" type="text" inputmode="url" placeholder="https://xxxxx.supabase.co"
                     class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary" />
             </div>
             <div class="space-y-xs">
-                <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Anon Key</label>
+                <div class="flex items-center justify-between">
+                    <label class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider block px-1">Anon Key</label>
+                    <span class="text-label-sm text-on-surface-variant" id="supabase-key-status">⋯</span>
+                </div>
                 <textarea id="supabase-anon-key" rows="2" placeholder="Paste anon / publishable key here"
                     class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary resize-none"></textarea>
             </div>
