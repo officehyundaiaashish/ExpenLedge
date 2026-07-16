@@ -1012,14 +1012,12 @@ function loadSupabaseCredentialsIntoForm() {
     if (!saved) {
         if (urlInput) urlInput.value = '';
         if (keyInput) keyInput.value = '';
-        showToast('No saved Supabase credentials found.');
         return;
     }
 
     const parsed = JSON.parse(saved);
     if (urlInput) urlInput.value = parsed.url || '';
     if (keyInput) keyInput.value = parsed.anonKey || '';
-    showToast('Saved Supabase credentials loaded.');
 }
 
 function markSupabaseStateDirty() {
