@@ -1,3 +1,4 @@
+
 // State storage
 let transactions = [];
 let userProfile = {
@@ -1645,8 +1646,9 @@ const animatedSyncIconEl = document.getElementById('supabase-sync-icon-animated'
 
 const updateSyncIconColor = (iconEl) => {
     if (!iconEl) return;
+    // Force green color for connected state regardless of theme
     if (iconEl.classList.contains('sync-icon--connected')) {
-        iconEl.style.color = 'var(--primary)';
+        iconEl.style.color = '#22c55e'; // Green-500
     } else if (iconEl.classList.contains('sync-icon--syncing')) {
         iconEl.style.color = 'var(--primary)';
     } else if (iconEl.classList.contains('sync-icon--success')) {
