@@ -978,15 +978,20 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     // We only flip the icon to "connected / disconnected / error" here —
     // the "syncing" and "success" states are driven by syncSupabaseNow() so
     // they take priority and play their full animation before reverting.
-    const icon = document.getElementById('supabase-sync-icon');
-    if (icon && !icon.classList.contains('sync-icon--syncing') && !icon.classList.contains('sync-icon--success')) {
-        icon.classList.remove('sync-icon--disconnected', 'sync-icon--connected', 'sync-icon--error');
+    const staticIcon = document.getElementById('supabase-sync-icon-static');
+    const animatedIcon = document.getElementById('supabase-sync-icon-animated');
+    
+    // Hide animated icon, show static icon when not syncing
+    if (animatedIcon) animatedIcon.style.display = 'none';
+    if (staticIcon) {
+        staticIcon.style.display = '';
+        staticIcon.classList.remove('sync-icon--disconnected', 'sync-icon--connected', 'sync-icon--error');
         if (isConnected && !isError) {
-            icon.classList.add('sync-icon--connected');
+            staticIcon.classList.add('sync-icon--connected');
         } else if (isError) {
-            icon.classList.add('sync-icon--error');
+            staticIcon.classList.add('sync-icon--error');
         } else {
-            icon.classList.add('sync-icon--disconnected');
+            staticIcon.classList.add('sync-icon--disconnected');
         }
     }
 }
@@ -1240,12 +1245,17 @@ async function syncSupabaseNow(options) {
     supabaseIntegration.manualActive = manual;
 
     // Drive the dashboard SVG icon to its spinning state.
-    const icon = document.getElementById('supabase-sync-icon');
-    if (icon) {
-        icon.classList.remove('sync-icon--disconnected', 'sync-icon--connected',
-                              'sync-icon--success', 'sync-icon--error');
-        void icon.offsetWidth;
-        icon.classList.add('sync-icon--syncing');
+    const staticIcon = document.getElementById('supabase-sync-icon-static');
+    const animatedIcon = document.getElementById('supabase-sync-icon-animated');
+    
+    // Show animated icon, hide static icon during syncing
+    if (staticIcon) staticIcon.style.display = 'none';
+    if (animatedIcon) {
+        animatedIcon.style.display = '';
+        animatedIcon.classList.remove('sync-icon--disconnected', 'sync-icon--connected',
+                                      'sync-icon--success', 'sync-icon--error');
+        void animatedIcon.offsetWidth;
+        animatedIcon.classList.add('sync-icon--syncing');
     }
 
     if (manual) showSyncLoadingOverlay('Checking for changes…');
@@ -1387,14 +1397,24 @@ async function syncSupabaseNow(options) {
         supabaseIntegration.lastError = error?.message || String(error);
         setSupabaseStatus(`Sync failed: ${supabaseIntegration.lastError}`, true, true);
 
-        if (icon) {
-            icon.classList.remove('sync-icon--syncing', 'sync-icon--success');
-            void icon.offsetWidth;
-            icon.classList.add('sync-icon--error');
+        const staticIcon = document.getElementById('supabase-sync-icon-static');
+        const animatedIcon = document.getElementById('supabase-sync-icon-animated');
+        
+        if (animatedIcon) {
+            animatedIcon.classList.remove('sync-icon--syncing', 'sync-icon--success');
+            void animatedIcon.offsetWidth;
+            animatedIcon.classList.add('sync-icon--error');
             setTimeout(() => {
-                icon.classList.remove('sync-icon--error');
-                if (supabaseIntegration.connected) {
-                    icon.classList.add('sync-icon--connected');
+                animatedIcon.classList.remove('sync-icon--error');
+                // After error, show static icon with connected/disconnected state
+                if (staticIcon) {
+                    staticIcon.style.display = '';
+                    animatedIcon.style.display = 'none';
+                    if (supabaseIntegration.connected) {
+                        staticIcon.classList.add('sync-icon--connected');
+                    } else {
+                        staticIcon.classList.add('sync-icon--disconnected');
+                    }
                 }
             }, 1200);
         }
@@ -1428,15 +1448,25 @@ async function syncSupabaseNow(options) {
  * (icon pulse + full-screen success overlay shown elsewhere).
  */
 function triggerSyncBadgeSuccessAnimation() {
-    const icon = document.getElementById('supabase-sync-icon');
-    if (!icon) return;
-    icon.classList.remove('sync-icon--syncing', 'sync-icon--error', 'sync-icon--disconnected');
-    void icon.offsetWidth;
-    icon.classList.add('sync-icon--success');
+    const staticIcon = document.getElementById('supabase-sync-icon-static');
+    const animatedIcon = document.getElementById('supabase-sync-icon-animated');
+    
+    if (!animatedIcon) return;
+    
+    animatedIcon.classList.remove('sync-icon--syncing', 'sync-icon--error', 'sync-icon--disconnected');
+    void animatedIcon.offsetWidth;
+    animatedIcon.classList.add('sync-icon--success');
     setTimeout(() => {
-        icon.classList.remove('sync-icon--success');
-        if (supabaseIntegration.connected) {
-            icon.classList.add('sync-icon--connected');
+        animatedIcon.classList.remove('sync-icon--success');
+        // After success, show static icon with connected state
+        if (staticIcon) {
+            staticIcon.style.display = '';
+            animatedIcon.style.display = 'none';
+            if (supabaseIntegration.connected) {
+                staticIcon.classList.add('sync-icon--connected');
+            } else {
+                staticIcon.classList.add('sync-icon--disconnected');
+            }
         }
     }, 1200);
 }
@@ -1592,30 +1622,37 @@ function initializeSupabaseFromSavedCredentials() {
 
 // Initial setup
 window.addEventListener('DOMContentLoaded', () => {
-// Inject custom sync SVG and adapt to app accent/states
-const syncIconEl = document.getElementById('supabase-sync-icon');
-if (syncIconEl) {
-    syncIconEl.innerHTML = `<svg fill="none" height="100%" width="100%" viewBox="0 0 428 428" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" class="w-full h-full transition-colors duration-300"><defs><clipPath id="i0"><rect height="750" width="750" y="0" x="0"/></clipPath><g id="i1"><g id="i2"><g transform="translate(377.5,375)"><g transform="scale(0.78,0)"><animateTransform repeatCount="indefinite" type="scale" attributeName="transform" dur="1.2s" begin="0s" calcMode="spline" values="0.78 0; 0.78 0; 0.494 -1.859; 0.48 -2.496; 0.347 -3.174; 0.213 -5.1; -0.358 3; -0.62 2.389; -0.652 1.625; -0.78 0; -0.78 0; -0.78 0; -0.78 0; -0.62 1.22; -0.533 2.719; -0.358 3; 0.02 -3; 0.614 -2.628; 0.78 0; 0.78 0" keyTimes="0; 0.2; 0.233333; 0.266667; 0.3; 0.333333; 0.499999; 0.6; 0.633334; 0.7; 0.833333; 0.9; 1; 1; 1; 1; 1; 1; 1; 1" keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1" fill="freeze"/><g transform="translate(36,2.5)"><animateTransform repeatCount="indefinite" type="translate" attributeName="transform" dur="1.2s" begin="0s" calcMode="spline" values="36 2.5; 36 2.5; 36 1; 36 1" keyTimes="0; 0.333333; 0.5; 1" keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1" fill="freeze"/><g id="i3" transform="matrix(1,0,0,1,-155.5,-1.5)"><rect ry="20" rx="20" height="17.191" width="153.355" y="-8.595" x="-76.677" stroke-width="0" stroke="#bdbdbd" fill="currentColor"/></g></g></g></g></g><g transform="matrix(1,0,0,1,374,359.5)" id="i4"><g id="i5" transform="matrix(1,0,0,1,1,13)"><ellipse ry="59" rx="59" cy="0" cx="0" stroke-width="0" stroke="#bdbdbd" fill="currentColor"><animate repeatCount="indefinite" attributeName="rx" dur="1.2s" begin="0s" fill="freeze" values="59; 59; 66; 66; 57.5; 59; 59; 68; 68; 59" keyTimes="0; 0.266667; 0.4; 0.466667; 0.633334; 0.7; 1; 1; 1; 1" keySplines="0 0 1 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 0.965; 0.333 0.63 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1" calcMode="spline"/><animate repeatCount="indefinite" attributeName="ry" dur="1.2s" begin="0s" fill="freeze" values="59; 59; 66; 66; 57.5; 59; 59; 68; 68; 59" keyTimes="0; 0.266667; 0.4; 0.466667; 0.633334; 0.7; 1; 1; 1; 1" keySplines="0 0 1 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 0.965; 0.333 0.63 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1" calcMode="spline"/></ellipse></g></g><g id="i6"><g transform="translate(374,373)"><animateTransform repeatCount="indefinite" type="translate" attributeName="transform" dur="1.2s" begin="0s" calcMode="spline" values="374 373; 350 371.5; 340.5 373.5; 339 372; 375 372.5; 408 370.5; 406 374; 391 372; 400.997 373; 403.547 373.1; 404.986 372.978; 340 372; 341 373; 346.5 373.5; 346 374.5; 347.5 375; 374 375" keyTimes="0; 0.166667; 0.233333; 0.333333; 0.4; 0.566667; 0.633333; 0.833333; 1; 1; 1; 1; 1; 1; 1; 1; 1" keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1" fill="freeze"/><g transform="scale(0.582,0.632) translate(0,-13.5)"><g id="i5" transform="matrix(1,0,0,1,1,13)"><ellipse ry="59" rx="59" cy="0" cx="0" stroke-width="0" stroke="#bdbdbd" fill="currentColor"><animate repeatCount="indefinite" attributeName="rx" dur="1.2s" begin="0s" fill="freeze" values="59; 59; 66; 66; 59; 59; 68; 68; 59" keyTimes="0; 0.266667; 0.4; 0.466667; 0.633334; 1; 1; 1; 1" keySplines="0 0 1 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1" calcMode="spline"/><animate repeatCount="indefinite" attributeName="ry" dur="1.2s" begin="0s" fill="freeze" values="59; 59; 66; 66; 59; 59; 68; 68; 59" keyTimes="0; 0.266667; 0.4; 0.466667; 0.633334; 1; 1; 1; 1" keySplines="0 0 1 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1; 0.333 0 0.667 1" calcMode="spline"/></ellipse></g></g></g></g><g id="i7"><g><g transform="translate(209,0)"><animateTransform repeatCount="indefinite" type="translate" attributeName="transform" dur="1.2s" begin="0s" calcMode="spline" values="209 0; 212.708 0; 223.358 0; 242.517 0; 271.757 0; 311.745 0; 360.343 0; 411.278 0; 456.778 0; 492.188 0; 516.787 0; 531.813 0; 538.93 0; 539.568 0; 533.699 0; 519.863 0; 496.321 0; 461.617 0; 416.039 0; 363.859 0; 313.203 0; 271.316 0; 240.98 0; 221.63 0; 211.55 0; 209 0" keyTimes="0; 0.066667; 0.133333; 0.2; 0.266667; 0.333333; 0.4; 0.466667; 0.533333; 0.6; 0.666667; 0.733333; 0.8; 0.866667; 0.933333; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1; 1" keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1" fill="freeze"/><g transform="translate(0,373)"><animateTransform repeatCount="indefinite" type="translate" attributeName="transform" dur="1.2s" begin="0s" calcMode="spline" values="0 373; 0 373; 0 373" keyTimes="0; 0.833333; 1" keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1" fill="freeze"/><g transform="scale(0.546,0.546)"><animateTransform repeatCount="indefinite" type="scale" attributeName="transform" dur="1.2s" begin="0s" calcMode="spline" values="0.546 0.546; 0.546 0.546; 0.536 0.489; 0.516 0.445; 0.516 0.336; 0.516 0.435; 0.531 0.466; 0.546 0.546; 0.546 0.546; 0.516 0.424; 0.516 0.525; 0.516 0.415; 0.516 0.395; 0.516 0.425; 0.536 0.475; 0.546 0.546" keyTimes="0; 0.266667; 0.3; 0.333333; 0.366667; 0.4; 0.433333; 0.466667; 0.533333; 0.566667; 0.6; 0.633333; 0.666667; 0.7; 0.733333; 0.766667; 0.8" keySplines="0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1; 0 0 1 1" fill="freeze"/><g transform="matrix(1,0,0,1,1,13)"><ellipse ry="75" rx="75" cy="0" cx="0" stroke-width="0" stroke="#bdbdbd" fill="currentColor"/></g></g></g></g></g></defs><g clip-path="url(#i0)"><use xlink:href="#i1" height="100%" width="100%" x="0" y="0"/></g></svg>`;
+// Setup color theming for both sync icons (static and animated)
+const staticSyncIconEl = document.getElementById('supabase-sync-icon-static');
+const animatedSyncIconEl = document.getElementById('supabase-sync-icon-animated');
 
-    // Apply accent color via CSS variable and state classes
-    const updateSyncIconColor = () => {
-        if (syncIconEl.classList.contains('sync-icon--connected')) {
-            syncIconEl.style.color = 'var(--primary)';
-        } else if (syncIconEl.classList.contains('sync-icon--syncing')) {
-            syncIconEl.style.color = 'var(--primary)';
-        } else if (syncIconEl.classList.contains('sync-icon--success')) {
-            syncIconEl.style.color = 'var(--tertiary)';
-        } else if (syncIconEl.classList.contains('sync-icon--error')) {
-            syncIconEl.style.color = 'var(--error)';
-        } else {
-            syncIconEl.style.color = 'var(--on-surface-variant)';
-        }
-    };
+const updateSyncIconColor = (iconEl) => {
+    if (!iconEl) return;
+    if (iconEl.classList.contains('sync-icon--connected')) {
+        iconEl.style.color = 'var(--primary)';
+    } else if (iconEl.classList.contains('sync-icon--syncing')) {
+        iconEl.style.color = 'var(--primary)';
+    } else if (iconEl.classList.contains('sync-icon--success')) {
+        iconEl.style.color = 'var(--tertiary)';
+    } else if (iconEl.classList.contains('sync-icon--error')) {
+        iconEl.style.color = 'var(--error)';
+    } else {
+        iconEl.style.color = 'var(--on-surface-variant)';
+    }
+};
 
-    // Observe class changes to update color
-    const observer = new MutationObserver(updateSyncIconColor);
-    observer.observe(syncIconEl, { attributes: true, attributeFilter: ['class'] });
-    updateSyncIconColor(); // Initial call
+// Observe class changes to update color for static icon
+if (staticSyncIconEl) {
+    const staticObserver = new MutationObserver(() => updateSyncIconColor(staticSyncIconEl));
+    staticObserver.observe(staticSyncIconEl, { attributes: true, attributeFilter: ['class'] });
+    updateSyncIconColor(staticSyncIconEl); // Initial call
+}
+
+// Observe class changes to update color for animated icon
+if (animatedSyncIconEl) {
+    const animatedObserver = new MutationObserver(() => updateSyncIconColor(animatedSyncIconEl));
+    animatedObserver.observe(animatedSyncIconEl, { attributes: true, attributeFilter: ['class'] });
+    updateSyncIconColor(animatedSyncIconEl); // Initial call
 }
 // Capitalize first letter of every text input
 document.addEventListener('input', function(e) {

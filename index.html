@@ -907,8 +907,12 @@
                         title="Supabase Sync"
                         class="relative p-1.5 rounded-full hover:bg-surface-container-high active:scale-90 transition-all duration-200"
                         onclick="openSupabaseSyncSheet()">
-                        <img id="supabase-sync-icon" src="sync.svg" alt="Sync"
+                        <!-- Static Supabase icon (shown when not syncing) -->
+                        <img id="supabase-sync-icon-static" src="supabase-icon.svg" alt="Sync"
                             class="sync-icon sync-icon--disconnected w-[26px] h-[26px]" />
+                        <!-- Animated sync icon (shown only when syncing) -->
+                        <img id="supabase-sync-icon-animated" src="sync.svg" alt="Syncing"
+                            class="sync-icon sync-icon--syncing w-[26px] h-[26px]" style="display: none;" />
                     </button>
                     <button class="p-xs hover:bg-surface-container-high rounded-full animate-hover"
                         onclick="openSearchOnTransactionsPage()">
