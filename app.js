@@ -192,29 +192,13 @@ function suppressBrowserAutofill(root = document) {
     fields.forEach((el) => {
         if (!el || el.disabled) return;
 
-        let type = (el.getAttribute('type') || el.type || '').toLowerCase();
+        const type = (el.getAttribute('type') || el.type || '').toLowerCase();
         if (['hidden', 'checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range', 'color'].includes(type)) return;
-
-        // CRITICAL FIX: Convert type="number" to text + inputmode to block payment overlay
-        // Google Payment Manager is triggered by type="number" fields.
-        if (type === 'number') {
-            el.type = 'text';
-            el.setAttribute('type', 'text');
-            el.setAttribute('inputmode', 'decimal');
-            type = 'text'; // update variable for subsequent checks
-        } else if (type === 'text' && !el.getAttribute('inputmode')) {
-            // For text fields, set numeric inputmode if it looks like an amount field
-            const isAmount = el.id && (el.id.toLowerCase().includes('amount') || el.id.toLowerCase().includes('balance'));
-            const hasNumericAttr = el.getAttribute('inputmode') === 'decimal' || el.getAttribute('inputmode') === 'numeric';
-            if (isAmount || hasNumericAttr) {
-                el.setAttribute('inputmode', 'decimal');
-            }
-        }
 
         // Force autocomplete off - some password managers ignore "off" but respect "new-password"
         // We use a combination: set to "off" and also set data-lpignore etc.
-        el.setAttribute('autocomplete', 'off');
-        el.setAttribute('autocapitalize', type === 'email' || type === 'search' ? 'none' : 'off');
+        el.setAttribute('autocomplete', 'new-password');
+        el.setAttribute('autocapitalize', 'none');
         el.setAttribute('autocorrect', 'off');
         el.setAttribute('spellcheck', 'false');
         el.setAttribute('data-form-type', 'other');
@@ -235,6 +219,16 @@ function suppressBrowserAutofill(root = document) {
             el.setAttribute('name', `expenledge_${safeId}_${Date.now()}`);
         }
 
+        // For number fields, switch to text + inputmode decimal to block payment detection
+        if (type === 'number') {
+            el.setAttribute('type', 'text');
+            el.setAttribute('inputmode', 'decimal');
+        } else if (type === 'email') {
+            el.setAttribute('inputmode', 'email');
+        } else if (!el.getAttribute('inputmode')) {
+            el.setAttribute('inputmode', 'text');
+        }
+
         // Remove any payment-related attributes that Chrome might use
         el.removeAttribute('payment');
         el.removeAttribute('payment-request');
@@ -252,9 +246,24 @@ function suppressBrowserAutofill(root = document) {
         }
 
         // CRITICAL: Set readonly to block password managers completely
-        // (will be removed on focus via global listener)
+        // Remove on first pointer interaction (before focus) so Payment Manager never triggers
         if (!el.hasAttribute('readonly')) {
             el.setAttribute('readonly', 'readonly');
+            // Remove readonly on first pointer/tap interaction (happens BEFORE focus)
+            el.addEventListener('pointerdown', function onFirstInteraction(e) {
+                if (this.hasAttribute('readonly')) {
+                    this.removeAttribute('readonly');
+                    this.focus();
+                }
+                this.removeEventListener('pointerdown', onFirstInteraction);
+            }, { once: true });
+            // Fallback for keyboard-only users
+            el.addEventListener('keydown', function onFirstKeydown(e) {
+                if (this.hasAttribute('readonly') && !e.ctrlKey && !e.metaKey && e.key !== 'Tab') {
+                    this.removeAttribute('readonly');
+                    this.removeEventListener('keydown', onFirstKeydown);
+                }
+            }, { once: true });
         }
     });
 }
@@ -1845,17 +1854,8 @@ window.addEventListener('DOMContentLoaded', () => {
         el.setAttribute('data-lpignore', 'true');
     });
 
-    // Remove readonly attribute on focus so user can type (password managers ignore readonly fields)
-    document.addEventListener('focusin', function (e) {
-        const target = e.target;
-        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-            // Only remove readonly if it was set by our script (we can check if it has the attribute)
-            if (target.hasAttribute('readonly')) {
-                target.removeAttribute('readonly');
-                // Optionally reapply after blur? We'll not reapply to avoid annoyance.
-            }
-        }
-    }, { passive: true });
+    // focusin listener removed - readonly is now removed on pointerdown/keydown instead
+    // This prevents Google Payment Manager from appearing above the keyboard
 
     supabaseIntegration.booting = false;
     supabaseInitialLoadDone = true;
