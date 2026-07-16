@@ -1218,6 +1218,9 @@ async function syncSupabaseNow(options) {
         }
         return false;
     }
+
+    // Call the internal implementation
+    return _syncSupabaseNowInternal(options);
 }
 
 // Expose to global scope for inline onclick handlers
