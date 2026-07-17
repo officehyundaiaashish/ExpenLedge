@@ -415,28 +415,40 @@ function renderRemarkSuggestions(query) {
         const prefix = prefixEnd ? escapeHtml(text.slice(0, prefixEnd)) : '';
         const rest = prefixEnd ? escapeHtml(text.slice(prefixEnd)) : safeText;
         return `
-            <button type="button" class="remark-suggestion-item ${index === remarkSuggestionState.activeIndex ? 'active' : ''}" data-remark="${safeText}">
-                <span class="remark-suggestion-icon material-symbols-outlined text-[16px]">history</span>
-                <span class="remark-suggestion-main">
-                    <span class="remark-suggestion-title">${prefix}<span class="text-primary">${rest}</span></span>
-                    <span class="remark-suggestion-meta">Tap to use this previous remark</span>
-                </span>
-            </button>
+            <div class="remark-suggestion-item ${index === remarkSuggestionState.activeIndex ? 'active' : ''}" data-remark="${safeText}" data-index="${index}">
+                <span class="remark-suggestion-icon material-symbols-outlined text-[15px]">history</span>
+                <span class="remark-suggestion-title">${prefix}<span class="text-primary font-semibold">${rest}</span></span>
+            </div>
         `;
     }).join('');
 
-    panel.innerHTML = `
-        <div class="flex items-center justify-between px-2 pt-1 pb-2">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">Previous remarks</span>
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">${matches.length} found</span>
-        </div>
-        <div class="space-y-1">${visibleItems}</div>
-    `;
+    panel.innerHTML = visibleItems;
 
     panel.classList.remove('hidden');
-    panel.querySelectorAll('.remark-suggestion-item').forEach((button, index) => {
-        button.addEventListener('click', (event) => {
-            event.preventDefault();
+
+    // Use touchend + pointermove guard to allow scrolling without triggering selection
+    panel.querySelectorAll('.remark-suggestion-item').forEach((item, index) => {
+        let touchStartY = 0;
+        let didScroll = false;
+
+        item.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            didScroll = false;
+        }, { passive: true });
+
+        item.addEventListener('touchmove', () => {
+            didScroll = true;
+        }, { passive: true });
+
+        item.addEventListener('touchend', (e) => {
+            if (didScroll) return;
+            e.preventDefault();
+            const value = matches[index];
+            if (value) selectRemarkSuggestion(value);
+        });
+
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
             const value = matches[index];
             if (value) selectRemarkSuggestion(value);
         });
