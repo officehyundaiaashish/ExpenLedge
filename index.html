@@ -174,16 +174,12 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Keep native scrolling responsive */
-        main {
-            overflow-x: hidden;
+        /* Prevent repaints on scrollable containers */
+        main, [id*="list"], [class*="overflow-y-auto"] {
+            contain: layout style paint;
         }
 
-        .overflow-y-auto {
-            -webkit-overflow-scrolling: touch;
-        }
-
-html.modal-open,
+        html.modal-open,
         html.modal-open body {
             overflow: hidden !important;
             overscroll-behavior: none;
@@ -222,7 +218,7 @@ html.modal-open,
 
         .bottom-sheet-transition .overflow-y-auto {
             overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: auto;
         }
 
         .custom-glass {
@@ -235,7 +231,7 @@ html.modal-open,
         .page-view {
             display: none;
             animation: slideIn 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-            will-change: auto;
+            will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
