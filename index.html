@@ -173,12 +173,6 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-
-        /* Keep the main document scroll free of heavy paint containment so native momentum stays smooth */
-        [id*="list"], [class*="overflow-y-auto"] {
-            contain: layout style;
-        }
-
         html.modal-open,
         html.modal-open body {
             overflow: hidden !important;
@@ -217,8 +211,8 @@
         }
 
         .bottom-sheet-transition .overflow-y-auto {
-            overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: auto;
         }
 
         .custom-glass {
@@ -231,7 +225,7 @@
         .overflow-y-auto,
         .overflow-auto {
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
+            overscroll-behavior-y: auto;
         }
 
         .page-view {
@@ -259,7 +253,7 @@
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
+            overscroll-behavior-y: auto;
             box-sizing: border-box;
             padding-bottom: 96px;
             padding-left: 16px;
