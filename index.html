@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -171,6 +170,13 @@
             max-width: 100vw;
             touch-action: pan-x pan-y;
             -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Prevent repaints on scrollable containers */
+        main, [id*="list"], [class*="overflow-y-auto"] {
+            contain: layout style paint;
         }
 
         html.modal-open,
@@ -198,22 +204,21 @@
         }
 
         .bottom-sheet-transition {
-            transition: transform 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0.26s linear;
+            transition: opacity 0.26s linear, visibility 0.26s linear;
+            opacity: 1;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            will-change: transform;
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
         }
 
         .bottom-sheet-transition.translate-y-full {
             visibility: hidden;
-            transition: transform 0.22s cubic-bezier(0.55, 0, 1, 0.45), visibility 0.22s linear;
+            opacity: 0;
+            transition: opacity 0.22s linear, visibility 0.22s linear;
         }
 
         .bottom-sheet-transition .overflow-y-auto {
             overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: auto;
         }
 
         .custom-glass {
@@ -247,11 +252,10 @@
             background-color: #fcfdfc;
             overflow-y: auto;
             overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: auto;
             overscroll-behavior-y: contain;
             box-sizing: border-box;
             padding-bottom: 96px;
-            /* 16px matches Material Design mobile gutter — comfortable, not squeezed */
             padding-left: 16px;
             padding-right: 16px;
         }
@@ -459,13 +463,13 @@
             <p class="text-body-md text-on-surface-variant">You have unsaved changes. What would you like to do?</p>
             <div class="flex flex-col gap-sm pt-sm">
                 <button onclick="unsavedDialogSave()"
-                    class="w-full py-3 bg-primary text-white font-semibold rounded-2xl shadow-sm active:scale-95 transition-transform">Save
+                    class="w-full py-3 bg-primary text-white font-semibold rounded-2xl shadow-sm">Save
                     Changes</button>
                 <button onclick="unsavedDialogDiscard()"
-                    class="w-full py-3 bg-error-container text-error font-semibold rounded-2xl active:scale-95 transition-transform">Discard
+                    class="w-full py-3 bg-error-container text-error font-semibold rounded-2xl">Discard
                     Changes</button>
                 <button onclick="dismissUnsavedDialog()"
-                    class="w-full py-3 bg-white text-on-surface font-semibold rounded-2xl active:scale-95 transition-transform border border-outline-variant">Cancel</button>
+                    class="w-full py-3 bg-white text-on-surface font-semibold rounded-2xl border border-outline-variant">Cancel</button>
             </div>
         </div>
     </div>
@@ -583,7 +587,7 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-primary/5 p-md rounded-2xl space-y-sm border border-primary/10 unt-shadow active:scale-[0.98] transition-transform cursor-pointer"
+                    <div class="bg-primary/5 p-md rounded-2xl space-y-sm border border-primary/10 unt-shadow cursor-pointer"
                         onclick="openSpendingDetailsSheet()">
                         <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                             <span class="material-symbols-outlined text-primary text-[18px]">north_east</span>
@@ -593,7 +597,7 @@
                             <p class="text-headline-md font-bold text-primary" id="stat-spending">₹0.00</p>
                         </div>
                     </div>
-                    <div class="bg-primary p-md rounded-2xl space-y-sm unt-shadow active:scale-[0.98] transition-transform cursor-pointer"
+                    <div class="bg-primary p-md rounded-2xl space-y-sm unt-shadow cursor-pointer"
                         onclick="openIncomeDetailsSheet()">
                         <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                             <span class="material-symbols-outlined text-white text-[18px]">south_west</span>
@@ -605,7 +609,7 @@
                     </div>
                 </div>
                 <div class="flex justify-center">
-                    <div class="bg-surface-dim px-6 py-2 rounded-full border border-outline-variant unt-shadow-sm active:scale-95 transition-transform cursor-pointer flex items-center gap-2"
+                    <div class="bg-surface-dim px-6 py-2 rounded-full border border-outline-variant unt-shadow-sm cursor-pointer flex items-center gap-2"
                         onclick="openNetBalancesSheet()">
                         <span class="text-label-sm text-on-surface-variant font-medium">Balance:</span>
                         <span class="text-label-sm font-bold text-on-surface" id="stat-balance">₹0.00</span>
@@ -674,7 +678,7 @@
             <div class="tx-sticky-header pt-4 pb-2 space-y-md border-b border-outline-variant/10">
                 <div class="flex items-center gap-md py-sm">
                     <button
-                        class="w-10 h-10 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+                        class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm"
                         onclick="backToHomeFromStructuredTx()">
                         <span class="material-symbols-outlined text-[24px]">arrow_back</span>
                     </button>
@@ -688,7 +692,7 @@
                 <div class="bg-white rounded-2xl border border-outline-variant shadow-sm" id="structured-period-nav">
                     <div class="flex items-center justify-between px-md py-sm">
                         <button
-                            class="w-9 h-9 rounded-full hover:bg-surface-dim flex items-center justify-center active:scale-90 transition-transform"
+                            class="w-9 h-9 rounded-full hover:bg-surface-dim flex items-center justify-center"
                             onclick="structuredTxNavPrev()">
                             <span
                                 class="material-symbols-outlined text-[22px] text-on-surface-variant">chevron_left</span>
@@ -698,7 +702,7 @@
                             <p class="text-label-sm text-on-surface-variant" id="structured-period-sublabel"></p>
                         </div>
                         <button
-                            class="w-9 h-9 rounded-full hover:bg-surface-dim flex items-center justify-center active:scale-90 transition-transform"
+                            class="w-9 h-9 rounded-full hover:bg-surface-dim flex items-center justify-center"
                             onclick="structuredTxNavNext()">
                             <span
                                 class="material-symbols-outlined text-[22px] text-on-surface-variant">chevron_right</span>
@@ -732,12 +736,12 @@
                 </div>
                 <div class="flex flex-wrap gap-xs justify-center text-[14px] font-bold" id="structured-totals-cards">
                     <span
-                        class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full cursor-pointer active:scale-95 transition-transform"
+                        class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full cursor-pointer"
                         id="structured-spent-card" onclick="toggleStructuredFilter('expense')">
                         Out: <span id="structured-total-spending">₹0</span>
                     </span>
                     <span
-                        class="bg-primary/10 text-primary px-4 py-1.5 rounded-full cursor-pointer active:scale-95 transition-transform"
+                        class="bg-primary/10 text-primary px-4 py-1.5 rounded-full cursor-pointer"
                         id="structured-income-card" onclick="toggleStructuredFilter('income')">
                         In: <span id="structured-total-income">₹0</span>
                     </span>
@@ -768,7 +772,7 @@
             <div class="tx-sticky-header pt-4 pb-2 space-y-md border-b border-outline-variant/10">
                 <div class="flex items-center gap-md py-sm">
                     <button
-                        class="w-10 h-10 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+                        class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm"
                         onclick="switchView('home')">
                         <span class="material-symbols-outlined text-[24px]">arrow_back</span>
                     </button>
@@ -784,7 +788,7 @@
                             type="text" />
                     </div>
                     <button
-                        class="w-[42px] h-[42px] rounded-2xl bg-white flex items-center justify-center hover:bg-surface-dim border border-outline-variant text-on-surface-variant active:scale-95 transition-transform shadow-sm flex-shrink-0"
+                        class="w-[42px] h-[42px] rounded-2xl bg-white flex items-center justify-center hover:bg-surface-dim border border-outline-variant text-on-surface-variant shadow-sm flex-shrink-0"
                         onclick="openAdvancedSearchSheet()">
                         <span class="material-symbols-outlined text-[20px]">tune</span>
                     </button>
@@ -851,12 +855,12 @@
                 </div>
                 <div class="flex flex-wrap gap-xs justify-center text-[14px] font-bold" id="analysis-totals-cards">
                     <button
-                        class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
+                        class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full"
                         onclick="setAnalysisCatType('spending')">
                         Out: <span id="analysis-total-spending">₹0</span>
                     </button>
                     <button
-                        class="bg-primary/10 text-primary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
+                        class="bg-primary/10 text-primary px-4 py-1.5 rounded-full"
                         onclick="setAnalysisCatType('income')">
                         In: <span id="analysis-total-income">₹0</span>
                     </button>
@@ -983,7 +987,7 @@
         <div class="page-view space-y-lg" id="view-budget">
             <div class="flex items-center gap-md py-sm">
                 <button
-                    class="w-10 h-10 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+                    class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm"
                     onclick="switchView('home')">
                     <span class="material-symbols-outlined text-[24px]">arrow_back</span>
                 </button>
@@ -1000,7 +1004,7 @@
                         tracking under Settings/Edit Budget Limits to monitor your spending.</p>
                 </div>
                 <button
-                    class="px-lg py-2 bg-primary text-white font-bold rounded-2xl shadow-sm active:scale-95 transition-transform text-body-md"
+                    class="px-lg py-2 bg-primary text-white font-bold rounded-2xl shadow-sm text-body-md"
                     onclick="openEditBudgetSheet()">Enable Now</button>
             </div>
             <div id="budget-active-content" class="space-y-lg">
@@ -1721,7 +1725,7 @@
                     id="mgcat-icon-grid"></div>
             </div>
             <button
-                class="w-full py-md bg-primary text-white font-bold rounded-2xl active:scale-95 transition-transform text-label-sm shadow-sm mt-md"
+                class="w-full py-md bg-primary text-white font-bold rounded-2xl text-label-sm shadow-sm mt-md"
                 onclick="addNewManagedCategory()">Add Category</button>
         </div>
     </div>
@@ -1818,7 +1822,7 @@
             </div>
             <div class="pt-md">
                 <button
-                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm active:scale-95 transition-transform"
+                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm"
                     onclick="saveProfileSecurity()">Save Changes</button>
             </div>
         </div>
@@ -2000,21 +2004,21 @@
             </div>
             <div class="space-y-sm pt-xs">
                 <button id="supabase-connect-btn" onclick="connectSupabaseFromSheet()"
-                    class="w-full py-sm rounded-2xl bg-primary text-white font-bold active:scale-95 transition-transform flex items-center justify-center gap-xs">
+                    class="w-full py-sm rounded-2xl bg-primary text-white font-bold flex items-center justify-center gap-xs">
                     <span class="material-symbols-outlined text-[18px]">link</span> Connect
                 </button>
                 <div class="grid grid-cols-2 gap-sm">
                     <button onclick="syncSupabaseNow({ manual: true })"
-                        class="w-full py-sm rounded-2xl bg-primary text-white font-bold border border-primary/30 active:scale-95 transition-transform flex items-center justify-center gap-xs shadow-sm">
+                        class="w-full py-sm rounded-2xl bg-primary text-white font-bold border border-primary/30 flex items-center justify-center gap-xs shadow-sm">
                         <span class="material-symbols-outlined text-[16px]">sync</span> Sync Now
                     </button>
                     <button onclick="disconnectSupabaseConnection()"
-                        class="w-full py-sm rounded-2xl bg-error/5 text-error font-bold active:scale-95 transition-transform flex items-center justify-center gap-xs border border-error/10">
+                        class="w-full py-sm rounded-2xl bg-error/5 text-error font-bold flex items-center justify-center gap-xs border border-error/10">
                         <span class="material-symbols-outlined text-[16px]">link_off</span> Disconnect
                     </button>
                 </div>
                 <button onclick="loadSupabaseCredentialsIntoForm()"
-                    class="w-full py-xs text-label-sm text-on-surface-variant font-bold active:scale-95 transition-transform text-center">Load
+                    class="w-full py-xs text-label-sm text-on-surface-variant font-bold text-center">Load
                     Saved Credentials</button>
             </div>
         </div>
@@ -2095,7 +2099,7 @@
             </div>
             <div class="pt-md">
                 <button
-                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm active:scale-95 transition-transform"
+                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm"
                     onclick="saveBudgetSettings()">Save Limits</button>
             </div>
         </div>
@@ -2168,10 +2172,10 @@
             </div>
             <div class="pt-md space-y-sm">
                 <button
-                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm active:scale-95 transition-transform"
+                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm"
                     onclick="saveAccountBalance()">Save Account</button>
                 <button
-                    class="w-full py-md bg-error/5 text-error font-bold rounded-2xl active:scale-95 transition-transform hidden"
+                    class="w-full py-md bg-error/5 text-error font-bold rounded-2xl hidden"
                     id="account-delete-btn" onclick="deleteAccount()">Delete Account</button>
             </div>
         </div>
@@ -2372,7 +2376,7 @@
             </div>
             <div class="pt-md">
                 <button
-                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm active:scale-95 transition-transform"
+                    class="w-full py-md bg-primary text-white font-bold rounded-2xl shadow-sm"
                     onclick="confirmScheduleTransaction()">Schedule Transaction</button>
             </div>
         </div>
@@ -2398,10 +2402,10 @@
             </div>
             <div class="flex gap-sm pt-md">
                 <button
-                    class="flex-1 py-md bg-surface-dim text-on-surface font-bold rounded-2xl border border-outline-variant shadow-sm active:scale-95 transition-transform"
+                    class="flex-1 py-md bg-surface-dim text-on-surface font-bold rounded-2xl border border-outline-variant shadow-sm"
                     onclick="closeConfirmActionSheet()">Cancel</button>
                 <button
-                    class="flex-1 py-md bg-error text-white font-bold rounded-2xl shadow-sm active:scale-95 transition-transform"
+                    class="flex-1 py-md bg-error text-white font-bold rounded-2xl shadow-sm"
                     id="confirm-action-btn">Yes, Confirm</button>
             </div>
         </div>
@@ -2669,9 +2673,9 @@
             </div>
             <div class="flex items-center gap-xs flex-shrink-0">
                 <button onclick="pwaInstallPrompt()"
-                    class="px-md py-xs bg-primary text-white font-bold text-label-sm rounded-full shadow-sm active:scale-95 transition-transform">Install</button>
+                    class="px-md py-xs bg-primary text-white font-bold text-label-sm rounded-full shadow-sm">Install</button>
                 <button onclick="pwaDismissBanner()"
-                    class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-dim text-on-surface-variant active:scale-95 transition-transform">
+                    class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-dim text-on-surface-variant">
                     <span class="material-symbols-outlined text-[16px]">close</span>
                 </button>
             </div>
