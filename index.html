@@ -576,7 +576,7 @@
                         </div>
                         <div class="space-y-0.5">
                             <span class="text-label-sm font-medium text-primary/80">Spending</span>
-                            <p class="text-headline-md font-bold text-primary truncate" id="stat-spending">₹0.00</p>
+                            <p class="text-headline-md font-bold text-primary" id="stat-spending">₹0.00</p>
                         </div>
                     </div>
                     <div class="bg-primary p-md rounded-2xl space-y-sm unt-shadow active:scale-[0.98] transition-transform cursor-pointer"
@@ -586,7 +586,7 @@
                         </div>
                         <div class="space-y-0.5">
                             <span class="text-label-sm font-medium text-white/80">Income</span>
-                            <p class="text-headline-md font-bold text-white truncate" id="stat-income">₹0.00</p>
+                            <p class="text-headline-md font-bold text-white" id="stat-income">₹0.00</p>
                         </div>
                     </div>
                 </div>
@@ -780,72 +780,75 @@
 
         <!-- VIEW: ANALYSIS -->
         <div class="page-view space-y-lg" id="view-analysis">
-            <div class="flex bg-surface-dim rounded-2xl p-1.5 border border-outline-variant unt-shadow">
-                <button
-                    class="flex-1 py-2 rounded-xl text-label-sm font-bold text-on-surface-variant hover:text-on-surface transition-all"
-                    id="analysis-pill-week" onclick="setAnalysisPeriod('week')">Week</button>
-                <button class="flex-1 py-2 rounded-xl text-label-sm font-bold bg-white text-on-surface shadow-sm"
-                    id="analysis-pill-month" onclick="setAnalysisPeriod('month')">Month</button>
-                <button
-                    class="flex-1 py-2 rounded-xl text-label-sm font-bold text-on-surface-variant hover:text-on-surface transition-all"
-                    id="analysis-pill-year" onclick="setAnalysisPeriod('year')">Year</button>
-                <button
-                    class="flex-1 py-2 rounded-xl text-label-sm font-bold text-on-surface-variant hover:text-on-surface transition-all"
-                    id="analysis-pill-custom" onclick="setAnalysisPeriod('custom')">Custom</button>
-            </div>
-            <div class="flex items-center justify-between py-2 px-md bg-white rounded-2xl border border-outline-variant unt-shadow"
-                id="analysis-period-nav">
-                <button class="p-2 text-on-surface-variant" onclick="changeAnalysisPeriod(-1)"><span
-                        class="material-symbols-outlined">chevron_left</span></button>
-                <span class="text-headline-md font-bold" id="analysis-month-label"></span>
-                <button class="p-2 text-on-surface-variant" onclick="changeAnalysisPeriod(1)"><span
-                        class="material-symbols-outlined">chevron_right</span></button>
-            </div>
-            <div class="hidden flex items-center justify-between py-2 px-md bg-white rounded-2xl border border-outline-variant unt-shadow"
-                id="analysis-week-nav">
-                <button class="p-2 text-on-surface-variant" onclick="changeAnalysisWeek(-1)"><span
-                        class="material-symbols-outlined">chevron_left</span></button>
-                <span class="text-body-lg font-semibold" id="analysis-week-label"></span>
-                <button class="p-2 text-on-surface-variant" onclick="changeAnalysisWeek(1)"><span
-                        class="material-symbols-outlined">chevron_right</span></button>
-            </div>
-            <div class="hidden flex gap-sm items-center bg-white rounded-2xl p-sm border border-outline-variant unt-shadow"
-                id="analysis-custom-nav">
-                <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('from')">
-                    <span class="text-label-sm text-on-surface-variant px-xs">From</span>
-                    <div
-                        class="w-full bg-surface-dim rounded-lg px-md py-sm text-body-md text-on-surface border border-outline-variant flex justify-between items-center h-10">
-                        <span id="analysis-custom-from-label">Select Date</span>
-                        <span
-                            class="material-symbols-outlined text-[18px] text-on-surface-variant">calendar_today</span>
-                    </div>
-                    <input type="hidden" id="analysis-custom-from" />
+            <div class="sticky top-0 bg-background z-20 pt-4 pb-2 space-y-md border-b border-outline-variant/10">
+                <div class="flex bg-surface-dim rounded-2xl p-1.5 border border-outline-variant unt-shadow">
+                    <button
+                        class="flex-1 py-2 rounded-xl text-label-sm font-bold text-on-surface-variant hover:text-on-surface transition-all"
+                        id="analysis-pill-week" onclick="setAnalysisPeriod('week')">Week</button>
+                    <button class="flex-1 py-2 rounded-xl text-label-sm font-bold bg-white text-on-surface shadow-sm"
+                        id="analysis-pill-month" onclick="setAnalysisPeriod('month')">Month</button>
+                    <button
+                        class="flex-1 py-2 rounded-xl text-label-sm font-bold text-on-surface-variant hover:text-on-surface transition-all"
+                        id="analysis-pill-year" onclick="setAnalysisPeriod('year')">Year</button>
+                    <button
+                        class="flex-1 py-2 rounded-xl text-label-sm font-bold text-on-surface-variant hover:text-on-surface transition-all"
+                        id="analysis-pill-custom" onclick="setAnalysisPeriod('custom')">Custom</button>
                 </div>
-                <span class="text-on-surface-variant mt-4">&rarr;</span>
-                <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('to')">
-                    <span class="text-label-sm text-on-surface-variant px-xs">To</span>
-                    <div
-                        class="w-full bg-surface-dim rounded-lg px-md py-sm text-body-md text-on-surface border border-outline-variant flex justify-between items-center h-10">
-                        <span id="analysis-custom-to-label">Select Date</span>
-                        <span
-                            class="material-symbols-outlined text-[18px] text-on-surface-variant">calendar_today</span>
-                    </div>
-                    <input type="hidden" id="analysis-custom-to" />
+                <div class="flex items-center justify-between py-2 px-md bg-white rounded-2xl border border-outline-variant unt-shadow"
+                    id="analysis-period-nav">
+                    <button class="p-2 text-on-surface-variant" onclick="changeAnalysisPeriod(-1)"><span
+                            class="material-symbols-outlined">chevron_left</span></button>
+                    <span class="text-headline-md font-bold" id="analysis-month-label"></span>
+                    <button class="p-2 text-on-surface-variant" onclick="changeAnalysisPeriod(1)"><span
+                            class="material-symbols-outlined">chevron_right</span></button>
                 </div>
-            </div>
-            <div class="flex flex-wrap gap-xs justify-center text-[14px] font-bold" id="analysis-totals-cards">
-                <button
-                    class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
-                    onclick="setAnalysisCatType('spending')">
-                    Out: <span id="analysis-total-spending">₹0</span>
-                </button>
-                <button class="bg-primary/10 text-primary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
-                    onclick="setAnalysisCatType('income')">
-                    In: <span id="analysis-total-income">₹0</span>
-                </button>
-                <span class="px-4 py-1.5 rounded-full bg-primary/15 text-primary" id="analysis-balance-card">
-                    Bal: <span id="analysis-total-balance">₹0</span>
-                </span>
+                <div class="hidden flex items-center justify-between py-2 px-md bg-white rounded-2xl border border-outline-variant unt-shadow"
+                    id="analysis-week-nav">
+                    <button class="p-2 text-on-surface-variant" onclick="changeAnalysisWeek(-1)"><span
+                            class="material-symbols-outlined">chevron_left</span></button>
+                    <span class="text-body-lg font-semibold" id="analysis-week-label"></span>
+                    <button class="p-2 text-on-surface-variant" onclick="changeAnalysisWeek(1)"><span
+                            class="material-symbols-outlined">chevron_right</span></button>
+                </div>
+                <div class="hidden flex gap-sm items-center bg-white rounded-2xl p-sm border border-outline-variant unt-shadow"
+                    id="analysis-custom-nav">
+                    <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('from')">
+                        <span class="text-label-sm text-on-surface-variant px-xs">From</span>
+                        <div
+                            class="w-full bg-surface-dim rounded-lg px-md py-sm text-body-md text-on-surface border border-outline-variant flex justify-between items-center h-10">
+                            <span id="analysis-custom-from-label">Select Date</span>
+                            <span
+                                class="material-symbols-outlined text-[18px] text-on-surface-variant">calendar_today</span>
+                        </div>
+                        <input type="hidden" id="analysis-custom-from" />
+                    </div>
+                    <span class="text-on-surface-variant mt-4">&rarr;</span>
+                    <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('to')">
+                        <span class="text-label-sm text-on-surface-variant px-xs">To</span>
+                        <div
+                            class="w-full bg-surface-dim rounded-lg px-md py-sm text-body-md text-on-surface border border-outline-variant flex justify-between items-center h-10">
+                            <span id="analysis-custom-to-label">Select Date</span>
+                            <span
+                                class="material-symbols-outlined text-[18px] text-on-surface-variant">calendar_today</span>
+                        </div>
+                        <input type="hidden" id="analysis-custom-to" />
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-xs justify-center text-[14px] font-bold" id="analysis-totals-cards">
+                    <button
+                        class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
+                        onclick="setAnalysisCatType('spending')">
+                        Out: <span id="analysis-total-spending">₹0</span>
+                    </button>
+                    <button
+                        class="bg-primary/10 text-primary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
+                        onclick="setAnalysisCatType('income')">
+                        In: <span id="analysis-total-income">₹0</span>
+                    </button>
+                    <span class="px-4 py-1.5 rounded-full bg-primary/15 text-primary" id="analysis-balance-card">
+                        Bal: <span id="analysis-total-balance">₹0</span>
+                    </span>
+                </div>
             </div>
             <section class="bg-white p-lg rounded-3xl border border-outline-variant unt-shadow space-y-sm">
                 <div class="flex items-center gap-xs">
