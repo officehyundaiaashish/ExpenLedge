@@ -231,18 +231,14 @@ function suppressBrowserAutofill(root = document) {
         el.removeAttribute('cc-csc');
         el.removeAttribute('cc-name');
 
-        // Ensure the field is not treated as a payment field
+        // Ensure the field is not treated as a payment field.
+        // Avoid forcing readonly here: on mobile it can collapse the keyboard
+        // and interrupt normal typing, especially when suggestion panels rerender.
         const form = el.closest('form');
         if (form) {
             form.setAttribute('autocomplete', 'off');
             form.setAttribute('x-autocompletetype', 'none');
             form.setAttribute('data-lpignore', 'true');
-        }
-
-        // CRITICAL: Set readonly to block password managers completely
-        // (will be removed on focus via global listener)
-        if (!el.hasAttribute('readonly')) {
-            el.setAttribute('readonly', 'readonly');
         }
     });
 }
@@ -1848,17 +1844,6 @@ window.addEventListener('DOMContentLoaded', () => {
         el.setAttribute('data-lpignore', 'true');
     });
 
-    // Remove readonly attribute on focus so user can type (password managers ignore readonly fields)
-    document.addEventListener('focusin', function (e) {
-        const target = e.target;
-        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
-            // Only remove readonly if it was set by our script (we can check if it has the attribute)
-            if (target.hasAttribute('readonly')) {
-                target.removeAttribute('readonly');
-                // Optionally reapply after blur? We'll not reapply to avoid annoyance.
-            }
-        }
-    }, { passive: true });
 
     supabaseIntegration.booting = false;
     supabaseInitialLoadDone = true;
