@@ -1570,45 +1570,48 @@
                     <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden" aria-label="Remark suggestions"></div>
                 </div>
             </div>
-            <!-- Category Setup Header with Pencil -->
-            <div class="flex justify-between items-center px-1 pt-1 -mb-0.5">
-                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
-                    Setup</span>
-                <button type="button"
-                    class="text-primary hover:bg-surface-container-high rounded-full p-0.5 transition-colors flex items-center justify-center"
-                    onclick="openManageCategoriesFromTx()">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-            <!-- Category Selector Trigger -->
-            <div class="flex items-center gap-sm py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
-                onclick="openCategorySheet()">
-                <span class="material-symbols-outlined text-secondary text-[20px]"
-                    id="tx-selected-cat-icon">shopping_basket</span>
-                <div class="flex-1 flex flex-col">
-                    <span
-                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
-                    <span class="text-body-md font-semibold" id="tx-selected-cat-name">Groceries</span>
-                </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
-            </div>
-            <!-- Payment Mode Trigger -->
-            <div class="flex items-center gap-sm py-2 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
-                onclick="openPaymentSheet()">
-                <span class="material-symbols-outlined text-secondary text-[20px]"
-                    id="tx-selected-pay-icon">payments</span>
-                <div class="flex-1 flex flex-col">
-                    <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
-                        Mode</span>
-                    <span class="text-body-md font-semibold" id="tx-selected-pay-name">Cash</span>
-                </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
-            </div>
+<!-- Category Setup Header with Pencil -->
+<div class="flex justify-between items-center px-1 pt-1 -mb-0.5">
+    <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
+        Setup</span>
+    <button type="button"
+        class="text-primary hover:bg-surface-container-high rounded-full p-0.5 transition-colors flex items-center justify-center"
+        onclick="openManageCategoriesFromTx()">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+            </path>
+        </svg>
+    </button>
+</div>
+<!-- Category & Payment Mode side by side -->
+<div class="grid grid-cols-2 gap-sm">
+    <!-- Category Selector Trigger -->
+    <div class="flex items-center gap-sm py-2 border border-outline-variant rounded-lg px-2 hover:bg-surface-container-high transition-colors cursor-pointer"
+        onclick="openCategorySheet()">
+        <span class="material-symbols-outlined text-secondary text-[20px]"
+            id="tx-selected-cat-icon">shopping_basket</span>
+        <div class="flex-1 flex flex-col min-w-0">
+            <span
+                class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
+            <span class="text-body-md font-semibold truncate" id="tx-selected-cat-name">Groceries</span>
+        </div>
+        <span class="material-symbols-outlined text-on-surface-variant text-[20px] flex-shrink-0">chevron_right</span>
+    </div>
+    <!-- Payment Mode Trigger -->
+    <div class="flex items-center gap-sm py-2 border border-outline-variant rounded-lg px-2 hover:bg-surface-container-high transition-colors cursor-pointer"
+        onclick="openPaymentSheet()">
+        <span class="material-symbols-outlined text-secondary text-[20px]"
+            id="tx-selected-pay-icon">payments</span>
+        <div class="flex-1 flex flex-col min-w-0">
+            <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
+                Mode</span>
+            <span class="text-body-md font-semibold truncate" id="tx-selected-pay-name">Cash</span>
+        </div>
+        <span class="material-symbols-outlined text-on-surface-variant text-[20px] flex-shrink-0">chevron_right</span>
+    </div>
+</div>
             <!-- Tags selector Trigger -->
             <div class="flex items-center gap-sm py-1.5 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openTagsSheet()">
