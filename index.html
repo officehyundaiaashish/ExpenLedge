@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -388,6 +387,7 @@
             align-items: center;
             justify-content: center;
         }
+
         /* The Supabase logo itself — default red so it's never black */
         #supabase-sync-btn .db-sync-logo {
             width: 20px;
@@ -401,12 +401,12 @@
 
         /* ---- DISCONNECTED ---- */
         #supabase-sync-btn.db-disconnected .db-sync-logo {
-            color: #ef4444;
+            color: var(--primary);
         }
 
         /* ---- CONNECTED ---- */
         #supabase-sync-btn.db-connected .db-sync-logo {
-            color: var(--primary);
+            color: #ef4444;
         }
 
         /* ---- SYNCING — logo ROTATES, color locked to accent ---- */
@@ -417,8 +417,13 @@
         }
 
         @keyframes db-logo-spin {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* ---- ERROR ---- */
@@ -439,16 +444,47 @@
             opacity: 0;
             transform: scale(0);
         }
+
+        /* ---- SUCCESS — badge flips to red after flash ---- */
         #supabase-sync-btn.db-success .db-sync-badge {
             animation: db-badge-flash 2s ease-out forwards;
         }
 
         @keyframes db-badge-flash {
-            0%   { transform: scale(0);    opacity: 0;   background: #fff;             box-shadow: none; }
-            15%  { transform: scale(1.5);  opacity: 1;   background: #fff;             box-shadow: 0 0 0 5px rgba(255,255,255,0.4); }
-            35%  { transform: scale(1.0);  opacity: 1;   background: var(--primary);   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 40%, transparent); }
-            65%  { transform: scale(1.0);  opacity: 1;   background: var(--primary);   box-shadow: 0 0 0 0 transparent; }
-            100% { transform: scale(1.0);  opacity: 1;   background: var(--primary);   box-shadow: none; }
+            0% {
+                transform: scale(0);
+                opacity: 0;
+                background: #fff;
+                box-shadow: none;
+            }
+
+            15% {
+                transform: scale(1.5);
+                opacity: 1;
+                background: #fff;
+                box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.4);
+            }
+
+            35% {
+                transform: scale(1.0);
+                opacity: 1;
+                background: #ef4444;
+                box-shadow: 0 0 0 4px color-mix(in srgb, #ef4444 40%, transparent);
+            }
+
+            65% {
+                transform: scale(1.0);
+                opacity: 1;
+                background: #ef4444;
+                box-shadow: 0 0 0 0 transparent;
+            }
+
+            100% {
+                transform: scale(1.0);
+                opacity: 1;
+                background: #ef4444;
+                box-shadow: none;
+            }
         }
 
 
