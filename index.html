@@ -247,27 +247,27 @@
 
 
 
-        .remark-suggestions-panel {
+.remark-suggestions-panel {
             position: absolute;
             left: 0;
             right: 0;
-            top: calc(100% + 4px);
+            top: 100%;
             z-index: 40;
-            max-height: 220px;
+            max-height: 180px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
             touch-action: pan-y;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
             background: #ffffff;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+            border: 1px solid rgba(0, 0, 0, 0.10);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
         }
 
         .dark .remark-suggestions-panel {
-            background: #1e1e1e;
+            background: #2a2a2a;
             border-color: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
         }
 
         .remark-suggestion-item {
@@ -275,37 +275,32 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 11px 14px;
+            padding: 10px 14px;
             text-align: left;
-            background: transparent;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            cursor: pointer;
+        }
+
+        .dark .remark-suggestion-item {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
         }
 
         .remark-suggestion-item:last-child {
             border-bottom: none;
         }
 
-        .remark-suggestion-item.active,
-        .remark-suggestion-item:active {
-            background: rgba(74, 124, 89, 0.07);
+        .remark-suggestion-item.active {
+            background: rgba(74, 124, 89, 0.06);
         }
 
         .remark-suggestion-icon {
-            color: #9aa09a;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            color: #b0b5af;
+            font-size: 16px !important;
             flex-shrink: 0;
         }
 
-        .dark .remark-suggestion-icon {
-            color: #6b716b;
-        }
-
         .remark-suggestion-title {
-            font-size: 14px;
-            line-height: 20px;
+            font-size: 13px;
+            line-height: 18px;
             font-weight: 400;
             color: #1a1c18;
             white-space: nowrap;
@@ -317,14 +312,7 @@
 
         .dark .remark-suggestion-title {
             color: #e8ebe6;
-        }
-
-        .remark-suggestion-empty {
-            padding: 12px 14px;
-            color: #5d635a;
-            font-size: 13px;
-            line-height: 19px;
-        }
+        } 
 
         @media (prefers-reduced-motion: reduce) {
 
