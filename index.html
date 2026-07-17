@@ -471,7 +471,7 @@
     </div>
 
     <!-- Main Views Container -->
-    <main class="mt-8 px-container_padding max-w-md mx-auto space-y-lg">
+    <main class="mt-8 px-container-padding max-w-md mx-auto space-y-lg">
 
         <!-- VIEW: HOME -->
         <div class="page-view active space-y-lg" id="view-home">
@@ -537,24 +537,24 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-primary p-md rounded-2xl space-y-sm unt-shadow active:scale-[0.98] transition-transform cursor-pointer"
+                    <div class="bg-primary/5 p-md rounded-2xl space-y-sm border border-primary/10 unt-shadow active:scale-[0.98] transition-transform cursor-pointer"
                         onclick="openSpendingDetailsSheet()">
-                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-white text-[18px]">north_east</span>
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-[18px]">north_east</span>
                         </div>
                         <div class="space-y-0.5">
-                            <span class="text-label-sm font-medium text-white/80">Spending</span>
-                            <p class="text-headline-md font-bold text-white truncate" id="stat-spending">₹0.00</p>
+                            <span class="text-label-sm font-medium text-primary/80">Spending</span>
+                            <p class="text-headline-md font-bold text-primary truncate" id="stat-spending">₹0.00</p>
                         </div>
                     </div>
-                    <div class="bg-primary/5 p-md rounded-2xl space-y-sm border border-primary/10 unt-shadow active:scale-[0.98] transition-transform cursor-pointer"
+                    <div class="bg-primary p-md rounded-2xl space-y-sm unt-shadow active:scale-[0.98] transition-transform cursor-pointer"
                         onclick="openIncomeDetailsSheet()">
-                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-primary text-[18px]">south_west</span>
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-[18px]">south_west</span>
                         </div>
                         <div class="space-y-0.5">
-                            <span class="text-label-sm font-medium text-primary/80">Income</span>
-                            <p class="text-headline-md font-bold text-primary truncate" id="stat-income">₹0.00</p>
+                            <span class="text-label-sm font-medium text-white/80">Income</span>
+                            <p class="text-headline-md font-bold text-white truncate" id="stat-income">₹0.00</p>
                         </div>
                     </div>
                 </div>
@@ -854,13 +854,14 @@
             <section class="bg-white rounded-3xl p-lg border border-outline-variant unt-shadow">
                 <h2 class="text-label-sm font-bold text-on-surface-variant mb-md uppercase tracking-wider">Category-wise
                     spending</h2>
-                <div class="relative w-full max-w-[240px] mx-auto cursor-pointer" style="height:240px;"
+                <div class="relative w-full max-w-[280px] mx-auto cursor-pointer aspect-square p-4"
                     onclick="onChartTapped()">
-                    <svg class="w-full h-full transform -rotate-90" id="donut-svg" viewBox="0 0 36 36"></svg>
+                    <svg class="w-full h-full transform -rotate-90" id="donut-svg" viewBox="-2 -2 40 40"
+                        style="overflow:visible;"></svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span
                             class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Spent</span>
-                        <span class="text-headline-lg font-bold text-on-surface" id="chart-total-spent">₹0.00</span>
+                        <span class="text-headline-md font-bold text-on-surface" id="chart-total-spent">₹0.00</span>
                     </div>
                 </div>
             </section>
@@ -1091,8 +1092,8 @@
             </button>
             <button class="flex flex-col items-center justify-center text-muted transition-all w-12"
                 id="nav-btn-analysis" onclick="switchView('analysis')">
-                <span class="material-symbols-outlined">bar_chart</span>
-                <span class="text-[10px] mt-1">Charts</span>
+                <span class="material-symbols-outlined">insights</span>
+                <span class="text-[10px] mt-1">Insights</span>
             </button>
             <div class="relative -top-6">
                 <button
@@ -1119,92 +1120,96 @@
         id="modal-overlay" onclick="closeAllSheets()"></div>
 
     <!-- MODAL: ADD TRANSACTION -->
-    <div class="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-[32px] transform translate-y-full bottom-sheet-transition h-[92dvh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto unt-shadow-lg pb-[env(safe-area-inset-bottom)]"
+    <div class="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-[28px] transform translate-y-full bottom-sheet-transition h-[85dvh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto unt-shadow-lg pb-[env(safe-area-inset-bottom)]"
         id="modal-add-transaction">
-        <header class="flex justify-between items-center px-lg py-md border-b border-outline-variant">
+        <header class="flex justify-between items-center px-lg py-3 border-b border-outline-variant">
             <div class="flex items-center gap-md">
-                <button class="p-2 hover:bg-surface-dim rounded-full" onclick="closeAddTransactionModal()">
-                    <span class="material-symbols-outlined">close</span>
+                <button class="p-1.5 hover:bg-surface-dim rounded-full" onclick="closeAddTransactionModal()">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
                 <h1 class="text-headline-md font-bold">Add Transaction</h1>
             </div>
             <div class="flex items-center gap-xs">
-                <button class="p-2 text-error hidden" id="header-delete-btn"
+                <button class="p-1.5 text-error hidden" id="header-delete-btn"
                     onclick="deleteCurrentEditingTransaction()"><span
-                        class="material-symbols-outlined">delete</span></button>
-                <button class="p-2 text-primary" id="header-save-btn" onclick="saveTransaction()"><span
-                        class="material-symbols-outlined text-[30px]"
+                        class="material-symbols-outlined text-[20px]">delete</span></button>
+                <button class="p-1.5 text-primary" id="header-save-btn" onclick="saveTransaction()"><span
+                        class="material-symbols-outlined text-[24px]"
                         style="font-variation-settings: 'FILL' 1">check_circle</span></button>
             </div>
         </header>
-        <main class="flex-1 overflow-y-auto px-lg py-lg space-y-lg no-scrollbar">
-            <div class="bg-surface-dim p-1.5 rounded-2xl border border-outline-variant flex">
-                <button class="flex-1 py-2.5 rounded-xl text-label-sm font-bold bg-white text-on-surface shadow-sm"
+        <main class="flex-1 overflow-y-auto px-lg py-3 space-y-3 no-scrollbar">
+            <div class="bg-surface-dim p-1 rounded-2xl border border-outline-variant flex">
+                <button class="flex-1 py-2 rounded-xl text-label-sm font-bold bg-white text-on-surface shadow-sm"
                     id="tx-type-expense" onclick="switchTransactionType('expense')">Expense</button>
-                <button class="flex-1 py-2.5 rounded-xl text-label-sm font-bold text-on-surface-variant"
+                <button class="flex-1 py-2 rounded-xl text-label-sm font-bold text-on-surface-variant"
                     id="tx-type-income" onclick="switchTransactionType('income')">Income</button>
             </div>
-            <div class="space-y-6">
-                <div class="flex items-center gap-md p-4 bg-surface-dim rounded-2xl border border-outline-variant cursor-pointer"
+            <div class="space-y-3">
+                <div class="flex items-center gap-3 p-3 bg-surface-dim rounded-2xl border border-outline-variant cursor-pointer"
                     onclick="openTxDateTimePicker()">
-                    <span class="material-symbols-outlined text-primary">calendar_today</span>
+                    <span class="material-symbols-outlined text-primary text-[20px]">calendar_today</span>
                     <div class="flex-1">
-                        <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Date
+                        <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block">Date
                             &amp; Time</span>
                         <span class="text-body-md font-bold" id="tx-selected-datetime">Today, 12:00 PM</span>
                     </div>
-                    <span class="material-symbols-outlined text-muted">chevron_right</span>
+                    <span class="material-symbols-outlined text-muted text-[20px]">chevron_right</span>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-1">
                     <label
-                        class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider block px-1">Amount</label>
+                        class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block px-1">Amount</label>
                     <div class="relative">
                         <input
-                            class="w-full bg-white border-b-2 border-outline-variant px-0 py-3 text-[44px] font-bold text-on-surface focus:border-primary outline-none transition-all placeholder:text-outline-variant"
-                            id="tx-input-amount" inputmode="decimal" placeholder="0.00" type="number" />
-                        <button class="absolute right-0 bottom-4 p-2 bg-primary/5 text-primary rounded-xl"
+                            class="w-full bg-surface-dim border border-outline-variant rounded-2xl px-md py-2.5 text-body-md font-bold text-on-surface focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/40"
+                            id="tx-input-amount" inputmode="decimal" placeholder="0" type="number" />
+                        <button
+                            class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-primary/5 text-primary rounded-xl"
                             onclick="openCalculatorSheet()">
-                            <span class="material-symbols-outlined">calculate</span>
+                            <span class="material-symbols-outlined text-[20px]">calculate</span>
                         </button>
                     </div>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-1 relative">
                     <label
-                        class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider block px-1">Note</label>
+                        class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block px-1">Note</label>
                     <input
-                        class="w-full bg-surface-dim border border-outline-variant rounded-2xl px-md py-4 text-body-md focus:border-primary outline-none transition-all"
-                        id="tx-input-desc" placeholder="What's this for?" type="text" />
+                        class="w-full bg-surface-dim border border-outline-variant rounded-2xl px-md py-2.5 text-body-md focus:border-primary outline-none transition-all"
+                        id="tx-input-desc" placeholder="What's this for?" type="text" autocomplete="off" />
+                    <div id="remark-suggestions"
+                        class="absolute z-20 w-full bg-white rounded-xl shadow-lg border border-outline-variant mt-1 max-h-48 overflow-y-auto hidden">
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="p-4 bg-surface-dim rounded-2xl border border-outline-variant cursor-pointer"
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 bg-surface-dim rounded-2xl border border-outline-variant cursor-pointer"
                         onclick="openCategorySheet()">
                         <span
-                            class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-2">Category</span>
+                            class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Category</span>
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-[20px]"
+                            <span class="material-symbols-outlined text-primary text-[18px]"
                                 id="tx-selected-cat-icon">shopping_basket</span>
                             <span class="text-body-md font-bold truncate" id="tx-selected-cat-name">Groceries</span>
                         </div>
                     </div>
-                    <div class="p-4 bg-surface-dim rounded-2xl border border-outline-variant cursor-pointer"
+                    <div class="p-3 bg-surface-dim rounded-2xl border border-outline-variant cursor-pointer"
                         onclick="openPaymentSheet()">
                         <span
-                            class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-2">Account</span>
+                            class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Account</span>
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-[20px]"
+                            <span class="material-symbols-outlined text-primary text-[18px]"
                                 id="tx-selected-pay-icon">payments</span>
                             <span class="text-body-md font-bold truncate" id="tx-selected-pay-name">Cash</span>
                         </div>
                     </div>
                 </div>
-                <!-- Tags selector Trigger (preserved for compatibility) -->
-                <div class="flex items-center gap-sm py-1.5 border-b border-outline-variant hover:bg-surface-dim transition-colors cursor-pointer rounded-lg px-2 -mx-2"
+                <!-- Tags selector Trigger -->
+                <div class="flex items-center gap-2 py-1 border-b border-outline-variant hover:bg-surface-dim transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                     onclick="openTagsSheet()">
-                    <span class="material-symbols-outlined text-muted text-[20px]">tag</span>
+                    <span class="material-symbols-outlined text-muted text-[18px]">tag</span>
                     <div class="flex-1 flex flex-col overflow-hidden">
                         <label
-                            class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Tags</label>
-                        <div class="flex gap-sm overflow-x-auto no-scrollbar pb-1" id="tx-selected-tags-container">
+                            class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Tags</label>
+                        <div class="flex gap-1 overflow-x-auto no-scrollbar pb-0.5" id="tx-selected-tags-container">
                             <span class="text-label-sm text-on-surface-variant">Add tags...</span>
                         </div>
                     </div>
