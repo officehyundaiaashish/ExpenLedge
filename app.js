@@ -60,9 +60,6 @@ const SUPABASE_LAST_PUSH_FINGERPRINT_KEY = 'expenledge_last_supabase_push_fp';
    when nothing has changed on the server. */
 const SUPABASE_LAST_REMOTE_UPDATED_AT_KEY = 'expenledge_last_supabase_remote_updated_at';
 
-// Remark history for autocomplete
-let remarkHistory = [];
-
 let supabaseClient = null;
 let supabaseRealtimeChannel = null;
 let supabaseConfig = {
@@ -242,10 +239,11 @@ function suppressBrowserAutofill(root = document) {
             form.setAttribute('data-lpignore', 'true');
         }
 
-        // NOTE: We used to set readonly to block password managers, but it causes
-        // issues with autocomplete and field freezing. The other attributes
-        // (autocomplete=off, data-lpignore, etc.) are sufficient to block autofill.
-        // Skip setting readonly to avoid interfering with user input.
+        // CRITICAL: Set readonly to block password managers completely
+        // (will be removed on focus via global listener)
+        if (!el.hasAttribute('readonly')) {
+            el.setAttribute('readonly', 'readonly');
+        }
     });
 }
 
@@ -496,19 +494,7 @@ function loadFromLocalStorage() {
         if (savedT) transactions = JSON.parse(savedT);
 
         const savedP = localStorage.getItem('expenledge_profile');
-        if (savedP) {
-            try {
-                const parsed = JSON.parse(savedP);
-                if (parsed && typeof parsed === 'object') {
-                    if (parsed.name) userProfile.name = parsed.name;
-                    if (parsed.email) userProfile.email = parsed.email;
-                    if (parsed.avatar) userProfile.avatar = parsed.avatar;
-                    if (typeof parsed.biometricLock === 'boolean') userProfile.biometricLock = parsed.biometricLock;
-                }
-            } catch (_e) {
-                console.warn('Failed to parse saved profile, keeping defaults');
-            }
-        }
+        if (savedP) userProfile = JSON.parse(savedP);
 
         const savedE = localStorage.getItem('expenledge_budget_enabled');
         if (savedE) budgetEnabled = savedE === 'true';
@@ -626,14 +612,6 @@ function loadFromLocalStorage() {
         }
 
         loadInterfacePreferences();
-
-        // Load remark history
-        const savedRemarkHistory = localStorage.getItem('expenledge_remark_history');
-        if (savedRemarkHistory) {
-            try {
-                remarkHistory = JSON.parse(savedRemarkHistory);
-            } catch (_e) { remarkHistory = []; }
-        }
 
     } catch (e) {
         console.error("Local storage load failed: ", e);
@@ -957,9 +935,6 @@ function mergeSupabaseStorageSnapshots(localSnapshot = {}, remoteSnapshot = {}) 
 
     Object.entries(remote).forEach(([key, value]) => {
         if (key === 'expenledge_transactions' || key === 'expenledge_deleted_transaction_log') return;
-        // Profile is device-local (name, avatar, biometric are user preferences on this device).
-        // Never let a remote snapshot overwrite it — syncing profile would revert avatar/name changes.
-        if (key === 'expenledge_profile') return;
         if (value !== undefined && value !== null && value !== '') {
             merged[key] = value;
         }
@@ -1313,7 +1288,7 @@ async function _syncSupabaseNowInternal(options) {
     setSupabaseStatus('Syncing to Supabase…', true, false);
 
     // Helper to update the loading overlay subtitle (no-op when manual=false).
-    const updateLoadingMsg = (_msg) => { };
+    const updateLoadingMsg = (_msg) => {};
 
     try {
         // ------------------------------------------------------------------
@@ -1893,14 +1868,7 @@ function switchView(viewId, isBackNavigation = false) {
     if (viewId === 'structured-tx') renderStructuredTx();
 
     if (!isBackNavigation) {
-        // Main tabs are peers — replace state so back never cycles through them.
-        // Sub-pages push one entry so back always returns to the previous main tab.
-        const mainViews = ['home', 'analysis', 'accounts', 'more', 'budget'];
-        if (mainViews.includes(viewId)) {
-            history.replaceState({ viewId: viewId }, '', '');
-        } else {
-            history.pushState({ viewId: viewId }, '', '');
-        }
+        history.pushState({ viewId: viewId }, '', '');
     }
 }
 
@@ -2903,55 +2871,47 @@ function renderAccountsList() {
             }
 
             const card = document.createElement('div');
-            card.className = "bg-surface-container hover:bg-surface-container-high transition-colors p-md rounded-xl shadow-sm border border-outline-variant/10";
-            // For cash account, integrate the toggle inside the card
-            if (acc.type === 'cash') {
-                card.innerHTML = `
-                    <div class="flex justify-between items-center cursor-pointer" onclick="openAccountDetailsSheet('${acc.id}')">
-                        <div class="flex flex-col">
-                            <span class="font-body-lg text-body-lg text-on-surface font-semibold">${acc.name}</span>
-                            <span class="text-label-sm text-on-surface-variant opacity-75">${acc.holderName || 'N/A'}</span>
-                        </div>
-                        <div class="flex items-center gap-sm">
-                            <span class="font-body-lg text-body-lg text-on-surface">₹${accBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
-                        </div>
-                    </div>
-                    <div class="cash-toggle-container mt-3 pt-3 border-t border-outline-variant/20 flex items-center justify-between" onclick="event.stopPropagation()">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">payments</span>
-                            <div>
-                                <div class="text-[13px] font-bold text-on-surface">Include Cash in Balance</div>
-                                <div class="text-[11px] text-on-surface-variant">
-                                    ${includeCashInBalance ? 'Cash wallet is included in totals' : 'Cash wallet is hidden from totals'}
-                                </div>
-                            </div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                            <input class="sr-only peer" id="acc-include-cash-toggle" onchange="toggleIncludeCashInBalance()"
-                                type="checkbox" ${includeCashInBalance ? 'checked' : ''} />
-                            <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                `;
-            } else {
-                card.className = card.className + " flex justify-between items-center cursor-pointer";
-                card.onclick = () => openAccountDetailsSheet(acc.id);
-                card.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="font-body-lg text-body-lg text-on-surface font-semibold">${acc.name}</span>
-                        <span class="text-label-sm text-on-surface-variant opacity-75">${acc.holderName || 'N/A'}</span>
-                    </div>
-                    <div class="flex items-center gap-sm">
-                        <span class="font-body-lg text-body-lg text-on-surface">₹${accBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
-                    </div>
-                `;
-            }
+            card.className = "bg-surface-container hover:bg-surface-container-high transition-colors p-md rounded-xl flex justify-between items-center cursor-pointer shadow-sm border border-outline-variant/10";
+            card.onclick = () => openAccountDetailsSheet(acc.id);
+            card.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="font-body-lg text-body-lg text-on-surface font-semibold">${acc.name}</span>
+                    <span class="text-label-sm text-on-surface-variant opacity-75">${acc.holderName || 'N/A'}</span>
+                </div>
+                <div class="flex items-center gap-sm">
+                    <span class="font-body-lg text-body-lg text-on-surface">₹${accBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                </div>
+            `;
             sec.appendChild(card);
         });
 
-        // The separate banner for cash is no longer needed – integrated into the cash card above
+        if (cat.type === 'cash') {
+            const banner = document.createElement('button');
+            banner.type = 'button';
+            banner.className = "mt-2 w-full text-left bg-primary/10 hover:bg-primary/15 border border-primary/15 rounded-2xl px-4 py-4 flex items-center justify-between gap-4 transition-colors active:scale-[0.99]";
+            banner.onclick = () => toggleIncludeCashInBalance();
+
+            banner.innerHTML = `
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+                    <div class="min-w-0">
+                        <div class="text-[13px] font-bold text-on-surface truncate">Include Cash in Balance</div>
+                        <div class="text-[11px] text-on-surface-variant truncate">
+                            ${includeCashInBalance ? 'Cash wallet is included in totals' : 'Cash wallet is hidden from totals'}
+                        </div>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0" onclick="event.stopPropagation()">
+                    <input class="sr-only peer" id="acc-include-cash-toggle" onchange="toggleIncludeCashInBalance()"
+                        type="checkbox" ${includeCashInBalance ? 'checked' : ''} />
+                    <div
+                        class="w-12 h-7 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary">
+                    </div>
+                </label>
+            `;
+            sec.appendChild(banner);
+        }
 
         listContainer.appendChild(sec);
     });
@@ -3389,18 +3349,18 @@ function renderPaymentModesList() {
     userAccounts.forEach(acc => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = "w-full flex items-center gap-sm py-sm px-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50";
+        btn.className = "w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50";
         const icon = acc.type === 'bank' ? 'account_balance' : acc.type === 'card' ? 'credit_card' : 'payments';
         const colorClass = acc.type === 'bank' ? 'bg-tertiary/10 text-tertiary' : acc.type === 'card' ? 'bg-secondary-container/20 text-secondary' : 'bg-primary/10 text-primary';
 
         btn.onclick = () => selectPaymentMode(acc.name, icon);
         btn.innerHTML = `
-            <div class="w-9 h-9 rounded-full ${colorClass} flex items-center justify-center flex-shrink-0">
-                <span class="material-symbols-outlined text-[20px]">${icon}</span>
+            <div class="w-12 h-12 rounded-full ${colorClass} flex items-center justify-center group-hover:scale-115 transition-transform">
+                <span class="material-symbols-outlined text-[28px]">${icon}</span>
             </div>
             <div class="flex-grow text-left min-w-0">
-                <span class="block text-body-md font-semibold text-on-background truncate">${acc.name}</span>
-                <span class="block text-label-sm text-on-surface-variant truncate">${acc.holderName ? acc.holderName + '  ·  ' : ''}${acc.type === 'bank' ? 'Bank Account' : acc.type === 'card' ? 'Credit Card' : 'Cash'}</span>
+                <span class="block text-body-lg font-semibold text-on-background truncate">${acc.name}</span>
+                <span class="block text-label-md text-on-surface-variant truncate">${acc.holderName ? acc.holderName + '  ·  ' : ''}${acc.type === 'bank' ? 'Bank Account' : acc.type === 'card' ? 'Credit Card' : 'Cash'}</span>
             </div>
         `;
         container.appendChild(btn);
@@ -3923,13 +3883,7 @@ window.addEventListener('popstate', (event) => {
 
     // Handle view change back navigation
     if (event.state && event.state.viewId) {
-        // If the state we're landing on is 'home' and we're already on home,
-        // the user pressed back from the home tab — treat it as app exit.
-        if (event.state.viewId === 'home' && currentView === 'home') {
-            exitApp();
-        } else {
-            switchView(event.state.viewId, true);
-        }
+        switchView(event.state.viewId, true);
     } else {
         exitApp();
     }
@@ -4622,8 +4576,6 @@ function saveProfileSecurity() {
     userProfile.name = newName;
     userProfile.email = newEmail;
     userProfile.avatar = newAvatar;
-    // Persist profile immediately in case saveToLocalStorage is interrupted
-    localStorage.setItem('expenledge_profile', JSON.stringify(userProfile));
 
     const nameDisplay = document.getElementById('profile-name-display');
     const emailDisplay = document.getElementById('profile-email-display');
@@ -7384,38 +7336,14 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initialize remark autocomplete
-    function initRemarkAutocomplete() {
-        const descInput = document.getElementById('tx-input-desc');
-        const suggestionsContainer = document.getElementById('remark-suggestions');
-        if (!descInput || !suggestionsContainer) return;
-
-        // Remove readonly attribute set by suppressBrowserAutofill to avoid interference
-        descInput.removeAttribute('readonly');
-
-        // Seed remark history from existing transactions if empty
-        if (remarkHistory.length === 0 && transactions.length > 0) {
-            const noteMap = new Map();
-            transactions.forEach(t => {
-                const note = (t.note || '').trim();
-                if (note) {
-                    noteMap.set(note, (noteMap.get(note) || 0) + 1);
-                }
-            });
-            const sorted = [...noteMap.entries()].sort((a, b) => b[1] - a[1]);
-            remarkHistory = sorted.map(([text, count]) => ({
-                text,
-                count,
-                lastUsed: Date.now() - (1000 * 60 * 60 * 24 * (sorted.length - sorted.indexOf([text, count])))
-            }));
-            localStorage.setItem('expenledge_remark_history', JSON.stringify(remarkHistory));
-        }
-
-        // Auto-prefill transaction details based on past description
+    // Auto-prefill transaction details based on past description
+    const descInput = document.getElementById('tx-input-desc');
+    if (descInput) {
         const handlePrefill = () => {
             const val = descInput.value.trim().toLowerCase();
             if (!val || !transactions) return;
 
+            // Find most recent transaction with this description (case insensitive)
             const match = transactions.slice().reverse().find(t => {
                 const descStr = t.description || t.note || "";
                 return descStr.trim().toLowerCase() === val;
@@ -7424,144 +7352,20 @@ window.addEventListener('DOMContentLoaded', () => {
             if (match) {
                 selectedCategory = match.category;
                 selectedCategoryIcon = match.categoryIcon || 'payments';
+
                 selectedPaymentMode = match.paymentMode;
                 if (match.paymentMode === 'Bank/UPI') selectedPaymentIcon = 'account_balance';
                 else if (match.paymentMode === 'Credit Card') selectedPaymentIcon = 'credit_card';
                 else selectedPaymentIcon = 'account_balance_wallet';
+
                 selectedTags = [...(match.tags || [])];
+
                 syncAddTransactionUI();
             }
         };
         descInput.addEventListener('blur', handlePrefill);
         descInput.addEventListener('change', handlePrefill);
-
-        // Autocomplete suggestions with scroll and freeze fix
-        let isSuggestionClick = false;
-        let suggestionUpdateRunning = false;
-
-        function updateSuggestions() {
-            try {
-                if (isSuggestionClick || suggestionUpdateRunning) return;
-                if (!descInput || !suggestionsContainer) return;
-                if (document.activeElement !== descInput) {
-                    suggestionsContainer.classList.add('hidden');
-                    return;
-                }
-
-                const val = descInput.value;
-                if (!val || typeof val !== 'string' || !val.trim()) {
-                    suggestionsContainer.classList.add('hidden');
-                    return;
-                }
-                const lowerVal = val.toLowerCase().trim();
-                // Ensure remarkHistory is an array
-                if (!Array.isArray(remarkHistory)) remarkHistory = [];
-                // Fetch up to 12 matches for potential scrolling
-                const matches = remarkHistory
-                    .filter(item => item && typeof item.text === 'string' && item.text.toLowerCase().startsWith(lowerVal))
-                    .sort((a, b) => {
-                        if (a.count !== b.count) return (b.count || 0) - (a.count || 0);
-                        return (b.lastUsed || 0) - (a.lastUsed || 0);
-                    })
-                    .slice(0, 12)
-                    .map(item => item.text);
-
-                if (matches.length === 0) {
-                    suggestionsContainer.classList.add('hidden');
-                    return;
-                }
-
-                suggestionUpdateRunning = true;
-
-                // Show up to 8 visible with scroll for more
-                const visibleCount = Math.min(matches.length, 8);
-                const hasMore = matches.length > 8;
-                const displayMatches = matches.slice(0, visibleCount);
-
-                suggestionsContainer.innerHTML = displayMatches.map(text =>
-                    `<div class="px-4 py-2.5 hover:bg-surface-dim cursor-pointer text-body-md transition-colors border-b border-outline-variant/30 last:border-0" data-value="${text}">${text}</div>`
-                ).join('');
-
-                if (hasMore) {
-                    suggestionsContainer.innerHTML += `<div class="px-4 py-2 text-center text-label-sm text-on-surface-variant/60 border-t border-outline-variant/30">Scroll for more (${matches.length - visibleCount} more)</div>`;
-                }
-
-                suggestionsContainer.classList.remove('hidden');
-                suggestionsContainer.style.maxHeight = '240px';
-                suggestionsContainer.style.overflowY = 'auto';
-                suggestionsContainer.style.scrollBehavior = 'smooth';
-
-                // Use mousedown/touchstart with preventDefault to avoid blur/freeze
-                suggestionsContainer.querySelectorAll('div[data-value]').forEach((el) => {
-                    // Remove existing listeners to prevent duplicates
-                    el.removeEventListener('mousedown', handleMouseDown);
-                    el.removeEventListener('touchstart', handleTouchStart);
-                    el.addEventListener('mousedown', handleMouseDown);
-                    el.addEventListener('touchstart', handleTouchStart);
-                });
-
-                function handleMouseDown(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    isSuggestionClick = true;
-                    const value = this.dataset.value;
-                    descInput.value = value;
-                    suggestionsContainer.classList.add('hidden');
-                    descInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    setTimeout(() => { isSuggestionClick = false; }, 200);
-                }
-
-                function handleTouchStart(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    isSuggestionClick = true;
-                    const value = this.dataset.value;
-                    descInput.value = value;
-                    suggestionsContainer.classList.add('hidden');
-                    descInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    setTimeout(() => { isSuggestionClick = false; }, 200);
-                }
-
-                suggestionUpdateRunning = false;
-            } catch (err) {
-                // Silently handle any errors to prevent crashes
-                console.warn('Autocomplete error:', err);
-                suggestionUpdateRunning = false;
-                if (suggestionsContainer) suggestionsContainer.classList.add('hidden');
-            }
-        }
-
-        let inputTimeout;
-        descInput.addEventListener('input', function () {
-            clearTimeout(inputTimeout);
-            inputTimeout = setTimeout(updateSuggestions, 150);
-        });
-
-        // Show suggestions on focus if there is text
-        descInput.addEventListener('focus', function () {
-            if (this.value.trim()) {
-                clearTimeout(inputTimeout);
-                inputTimeout = setTimeout(updateSuggestions, 150);
-            }
-        });
-
-        descInput.addEventListener('blur', function () {
-            setTimeout(() => suggestionsContainer.classList.add('hidden'), 300);
-        });
-
-        // Hide when modal closes
-        const modal = document.getElementById('modal-add-transaction');
-        if (modal) {
-            const observerModal = new MutationObserver(() => {
-                if (modal.classList.contains('translate-y-full')) {
-                    suggestionsContainer.classList.add('hidden');
-                }
-            });
-            observerModal.observe(modal, { attributes: true, attributeFilter: ['class'] });
-        }
     }
-
-    initRemarkAutocomplete();
 
     setTimeout(() => {
         const fromVal = document.getElementById('analysis-custom-from');
