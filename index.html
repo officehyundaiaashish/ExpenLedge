@@ -245,6 +245,97 @@
             flex-shrink: 0;
         }
 
+
+
+        .remark-suggestions-panel {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 8px);
+            z-index: 40;
+            max-height: 232px;
+            overflow-y: auto;
+            padding: 6px;
+            border-radius: 18px;
+            border: 1px solid rgba(74, 124, 89, 0.10);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .dark .remark-suggestions-panel {
+            background: rgba(24, 24, 24, 0.96);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .remark-suggestion-item {
+            width: 100%;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 12px;
+            border-radius: 14px;
+            text-align: left;
+            transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .remark-suggestion-item:hover,
+        .remark-suggestion-item.active {
+            background: rgba(74, 124, 89, 0.09);
+            transform: translateY(-1px);
+            box-shadow: inset 0 0 0 1px rgba(74, 124, 89, 0.16);
+        }
+
+        .remark-suggestion-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 9999px;
+            background: rgba(74, 124, 89, 0.12);
+            color: #4a7c59;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .remark-suggestion-main {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .remark-suggestion-title {
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 700;
+            color: #1a1c18;
+            word-break: break-word;
+        }
+
+        .dark .remark-suggestion-title {
+            color: #f1f3ee;
+        }
+
+        .remark-suggestion-meta {
+            font-size: 11px;
+            line-height: 14px;
+            color: #5d635a;
+            margin-top: 2px;
+        }
+
+        .dark .remark-suggestion-meta {
+            color: rgba(241, 243, 238, 0.70);
+        }
+
+        .remark-suggestion-empty {
+            padding: 12px 12px;
+            border-radius: 14px;
+            color: #5d635a;
+            font-size: 13px;
+            line-height: 19px;
+        }
+
         @media (prefers-reduced-motion: reduce) {
 
             *,
@@ -1490,7 +1581,7 @@
             <!-- Description -->
             <div class="flex items-center gap-sm py-2 border-b border-outline-variant">
                 <span class="material-symbols-outlined text-secondary text-[22px]">notes</span>
-                <div class="flex-1 flex flex-col">
+                <div class="flex-1 flex flex-col relative">
                     <label
                         class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Description</label>
                     <input class="bg-transparent border-none p-0 text-body-md text-on-surface w-full focus:ring-0 h-8"
@@ -1498,6 +1589,7 @@
                         name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
                         autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
                         data-bwignore="true" />
+                    <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden" aria-label="Remark suggestions"></div>
                 </div>
             </div>
             <!-- Category Setup Header with Pencil -->
