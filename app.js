@@ -387,8 +387,10 @@ function selectRemarkSuggestion(text) {
     input.value = text;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     try { input.setSelectionRange(text.length, text.length); } catch (_e) { }
-    // Remove focus and dismiss keyboard after selection
-    input.blur();
+    // Dismiss keyboard and remove focus after a short delay to let events settle
+    setTimeout(() => {
+        input.blur();
+    }, 50);
     hideRemarkSuggestions();
 }
 
