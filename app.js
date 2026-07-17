@@ -115,6 +115,7 @@ let supabaseInitialLoadDone = false;
 let currentView = 'home';
 let isSearching = false;
 let dashboardSearchOpen = false;
+let pendingViewRenderFrame = null;
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -1845,6 +1846,32 @@ function submitOnboarding(event) {
     showToast(`Welcome to ExpenLedge, ${name}!`);
 }
 
+
+
+function scheduleViewRefresh(viewId) {
+    if (pendingViewRenderFrame && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(pendingViewRenderFrame);
+        pendingViewRenderFrame = null;
+    }
+
+    const runRefresh = () => {
+        pendingViewRenderFrame = null;
+        if (viewId !== currentView) return;
+        if (viewId === 'home') updateDashboard();
+        if (viewId === 'analysis') updateAnalysis();
+        if (viewId === 'accounts') updateAccounts();
+        if (viewId === 'budget') updateBudget();
+        if (viewId === 'transactions-all') updateAllTransactionsView();
+        if (viewId === 'structured-tx') renderStructuredTx();
+    };
+
+    if (typeof requestAnimationFrame === 'function') {
+        pendingViewRenderFrame = requestAnimationFrame(() => requestAnimationFrame(runRefresh));
+    } else {
+        pendingViewRenderFrame = setTimeout(runRefresh, 0);
+    }
+}
+
 // View router
 function switchView(viewId, isBackNavigation = false) {
     document.querySelectorAll('.page-view').forEach(view => {
@@ -1908,13 +1935,9 @@ function switchView(viewId, isBackNavigation = false) {
         }
     }
 
-    // Sync specific view content
-    if (viewId === 'home') updateDashboard();
-    if (viewId === 'analysis') updateAnalysis();
-    if (viewId === 'accounts') updateAccounts();
-    if (viewId === 'budget') updateBudget();
-    if (viewId === 'transactions-all') updateAllTransactionsView();
-    if (viewId === 'structured-tx') renderStructuredTx();
+    // Sync specific view content after the first paint so the initial scroll
+    // gesture does not compete with a heavy redraw.
+    scheduleViewRefresh(viewId);
 
     if (!isBackNavigation) {
         // Main tabs are peers — replace state so back never cycles through them.
@@ -7270,7 +7293,7 @@ function initClockFaceInteraction() {
     face.addEventListener('touchstart', (e) => {
         startDrag(e);
     });
-    window.addEventListener('touchmove', handleTimeDrag, { passive: true });
+    window.addEventListener('touchmove', handleTimeDrag);
     window.addEventListener('touchend', () => {
         isDragging = false;
     });
