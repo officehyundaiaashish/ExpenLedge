@@ -7287,7 +7287,7 @@ function initClockFaceInteraction() {
     face.addEventListener('touchstart', (e) => {
         startDrag(e);
     });
-    window.addEventListener('touchmove', handleTimeDrag);
+    window.addEventListener('touchmove', handleTimeDrag, { passive: true });
     window.addEventListener('touchend', () => {
         isDragging = false;
     });
