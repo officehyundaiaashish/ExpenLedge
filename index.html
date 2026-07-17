@@ -396,6 +396,31 @@
             }
         }
     </style>
+    <style>
+        @media (max-width: 420px) {
+            .grid-cols-5 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .grid-cols-4 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 360px) {
+            .grid-cols-5 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .grid-cols-4 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        main {
+            overflow-x: hidden;
+        }
+    </style>
 </head>
 
 <body class="min-h-screen pb-32 bg-background">
