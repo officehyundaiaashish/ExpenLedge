@@ -5443,9 +5443,6 @@ function populateWheel(elementId, items, defaultValue, callback) {
     if (!container) return;
     container.innerHTML = '';
 
-    container.style.webkitOverflowScrolling = 'touch';
-    container.style.overscrollBehaviorY = 'contain';
-
     const spacerTop = document.createElement('div');
     spacerTop.style.height = '40px';
     spacerTop.style.flexShrink = '0';
@@ -5469,9 +5466,7 @@ function populateWheel(elementId, items, defaultValue, callback) {
     // Cache DOM nodes for faster access
     const childrenArray = [];
     let lastScrolledIndex = -1;
-    let scrollRafId = 0;
-    let pendingScrollTop = container.scrollTop;
-
+    
     // Populate children array once
     setTimeout(() => {
         container.querySelectorAll('div').forEach((child, i) => {
@@ -5479,9 +5474,8 @@ function populateWheel(elementId, items, defaultValue, callback) {
         });
     }, 0);
 
-    const applyWheelSelection = () => {
-        scrollRafId = 0;
-        const scrollPos = pendingScrollTop;
+    container.onscroll = () => {
+        const scrollPos = container.scrollTop;
         const index = Math.round(scrollPos / 40);
         const clampedIndex = Math.max(0, Math.min(index, items.length - 1));
 
@@ -5491,7 +5485,7 @@ function populateWheel(elementId, items, defaultValue, callback) {
 
         // Use cached children if available, otherwise query
         const children = childrenArray.length > 0 ? childrenArray : container.querySelectorAll('div');
-
+        
         children.forEach((child, i) => {
             if (i === clampedIndex + 1) {
                 child.classList.add('text-primary', 'scale-110');
@@ -5505,17 +5499,6 @@ function populateWheel(elementId, items, defaultValue, callback) {
         });
 
         callback(items[clampedIndex]);
-    };
-
-    container.onscroll = () => {
-        pendingScrollTop = container.scrollTop;
-        if (scrollRafId) return;
-
-        if (typeof requestAnimationFrame === 'function') {
-            scrollRafId = requestAnimationFrame(applyWheelSelection);
-        } else {
-            applyWheelSelection();
-        }
     };
 
     const defIndex = items.indexOf(defaultValue);
