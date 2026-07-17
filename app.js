@@ -333,6 +333,173 @@ function getAllTags() {
         .sort((a, b) => a.localeCompare(b));
 }
 
+const remarkSuggestionState = {
+    items: [],
+    activeIndex: -1,
+    query: ''
+};
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getSavedRemarkSource() {
+    const latestByRemark = new Map();
+    transactions.forEach((tx, index) => {
+        const remark = String(tx?.note ?? tx?.description ?? tx?.remarks ?? '').trim();
+        if (!remark) return;
+
+        const key = remark.toLowerCase();
+        const stamp = getTransactionFreshness(tx) || (transactions.length - index);
+        const existing = latestByRemark.get(key);
+        if (!existing || stamp >= existing.stamp) {
+            latestByRemark.set(key, { text: remark, stamp });
+        }
+    });
+
+    return [...latestByRemark.values()]
+        .sort((a, b) => b.stamp - a.stamp)
+        .map(item => item.text);
+}
+
+function getRemarkSuggestions(query) {
+    const trimmed = String(query || '').trim();
+    if (!trimmed) return [];
+
+    const normalized = trimmed.toLowerCase();
+    return getSavedRemarkSource().filter(item => item.toLowerCase().startsWith(normalized));
+}
+
+function hideRemarkSuggestions() {
+    const panel = document.getElementById('remark-suggestions-panel');
+    if (panel) panel.classList.add('hidden');
+    remarkSuggestionState.items = [];
+    remarkSuggestionState.activeIndex = -1;
+    remarkSuggestionState.query = '';
+}
+
+function selectRemarkSuggestion(text) {
+    const input = document.getElementById('tx-input-desc');
+    if (!input) return;
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    try { input.setSelectionRange(text.length, text.length); } catch (_e) { }
+    hideRemarkSuggestions();
+}
+
+function renderRemarkSuggestions(query) {
+    const input = document.getElementById('tx-input-desc');
+    const panel = document.getElementById('remark-suggestions-panel');
+    if (!input || !panel) return;
+
+    const normalized = String(query || '').trim();
+    const matches = getRemarkSuggestions(normalized);
+    remarkSuggestionState.query = normalized;
+    remarkSuggestionState.items = matches;
+    remarkSuggestionState.activeIndex = matches.length ? 0 : -1;
+
+    if (!normalized || !matches.length) {
+        hideRemarkSuggestions();
+        return;
+    }
+
+    const accent = escapeHtml(normalized);
+    const visibleItems = matches.map((text, index) => {
+        const safeText = escapeHtml(text);
+        const lowerText = text.toLowerCase();
+        const lowerQuery = normalized.toLowerCase();
+        const prefixEnd = lowerText.indexOf(lowerQuery) === 0 ? normalized.length : 0;
+        const prefix = prefixEnd ? escapeHtml(text.slice(0, prefixEnd)) : '';
+        const rest = prefixEnd ? escapeHtml(text.slice(prefixEnd)) : safeText;
+        return `
+            <button type="button" class="remark-suggestion-item ${index === remarkSuggestionState.activeIndex ? 'active' : ''}" data-remark="${safeText}">
+                <span class="remark-suggestion-icon material-symbols-outlined text-[16px]">history</span>
+                <span class="remark-suggestion-main">
+                    <span class="remark-suggestion-title">${prefix}<span class="text-primary">${rest}</span></span>
+                    <span class="remark-suggestion-meta">Tap to use this previous remark</span>
+                </span>
+            </button>
+        `;
+    }).join('');
+
+    panel.innerHTML = `
+        <div class="flex items-center justify-between px-2 pt-1 pb-2">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">Previous remarks</span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">${matches.length} found</span>
+        </div>
+        <div class="space-y-1">${visibleItems}</div>
+    `;
+
+    panel.classList.remove('hidden');
+    panel.querySelectorAll('.remark-suggestion-item').forEach((button, index) => {
+        button.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            const value = matches[index];
+            if (value) selectRemarkSuggestion(value);
+        });
+    });
+}
+
+function moveRemarkSuggestionActive(delta) {
+    const panel = document.getElementById('remark-suggestions-panel');
+    if (!panel || panel.classList.contains('hidden')) return false;
+    const items = remarkSuggestionState.items || [];
+    if (!items.length) return false;
+
+    const nextIndex = Math.max(0, Math.min(items.length - 1, remarkSuggestionState.activeIndex + delta));
+    remarkSuggestionState.activeIndex = nextIndex;
+    const buttons = panel.querySelectorAll('.remark-suggestion-item');
+    buttons.forEach((btn, idx) => btn.classList.toggle('active', idx === nextIndex));
+    buttons[nextIndex]?.scrollIntoView({ block: 'nearest' });
+    return true;
+}
+
+function handleRemarkInput() {
+    const input = document.getElementById('tx-input-desc');
+    if (!input) return;
+    renderRemarkSuggestions(input.value);
+}
+
+function handleRemarkKeydown(event) {
+    if (event.key === 'ArrowDown') {
+        if (moveRemarkSuggestionActive(1)) event.preventDefault();
+    } else if (event.key === 'ArrowUp') {
+        if (moveRemarkSuggestionActive(-1)) event.preventDefault();
+    } else if (event.key === 'Enter') {
+        const panel = document.getElementById('remark-suggestions-panel');
+        if (panel && !panel.classList.contains('hidden') && remarkSuggestionState.items.length) {
+            const value = remarkSuggestionState.items[remarkSuggestionState.activeIndex] || remarkSuggestionState.items[0];
+            if (value) {
+                event.preventDefault();
+                selectRemarkSuggestion(value);
+            }
+        }
+    } else if (event.key === 'Escape') {
+        hideRemarkSuggestions();
+    }
+}
+
+function initRemarkSuggestionFeature() {
+    const input = document.getElementById('tx-input-desc');
+    const panel = document.getElementById('remark-suggestions-panel');
+    if (!input || !panel || input.dataset.remarkSuggestionsBound === '1') return;
+    input.dataset.remarkSuggestionsBound = '1';
+    input.addEventListener('input', handleRemarkInput);
+    input.addEventListener('focus', handleRemarkInput);
+    input.addEventListener('keydown', handleRemarkKeydown);
+    input.addEventListener('blur', () => {
+        window.setTimeout(() => {
+            if (document.activeElement !== input) hideRemarkSuggestions();
+        }, 120);
+    });
+}
+
 function removeLegacyPlaceholderTags() {
     if (localStorage.getItem('expenledge_placeholder_tags_removed') === 'true') return false;
 
@@ -1602,6 +1769,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     history.replaceState({ viewId: 'home' }, '', '');
     loadFromLocalStorage();
+    initRemarkSuggestionFeature();
     suppressBrowserAutofill();
     syncCategoryLayoutUI();
     syncManageCategoryLayoutUI();
@@ -3140,6 +3308,7 @@ function openAddTransactionModal() {
     // Reset modal values
     document.getElementById('tx-input-amount').value = '';
     document.getElementById('tx-input-desc').value = '';
+    hideRemarkSuggestions();
 
     if (currentView === 'structured-tx') {
         if (structuredTxMode === 'day') {
@@ -3185,6 +3354,7 @@ function openAddTransactionModal() {
 }
 
 function originalCloseAddTransactionModal() {
+    hideRemarkSuggestions();
     const modal = document.getElementById('modal-add-transaction');
     if (!modal) return;
     modal.classList.add('translate-y-full');
@@ -3785,6 +3955,7 @@ function saveTransaction() {
     }
 
     saveToLocalStorage();
+    hideRemarkSuggestions();
     currentFormContext = null;
 
     // Sync all views immediately BEFORE closing modal to avoid flicker
@@ -4043,6 +4214,7 @@ function openEditTransactionModal(t) {
 
     document.getElementById('tx-input-amount').value = t.amount;
     document.getElementById('tx-input-desc').value = t.note;
+    hideRemarkSuggestions();
 
     if (t.rawDate) {
         selectedTxDateObj = new Date(t.rawDate);
