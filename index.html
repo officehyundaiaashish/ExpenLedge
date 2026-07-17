@@ -168,15 +168,15 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             max-width: 100vw;
-            touch-action: pan-x pan-y;
+            touch-action: pan-y;
             -webkit-text-size-adjust: 100%;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Prevent repaints on scrollable containers */
-        main, [id*="list"], [class*="overflow-y-auto"] {
-            contain: layout style paint;
+        /* Keep the main document scroll free of heavy paint containment so native momentum stays smooth */
+        [id*="list"], [class*="overflow-y-auto"] {
+            contain: layout style;
         }
 
         html.modal-open,
@@ -218,7 +218,7 @@
 
         .bottom-sheet-transition .overflow-y-auto {
             overscroll-behavior: contain;
-            -webkit-overflow-scrolling: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .custom-glass {
@@ -226,6 +226,12 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .overflow-y-auto,
+        .overflow-auto {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
         }
 
         .page-view {
@@ -252,7 +258,7 @@
             background-color: #fcfdfc;
             overflow-y: auto;
             overflow-x: hidden;
-            -webkit-overflow-scrolling: auto;
+            -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: contain;
             box-sizing: border-box;
             padding-bottom: 96px;
@@ -413,7 +419,7 @@
         }
     </style>
     <style>
-        <style>@media (max-width: 420px) {
+        @media (max-width: 420px) {
             .grid-cols-5 {
                 grid-template-columns: repeat(4, minmax(0, 1fr));
             }
@@ -2314,7 +2320,7 @@
                             <div
                                 class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
                             </div>
-                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col"
+                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-proximity text-center no-scrollbar flex flex-col"
                                 id="wheel-day"></div>
                         </div>
                     </div>
@@ -2325,7 +2331,7 @@
                             <div
                                 class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
                             </div>
-                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col"
+                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-proximity text-center no-scrollbar flex flex-col"
                                 id="wheel-month"></div>
                         </div>
                     </div>
@@ -2336,7 +2342,7 @@
                             <div
                                 class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
                             </div>
-                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col"
+                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-proximity text-center no-scrollbar flex flex-col"
                                 id="wheel-year"></div>
                         </div>
                     </div>
@@ -2354,7 +2360,7 @@
                             <div
                                 class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
                             </div>
-                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col"
+                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-proximity text-center no-scrollbar flex flex-col"
                                 id="wheel-hour"></div>
                         </div>
                     </div>
@@ -2368,7 +2374,7 @@
                             <div
                                 class="absolute inset-x-0 top-[40px] h-[40px] border-y border-primary/30 pointer-events-none bg-primary/5">
                             </div>
-                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-mandatory text-center no-scrollbar flex flex-col"
+                            <div class="w-full h-full overflow-y-auto scroll-smooth snap-y snap-proximity text-center no-scrollbar flex flex-col"
                                 id="wheel-minute"></div>
                         </div>
                     </div>
