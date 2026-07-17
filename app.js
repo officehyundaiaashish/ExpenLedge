@@ -386,8 +386,9 @@ function selectRemarkSuggestion(text) {
     if (!input) return;
     input.value = text;
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    if (document.activeElement !== input) input.focus({ preventScroll: true });
     try { input.setSelectionRange(text.length, text.length); } catch (_e) { }
+    // Remove focus and dismiss keyboard after selection
+    input.blur();
     hideRemarkSuggestions();
 }
 
