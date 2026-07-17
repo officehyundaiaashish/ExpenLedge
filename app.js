@@ -1002,24 +1002,17 @@ function setSupabaseStatus(message, isConnected = false, isError = false) {
     if (syncBtn) syncBtn.disabled = !isConnected || supabaseIntegration.connecting;
     if (disconnectBtn) disconnectBtn.disabled = !isConnected && !supabaseClient;
 
-    // Update dashboard header SVG sync icon.
-    // We only flip the icon to "connected / disconnected / error" here —
-    // the "syncing" and "success" states are driven by syncSupabaseNow() so
-    // they take priority and play their full animation before reverting.
-    const staticIcon = document.getElementById('supabase-sync-icon-static');
-    const animatedIcon = document.getElementById('supabase-sync-icon-animated');
-
-    // Hide animated icon, show static icon when not syncing
-    if (animatedIcon) animatedIcon.style.display = 'none';
-    if (staticIcon) {
-        staticIcon.style.display = '';
-        staticIcon.classList.remove('sync-icon--disconnected', 'sync-icon--connected', 'sync-icon--error');
+    // Update dashboard header Supabase sync icon state.
+    // Skip if syncing is in progress — syncSupabaseNow owns that state.
+    const dashSyncBtn = document.getElementById('supabase-sync-btn');
+    if (dashSyncBtn && !dashSyncBtn.classList.contains('db-syncing')) {
+        dashSyncBtn.classList.remove('db-disconnected', 'db-connected', 'db-syncing', 'db-success', 'db-error');
         if (isConnected && !isError) {
-            staticIcon.classList.add('sync-icon--connected');
+            dashSyncBtn.classList.add('db-connected');
         } else if (isError) {
-            staticIcon.classList.add('sync-icon--error');
+            dashSyncBtn.classList.add('db-error');
         } else {
-            staticIcon.classList.add('sync-icon--disconnected');
+            dashSyncBtn.classList.add('db-disconnected');
         }
     }
 }
@@ -1243,11 +1236,7 @@ async function syncSupabaseNow(options) {
 
     if (!supabaseClient) {
         setSupabaseStatus('Supabase is not connected', false, true);
-        if (manual) {
-            showSyncErrorOverlay('Supabase is not connected. Please connect first.');
-        } else {
-            showToast('Connect Supabase first');
-        }
+        showToast('Connect Supabase first');
         return false;
     }
 
@@ -1263,11 +1252,7 @@ async function _syncSupabaseNowInternal(options) {
 
     if (!supabaseClient) {
         setSupabaseStatus('Supabase is not connected', false, true);
-        if (manual) {
-            showSyncErrorOverlay('Supabase is not connected. Please connect first.');
-        } else {
-            showToast('Connect Supabase first');
-        }
+        showToast('Connect Supabase first');
         return false;
     }
 
@@ -1278,16 +1263,13 @@ async function _syncSupabaseNowInternal(options) {
     if (supabaseIntegration.syncInProgress) {
         supabaseIntegration.pendingSync = true;
         if (manual) {
-            showSyncLoadingOverlay('Waiting for previous sync…');
+            showToast('Sync in progress…');
             try {
                 while (supabaseIntegration.syncInProgress) {
                     await new Promise(r => setTimeout(r, 150));
                 }
                 return syncSupabaseNow({ manual: true });
-            } catch (_e) {
-                hideSyncResultOverlay();
-                return false;
-            }
+            } catch (_e) { return false; }
         }
         return false;
     }
@@ -1296,25 +1278,17 @@ async function _syncSupabaseNowInternal(options) {
     supabaseIntegration.pendingSync = true;
     supabaseIntegration.manualActive = manual;
 
-    // Drive the dashboard SVG icon to its spinning state.
-    const staticIcon = document.getElementById('supabase-sync-icon-static');
-    const animatedIcon = document.getElementById('supabase-sync-icon-animated');
-
-    // Show animated icon, hide static icon during syncing
-    if (staticIcon) staticIcon.style.display = 'none';
-    if (animatedIcon) {
-        animatedIcon.style.display = '';
-        animatedIcon.classList.remove('sync-icon--disconnected', 'sync-icon--connected',
-            'sync-icon--success', 'sync-icon--error');
-        void animatedIcon.offsetWidth;
-        animatedIcon.classList.add('sync-icon--syncing');
+    // Drive the dashboard icon to its spinning (syncing) state.
+    const syncBtn = document.getElementById('supabase-sync-btn');
+    if (syncBtn) {
+        syncBtn.classList.remove('db-disconnected', 'db-connected', 'db-success', 'db-error');
+        syncBtn.classList.add('db-syncing');
     }
 
-    if (manual) showSyncLoadingOverlay('Checking for changes…');
     setSupabaseStatus('Syncing to Supabase…', true, false);
 
     // Helper to update the loading overlay subtitle (no-op when manual=false).
-    const updateLoadingMsg = (msg) => { if (manual) showSyncLoadingOverlay(msg); };
+    const updateLoadingMsg = (_msg) => {};
 
     try {
         // ------------------------------------------------------------------
@@ -1404,7 +1378,7 @@ async function _syncSupabaseNowInternal(options) {
             updateSupabaseSyncTime();
             setSupabaseStatus('Supabase synced successfully', true, false);
             triggerSyncBadgeSuccessAnimation();
-            if (manual) showSyncSuccessOverlay();
+            if (manual) showToast('Sync complete ✔');
             return true;
         }
 
@@ -1443,36 +1417,24 @@ async function _syncSupabaseNowInternal(options) {
         setSupabaseStatus('Supabase synced successfully', true, false);
 
         triggerSyncBadgeSuccessAnimation();
-        if (manual) showSyncSuccessOverlay();
+        if (manual) showToast('Sync complete ✔');
         return true;
     } catch (error) {
         supabaseIntegration.lastError = error?.message || String(error);
         setSupabaseStatus(`Sync failed: ${supabaseIntegration.lastError}`, true, true);
 
-        const staticIcon = document.getElementById('supabase-sync-icon-static');
-        const animatedIcon = document.getElementById('supabase-sync-icon-animated');
-
-        if (animatedIcon) {
-            animatedIcon.classList.remove('sync-icon--syncing', 'sync-icon--success');
-            void animatedIcon.offsetWidth;
-            animatedIcon.classList.add('sync-icon--error');
+        const syncBtn = document.getElementById('supabase-sync-btn');
+        if (syncBtn) {
+            syncBtn.classList.remove('db-syncing', 'db-success');
+            syncBtn.classList.add('db-error');
             setTimeout(() => {
-                animatedIcon.classList.remove('sync-icon--error');
-                // After error, show static icon with connected/disconnected state
-                if (staticIcon) {
-                    staticIcon.style.display = '';
-                    animatedIcon.style.display = 'none';
-                    if (supabaseIntegration.connected) {
-                        staticIcon.classList.add('sync-icon--connected');
-                    } else {
-                        staticIcon.classList.add('sync-icon--disconnected');
-                    }
-                }
-            }, 1200);
+                syncBtn.classList.remove('db-error');
+                syncBtn.classList.add(supabaseIntegration.connected ? 'db-connected' : 'db-disconnected');
+            }, 1500);
         }
 
         if (manual) {
-            showSyncErrorOverlay(supabaseIntegration.lastError || 'Sync failed. Please try again.');
+            showToast('⚠️ Sync failed: ' + (supabaseIntegration.lastError || 'Please try again.'));
         } else {
             showToast('Supabase sync failed');
         }
@@ -1500,97 +1462,18 @@ async function _syncSupabaseNowInternal(options) {
  * (icon pulse + full-screen success overlay shown elsewhere).
  */
 function triggerSyncBadgeSuccessAnimation() {
-    const staticIcon = document.getElementById('supabase-sync-icon-static');
-    const animatedIcon = document.getElementById('supabase-sync-icon-animated');
+    const syncBtn = document.getElementById('supabase-sync-btn');
+    if (!syncBtn) return;
 
-    if (!animatedIcon) return;
-
-    animatedIcon.classList.remove('sync-icon--syncing', 'sync-icon--error', 'sync-icon--disconnected');
-    void animatedIcon.offsetWidth;
-    animatedIcon.classList.add('sync-icon--success');
+    syncBtn.classList.remove('db-syncing', 'db-error', 'db-disconnected');
+    syncBtn.classList.add('db-success');
     setTimeout(() => {
-        animatedIcon.classList.remove('sync-icon--success');
-        // After success, show static icon with connected state
-        if (staticIcon) {
-            staticIcon.style.display = '';
-            animatedIcon.style.display = 'none';
-            if (supabaseIntegration.connected) {
-                staticIcon.classList.add('sync-icon--connected');
-            } else {
-                staticIcon.classList.add('sync-icon--disconnected');
-            }
-        }
-    }, 1200);
+        syncBtn.classList.remove('db-success');
+        syncBtn.classList.add(supabaseIntegration.connected ? 'db-connected' : 'db-disconnected');
+    }, 2200);
 }
 
-function _setSyncOverlayState(state) {
-    const overlay = document.getElementById('sync-result-overlay');
-    if (!overlay) return;
-    overlay.classList.remove('is-loading', 'is-success', 'is-error');
-    if (state) overlay.classList.add('is-' + state);
-}
 
-/** Show the loading spinner overlay (no auto-dismiss).
- *  @param {string} [message] — optional subtitle to display under "Syncing…" */
-function showSyncLoadingOverlay(message) {
-    const overlay = document.getElementById('sync-result-overlay');
-    if (!overlay) return;
-    const msgEl = document.getElementById('sync-result-loading-msg');
-    if (msgEl && message) msgEl.textContent = message;
-    _setSyncOverlayState('loading');
-    overlay.classList.add('is-visible');
-}
-
-/** Switch the visible overlay to the success state and auto-dismiss after 1.8s. */
-let _syncSuccessDismissTimer = null;
-function showSyncSuccessOverlay() {
-    const overlay = document.getElementById('sync-result-overlay');
-    if (!overlay) return;
-    _setSyncOverlayState('success');
-    overlay.classList.add('is-visible');
-
-    if (_syncSuccessDismissTimer) clearTimeout(_syncSuccessDismissTimer);
-    _syncSuccessDismissTimer = setTimeout(() => {
-        hideSyncResultOverlay();
-        _syncSuccessDismissTimer = null;
-    }, 1800);
-}
-
-/** Switch the visible overlay to the error state. Stays until dismissed. */
-function showSyncErrorOverlay(message) {
-    const overlay = document.getElementById('sync-result-overlay');
-    if (!overlay) return;
-    const msgEl = document.getElementById('sync-result-error-msg');
-    if (msgEl && message) {
-        // Trim very long error messages so the overlay stays readable.
-        const trimmed = String(message).trim();
-        msgEl.textContent = trimmed.length > 220 ? trimmed.slice(0, 220) + '…' : trimmed;
-    }
-    _setSyncOverlayState('error');
-    overlay.classList.add('is-visible');
-
-    if (_syncSuccessDismissTimer) {
-        clearTimeout(_syncSuccessDismissTimer);
-        _syncSuccessDismissTimer = null;
-    }
-}
-
-/** Fade the overlay out and reset its state. Safe to call anytime. */
-function hideSyncResultOverlay() {
-    const overlay = document.getElementById('sync-result-overlay');
-    if (!overlay) return;
-    overlay.classList.remove('is-visible');
-    // Clear the state class after the fade so the next show starts clean.
-    setTimeout(() => {
-        if (!overlay.classList.contains('is-visible')) {
-            overlay.classList.remove('is-loading', 'is-success', 'is-error');
-        }
-    }, 340);
-    if (_syncSuccessDismissTimer) {
-        clearTimeout(_syncSuccessDismissTimer);
-        _syncSuccessDismissTimer = null;
-    }
-}
 async function connectSupabaseFromSheet() {
     const urlInput = document.getElementById('supabase-project-url');
     const keyInput = document.getElementById('supabase-anon-key');
@@ -1613,10 +1496,7 @@ async function connectSupabaseFromSheet() {
         return;
     }
 
-    // Show loading overlay only for manual connect (user clicked Connect button)
-    if (isManual) {
-        showSyncLoadingOverlay('Connecting to Supabase…');
-    }
+    if (isManual) showToast('Connecting to Supabase…');
 
     supabaseConfig.url = url;
     supabaseConfig.anonKey = anonKey;
@@ -1658,18 +1538,15 @@ async function connectSupabaseFromSheet() {
 
         await syncSupabaseNow();
 
-        // Show success overlay only for manual connect
-        if (isManual) {
-            showSyncSuccessOverlay();
-        }
+        if (isManual) showToast('Connected to Supabase ✔');
+
     } catch (error) {
         supabaseIntegration.connected = false;
         supabaseIntegration.lastError = error?.message || String(error);
         setSupabaseStatus(`Connection failed: ${supabaseIntegration.lastError}`, false, true);
         if (isManual) {
-            showSyncErrorOverlay(supabaseIntegration.lastError || 'Connection failed. Please check your credentials.');
+            showToast('⚠️ Connection failed: ' + (supabaseIntegration.lastError || 'Check credentials.'));
         } else {
-            // Silent fail for auto-connect - only show toast
             showToast('Supabase connect failed');
         }
     } finally {
@@ -1703,39 +1580,9 @@ function initializeSupabaseFromSavedCredentials() {
 
 // Initial setup
 window.addEventListener('DOMContentLoaded', () => {
-    // Setup color theming for both sync icons (static and animated)
-    const staticSyncIconEl = document.getElementById('supabase-sync-icon-static');
-    const animatedSyncIconEl = document.getElementById('supabase-sync-icon-animated');
+    // Dashboard sync button: initial state driven by setSupabaseStatus on load
+    // (MutationObserver no longer needed — state is class-based on the button)
 
-    const updateSyncIconColor = (iconEl) => {
-        if (!iconEl) return;
-        // Force green color for connected state regardless of theme
-        if (iconEl.classList.contains('sync-icon--connected')) {
-            iconEl.style.color = '#22c55e'; // Green-500
-        } else if (iconEl.classList.contains('sync-icon--syncing')) {
-            iconEl.style.color = 'var(--primary)';
-        } else if (iconEl.classList.contains('sync-icon--success')) {
-            iconEl.style.color = 'var(--tertiary)';
-        } else if (iconEl.classList.contains('sync-icon--error')) {
-            iconEl.style.color = 'var(--error)';
-        } else {
-            iconEl.style.color = 'var(--on-surface-variant)';
-        }
-    };
-
-    // Observe class changes to update color for static icon
-    if (staticSyncIconEl) {
-        const staticObserver = new MutationObserver(() => updateSyncIconColor(staticSyncIconEl));
-        staticObserver.observe(staticSyncIconEl, { attributes: true, attributeFilter: ['class'] });
-        updateSyncIconColor(staticSyncIconEl); // Initial call
-    }
-
-    // Observe class changes to update color for animated icon
-    if (animatedSyncIconEl) {
-        const animatedObserver = new MutationObserver(() => updateSyncIconColor(animatedSyncIconEl));
-        animatedObserver.observe(animatedSyncIconEl, { attributes: true, attributeFilter: ['class'] });
-        updateSyncIconColor(animatedSyncIconEl); // Initial call
-    }
     // Capitalize first letter of every text input
     document.addEventListener('input', function (e) {
         const target = e.target;
@@ -2184,11 +2031,11 @@ function renderStructuredTx(loadMore = false) {
 
     let filtered = [];
     if (structuredTxMode === 'day') {
+        const selectedDate = new Date(structuredSelectedDate.getFullYear(), structuredSelectedDate.getMonth(), structuredSelectedDate.getDate());
         filtered = transactions.filter(t => {
             const txDate = getTransactionDate(t);
-            return txDate.getDate() === structuredSelectedDate.getDate() &&
-                txDate.getMonth() === structuredSelectedDate.getMonth() &&
-                txDate.getFullYear() === structuredSelectedDate.getFullYear();
+            const txDateNormalized = new Date(txDate.getFullYear(), txDate.getMonth(), txDate.getDate());
+            return txDateNormalized.getTime() === selectedDate.getTime();
         });
     } else if (structuredTxMode === 'month') {
         filtered = transactions.filter(t => {
@@ -2456,7 +2303,14 @@ function updateDashboard() {
         fitText(balanceEl);
     }
 
-    renderRecentTransactions(transactions.filter(transactionBelongsToFilter));
+    const filteredTxs = transactions.filter(transactionBelongsToFilter);
+    filteredTxs.sort((a, b) => {
+        const dateA = getTransactionDate(a);
+        const dateB = getTransactionDate(b);
+        // Sort by full date AND time (milliseconds precision)
+        return dateB.getTime() - dateA.getTime();
+    });
+    renderRecentTransactions(filteredTxs);
 
     // Calculate yearly expenses
     let yearlyExpense = 0;
@@ -2804,11 +2658,10 @@ function updateAnalysis() {
         'Other Income': 'bg-surface-container-high text-on-surface-variant'
     };
 
-    // Sort: non-zero first by amount desc, then zero alphabetically
+    // Sort: non-zero first by amount desc
     const withValue = allCats.filter(c => (categorySums[c.name] || 0) > 0)
         .sort((a, b) => (categorySums[b.name] || 0) - (categorySums[a.name] || 0));
-    const withoutValue = allCats.filter(c => !(categorySums[c.name] > 0));
-    const sortedCats = [...withValue, ...withoutValue];
+    const sortedCats = withValue; // Only show categories with transactions
 
     // Draw donut only for non-zero
     let offset = 0;
@@ -2830,16 +2683,15 @@ function updateAnalysis() {
         offset += pct;
     });
 
-    // Draw all category rows (including zero)
+    // Draw only category rows that have transactions (non-zero)
     sortedCats.forEach(cat => {
         const sum = categorySums[cat.name] || 0;
-        const pct = total > 0 && sum > 0 ? (sum / total) * 100 : 0;
+        const pct = total > 0 ? (sum / total) * 100 : 0;
         const bgLight = bgLightColors[cat.name] || 'bg-surface-container-high text-on-surface-variant';
-        const isZero = sum === 0;
 
         const item = document.createElement('div');
-        item.className = `flex items-center justify-between p-md bg-surface-container rounded-xl transition-colors ${isZero ? 'opacity-40' : 'hover:bg-surface-container-high cursor-pointer'}`;
-        if (!isZero) item.onclick = () => openCatTransactionsSheet(cat.name, cat.icon);
+        item.className = `flex items-center justify-between p-md bg-surface-container rounded-xl transition-colors hover:bg-surface-container-high cursor-pointer`;
+        item.onclick = () => openCatTransactionsSheet(cat.name, cat.icon);
         item.innerHTML = `
             <div class="flex items-center gap-md">
                 <div class="w-12 h-12 rounded-full flex items-center justify-center ${bgLight}">
@@ -2847,10 +2699,10 @@ function updateAnalysis() {
                 </div>
                 <div>
                     <p class="text-body-lg font-semibold">${cat.name}</p>
-                    <p class="text-label-md text-on-surface-variant">${isZero ? 'No transactions' : pct.toFixed(1) + '% of total'}</p>
+                    <p class="text-label-md text-on-surface-variant">${pct.toFixed(1) + '% of total'}</p>
                 </div>
             </div>
-            <p class="text-body-lg font-bold ${isZero ? 'text-on-surface-variant' : ''}">₹${sum.toFixed(2)}</p>
+            <p class="text-body-lg font-bold">₹${sum.toFixed(2)}</p>
         `;
         listContainer.appendChild(item);
     });
@@ -3289,7 +3141,32 @@ function openAddTransactionModal() {
     document.getElementById('tx-input-amount').value = '';
     document.getElementById('tx-input-desc').value = '';
 
-    selectedTxDateObj = new Date();
+    if (currentView === 'structured-tx') {
+        if (structuredTxMode === 'day') {
+            // Use the specific day the user is viewing
+            selectedTxDateObj = new Date(structuredSelectedDate);
+        } else if (structuredTxMode === 'month') {
+            // Use the 1st day of the selected month
+            selectedTxDateObj = new Date(structuredSelectedDate.getFullYear(), structuredSelectedDate.getMonth(), 1);
+        } else if (structuredTxMode === 'custom') {
+            // Use the "From" date of the custom range
+            const fromInput = document.getElementById('structured-date-from');
+            if (fromInput && fromInput.value) {
+                const parsed = new Date(fromInput.value);
+                if (!isNaN(parsed.getTime())) {
+                    selectedTxDateObj = parsed;
+                } else {
+                    selectedTxDateObj = new Date();
+                }
+            } else {
+                selectedTxDateObj = new Date();
+            }
+        } else {
+            selectedTxDateObj = new Date();
+        }
+    } else {
+        selectedTxDateObj = new Date();
+    }
     updateTxDatePickerLabel();
 
     selectedCategory = 'Groceries';
@@ -3859,6 +3736,11 @@ function saveTransaction() {
     if (editingTransactionId !== null) {
         const tx = transactions.find(x => x.id === editingTransactionId);
         if (tx) {
+            const originalRawDate = tx.rawDate;
+            const originalDate = tx.date;
+            const newRawDate = selectedTxDateObj.toISOString();
+            const newDate = getRelativeDateString(selectedTxDateObj);
+
             tx.amount = amtVal;
             tx.note = descVal || selectedCategory;
             tx.category = selectedCategory;
@@ -3866,9 +3748,19 @@ function saveTransaction() {
             tx.type = selectedTxType;
             tx.paymentMode = selectedPaymentMode;
             tx.tags = [...selectedTags];
-            tx.rawDate = selectedTxDateObj.toISOString();
+
+            // Update updatedAt for sync
             tx.updatedAt = new Date().toISOString();
-            tx.date = getRelativeDateString(selectedTxDateObj);
+
+            // Only update date fields if the user actually changed the date/time
+            if (originalRawDate !== newRawDate) {
+                tx.rawDate = newRawDate;
+                tx.date = newDate;
+            } else {
+                // Keep original dates unchanged
+                tx.rawDate = originalRawDate;
+                tx.date = originalDate;
+            }
         }
         editingTransactionId = null;
         toastMessage = "Transaction updated successfully!";
@@ -6700,11 +6592,41 @@ function togglePickerDropdown(type) {
         if (el) {
             if (d === type) {
                 el.classList.toggle('hidden');
+                // If we are showing this dropdown, scroll to the selected value
+                if (!el.classList.contains('hidden')) {
+                    scrollPickerDropdownToValue(d);
+                }
             } else {
                 el.classList.add('hidden');
             }
         }
     });
+}
+
+function scrollPickerDropdownToValue(type) {
+    const dropdown = document.getElementById(`dtpicker-custom-${type}-options`);
+    if (!dropdown) return;
+    const buttons = dropdown.querySelectorAll('button');
+    if (!buttons.length) return;
+    // Get current value
+    const valueEl = document.getElementById(`dtpicker-custom-${type}-value`);
+    if (!valueEl) return;
+    const currentVal = valueEl.innerText.trim();
+    // Find button with matching text
+    let targetButton = null;
+    buttons.forEach(btn => {
+        if (btn.innerText.trim() === currentVal) {
+            targetButton = btn;
+        }
+    });
+    if (targetButton) {
+        // Scroll to center the button in the dropdown container
+        const containerHeight = dropdown.clientHeight;
+        const buttonTop = targetButton.offsetTop;
+        const buttonHeight = targetButton.clientHeight;
+        const scrollTarget = buttonTop - (containerHeight / 2) + (buttonHeight / 2);
+        dropdown.scrollTop = Math.max(0, scrollTarget);
+    }
 }
 
 function selectPickerDropdownValue(type, val) {
@@ -6955,6 +6877,42 @@ function openTxDateTimePicker() {
     if (hrVal) hrVal.innerText = String(hr).padStart(2, '0');
     if (minVal) minVal.innerText = String(min).padStart(2, '0');
     if (ampmVal) ampmVal.innerText = ampm;
+
+    // Auto-scroll hour wheel to selected hour
+    setTimeout(() => {
+        const hourOptions = document.getElementById('dtpicker-custom-hour-options');
+        if (hourOptions) {
+            const hourButtons = hourOptions.querySelectorAll('button');
+            const targetHour = String(hr).padStart(2, '0');
+            let targetIndex = 0;
+            hourButtons.forEach((btn, idx) => {
+                if (btn.innerText === targetHour) {
+                    targetIndex = idx;
+                }
+            });
+            if (hourButtons[targetIndex]) {
+                hourButtons[targetIndex].scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+        }
+    }, 100);
+
+    // Auto-scroll minute wheel to selected minute
+    setTimeout(() => {
+        const minuteOptions = document.getElementById('dtpicker-custom-minute-options');
+        if (minuteOptions) {
+            const minuteButtons = minuteOptions.querySelectorAll('button');
+            const targetMinute = String(min).padStart(2, '0');
+            let targetIndex = 0;
+            minuteButtons.forEach((btn, idx) => {
+                if (btn.innerText === targetMinute) {
+                    targetIndex = idx;
+                }
+            });
+            if (minuteButtons[targetIndex]) {
+                minuteButtons[targetIndex].scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+        }
+    }, 150);
 
     syncClockFromSelects();
 
