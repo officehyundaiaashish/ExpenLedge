@@ -174,12 +174,16 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Momentum scroll for all native scrolling containers */
-        .page-view, main, [id*="list"], [class*="overflow-y-auto"] {
+        /* Keep native scrolling responsive */
+        main {
+            overflow-x: hidden;
+        }
+
+        .overflow-y-auto {
             -webkit-overflow-scrolling: touch;
         }
 
-        html.modal-open,
+html.modal-open,
         html.modal-open body {
             overflow: hidden !important;
             overscroll-behavior: none;
@@ -231,7 +235,7 @@
         .page-view {
             display: none;
             animation: slideIn 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-            will-change: transform;
+            will-change: auto;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
@@ -252,7 +256,7 @@
             background-color: #fcfdfc;
             overflow-y: auto;
             overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: auto;
             overscroll-behavior-y: contain;
             box-sizing: border-box;
             padding-bottom: 96px;
