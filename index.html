@@ -255,6 +255,9 @@
             z-index: 40;
             max-height: 232px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            touch-action: pan-y;
             padding: 6px;
             border-radius: 18px;
             border: 1px solid rgba(74, 124, 89, 0.10);
@@ -277,6 +280,7 @@
             padding: 12px 12px;
             border-radius: 14px;
             text-align: left;
+            touch-action: manipulation;
             transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
         }
 
@@ -1588,7 +1592,7 @@
                         id="tx-input-desc" placeholder="Note (e.g. Lunch with team)" type="text"
                         name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
                         autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
-                        data-bwignore="true" />
+                        data-bwignore="true" data-no-capitalize="true" />
                     <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden" aria-label="Remark suggestions"></div>
                 </div>
             </div>
