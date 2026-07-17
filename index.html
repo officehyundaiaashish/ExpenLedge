@@ -1518,58 +1518,19 @@
                         id="tx-type-income" onclick="switchTransactionType('income')">Income</button>
                 </div>
             </div>
-            <!-- Date & Time Selector -->
-            <div class="flex items-center gap-sm py-2 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
-                onclick="openTxDateTimePicker()">
-                <span class="material-symbols-outlined text-secondary text-[22px]">calendar_today</span>
-                <div class="flex-1 flex flex-col">
-                    <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
-                        Time</span>
-                    <span class="text-body-md font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
-                        PM</span>
-                    <input type="hidden" id="tx-input-datetime" />
-                </div>
-                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
-            </div>
-            <!-- Amount input -->
-            <div class="flex items-center gap-sm py-2 group border-b border-outline-variant">
-                <span class="material-symbols-outlined text-secondary text-[22px]">currency_rupee</span>
-                <div class="flex-1 flex flex-col">
-                    <label
-                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
-                    <input
-                        class="bg-transparent border-none p-0 text-headline-md font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-8"
-                        id="tx-input-amount" placeholder="0" required="" type="number"
-                        name="expenledge_transaction_amount" autocomplete="new-password" autocorrect="off"
-                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
-                        data-bwignore="true" inputmode="decimal" />
-
-                </div>
-                <!-- Calculator Button -->
-                <button type="button"
-                    class="text-primary hover:bg-surface-container-high rounded-full p-1.5 transition-colors flex items-center justify-center self-end"
-                    onclick="openCalculatorSheet()">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <rect x="4" y="4" width="16" height="16" rx="2" stroke-linejoin="round"></rect>
-                        <path d="M9 9h6M9 13h2M13 13h2M9 17h2M13 17h2" stroke-linecap="round"></path>
-                    </svg>
-                </button>
-            </div>
-            <!-- Description -->
-            <div class="flex items-center gap-sm py-2 border-b border-outline-variant">
-                <span class="material-symbols-outlined text-secondary text-[22px]">notes</span>
-                <div class="flex-1 flex flex-col relative">
-                    <label
-                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Description</label>
-                    <input class="bg-transparent border-none p-0 text-body-md text-on-surface w-full focus:ring-0 h-8"
-                        id="tx-input-desc" placeholder="Note (e.g. Lunch with team)" type="text"
-                        name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
-                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
-                        data-bwignore="true" data-no-capitalize="true" />
-                    <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden" aria-label="Remark suggestions"></div>
-                </div>
-            </div>
+<!-- Date & Time Selector -->
+<div class="flex items-center gap-sm py-2 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
+    onclick="openTxDateTimePicker()">
+    <span class="material-symbols-outlined text-secondary text-[22px]">calendar_today</span>
+    <div class="flex-1 flex flex-col">
+        <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
+            Time</span>
+        <span class="text-body-md font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
+            PM</span>
+        <input type="hidden" id="tx-input-datetime" />
+    </div>
+    <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+</div>
 <!-- Category Setup Header with Pencil -->
 <div class="flex justify-between items-center px-1 pt-1 -mb-0.5">
     <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
@@ -1612,6 +1573,45 @@
         <span class="material-symbols-outlined text-on-surface-variant text-[20px] flex-shrink-0">chevron_right</span>
     </div>
 </div>
+            <!-- Amount input -->
+            <div class="flex items-center gap-sm py-2 group border-b border-outline-variant">
+                <span class="material-symbols-outlined text-secondary text-[22px]">currency_rupee</span>
+                <div class="flex-1 flex flex-col">
+                    <label
+                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
+                    <input
+                        class="bg-transparent border-none p-0 text-headline-md font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-8"
+                        id="tx-input-amount" placeholder="0" required="" type="number"
+                        name="expenledge_transaction_amount" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" inputmode="decimal" />
+
+                </div>
+                <!-- Calculator Button -->
+                <button type="button"
+                    class="text-primary hover:bg-surface-container-high rounded-full p-1.5 transition-colors flex items-center justify-center self-end"
+                    onclick="openCalculatorSheet()">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <rect x="4" y="4" width="16" height="16" rx="2" stroke-linejoin="round"></rect>
+                        <path d="M9 9h6M9 13h2M13 13h2M9 17h2M13 17h2" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+            </div>
+            <!-- Description -->
+            <div class="flex items-center gap-sm py-2 border-b border-outline-variant">
+                <span class="material-symbols-outlined text-secondary text-[22px]">notes</span>
+                <div class="flex-1 flex flex-col relative">
+                    <label
+                        class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Description</label>
+                    <input class="bg-transparent border-none p-0 text-body-md text-on-surface w-full focus:ring-0 h-8"
+                        id="tx-input-desc" placeholder="Note (e.g. Lunch with team)" type="text"
+                        name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" data-no-capitalize="true" />
+                    <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden" aria-label="Remark suggestions"></div>
+                </div>
+            </div>
             <!-- Tags selector Trigger -->
             <div class="flex items-center gap-sm py-1.5 border-b border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg px-2 -mx-2"
                 onclick="openTagsSheet()">
