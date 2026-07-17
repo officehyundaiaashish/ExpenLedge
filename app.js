@@ -213,10 +213,11 @@ function suppressBrowserAutofill(root = document) {
         el.setAttribute('x-webkit-autofill', 'off');
         el.setAttribute('x-moz-autofill', 'off');
 
-        // Set a random, non-semantic name attribute to avoid pattern matching
-        if (!el.name || el.name.startsWith('expenledge_')) {
+        // Do not rewrite the field name on every pass.
+        // Renaming a focused input can destabilize mobile keyboards and IMEs.
+        if (!el.name) {
             const safeId = (el.id || 'field').replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
-            el.setAttribute('name', `expenledge_${safeId}_${Date.now()}`);
+            el.setAttribute('name', `expenledge_${safeId}`);
         }
 
         if (type === 'number' && !el.getAttribute('inputmode')) {
@@ -332,7 +333,8 @@ function getAllTags() {
 const remarkSuggestionState = {
     items: [],
     activeIndex: -1,
-    query: ''
+    query: '',
+    renderTimer: null
 };
 
 function escapeHtml(text) {
@@ -384,7 +386,7 @@ function selectRemarkSuggestion(text) {
     if (!input) return;
     input.value = text;
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.focus();
+    if (document.activeElement !== input) input.focus({ preventScroll: true });
     try { input.setSelectionRange(text.length, text.length); } catch (_e) { }
     hideRemarkSuggestions();
 }
@@ -405,7 +407,6 @@ function renderRemarkSuggestions(query) {
         return;
     }
 
-    const accent = escapeHtml(normalized);
     const visibleItems = matches.map((text, index) => {
         const safeText = escapeHtml(text);
         const lowerText = text.toLowerCase();
@@ -434,7 +435,7 @@ function renderRemarkSuggestions(query) {
 
     panel.classList.remove('hidden');
     panel.querySelectorAll('.remark-suggestion-item').forEach((button, index) => {
-        button.addEventListener('pointerdown', (event) => {
+        button.addEventListener('click', (event) => {
             event.preventDefault();
             const value = matches[index];
             if (value) selectRemarkSuggestion(value);
@@ -459,7 +460,12 @@ function moveRemarkSuggestionActive(delta) {
 function handleRemarkInput() {
     const input = document.getElementById('tx-input-desc');
     if (!input) return;
-    renderRemarkSuggestions(input.value);
+    if (remarkSuggestionState.renderTimer) {
+        window.clearTimeout(remarkSuggestionState.renderTimer);
+    }
+    remarkSuggestionState.renderTimer = window.setTimeout(() => {
+        renderRemarkSuggestions(input.value);
+    }, 80);
 }
 
 function handleRemarkKeydown(event) {
@@ -486,13 +492,13 @@ function initRemarkSuggestionFeature() {
     const panel = document.getElementById('remark-suggestions-panel');
     if (!input || !panel || input.dataset.remarkSuggestionsBound === '1') return;
     input.dataset.remarkSuggestionsBound = '1';
-    input.addEventListener('input', handleRemarkInput);
+    input.addEventListener('input', handleRemarkInput, { passive: true });
     input.addEventListener('focus', handleRemarkInput);
     input.addEventListener('keydown', handleRemarkKeydown);
     input.addEventListener('blur', () => {
         window.setTimeout(() => {
             if (document.activeElement !== input) hideRemarkSuggestions();
-        }, 120);
+        }, 160);
     });
 }
 
@@ -1746,19 +1752,21 @@ window.addEventListener('DOMContentLoaded', () => {
     // Dashboard sync button: initial state driven by setSupabaseStatus on load
     // (MutationObserver no longer needed — state is class-based on the button)
 
-    // Capitalize first letter of every text input
+    // Capitalize first letter only for fields that benefit from it.
+    // Skip the transaction description field so typing remains stable.
     document.addEventListener('input', function (e) {
         const target = e.target;
-        if (target.tagName === 'INPUT' && target.type === 'text') {
-            const val = target.value;
-            if (val.length > 0) {
-                const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
-                if (target.value !== capitalized) {
-                    const start = target.selectionStart;
-                    const end = target.selectionEnd;
-                    target.value = capitalized;
-                    target.setSelectionRange(start, end);
-                }
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.type !== 'text') return;
+        if (target.id === 'tx-input-desc') return;
+        const val = target.value;
+        if (val.length > 0) {
+            const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
+            if (target.value !== capitalized) {
+                const start = target.selectionStart;
+                const end = target.selectionEnd;
+                target.value = capitalized;
+                try { target.setSelectionRange(start, end); } catch (_e) { }
             }
         }
     });
