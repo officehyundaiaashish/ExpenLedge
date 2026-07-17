@@ -407,7 +407,7 @@ function renderRemarkSuggestions(query) {
         return;
     }
 
-    const visibleItems = matches.map((text, index) => {
+ const visibleItems = matches.map((text, index) => {
         const safeText = escapeHtml(text);
         const lowerText = text.toLowerCase();
         const lowerQuery = normalized.toLowerCase();
@@ -415,9 +415,9 @@ function renderRemarkSuggestions(query) {
         const prefix = prefixEnd ? escapeHtml(text.slice(0, prefixEnd)) : '';
         const rest = prefixEnd ? escapeHtml(text.slice(prefixEnd)) : safeText;
         return `
-            <div class="remark-suggestion-item ${index === remarkSuggestionState.activeIndex ? 'active' : ''}" data-remark="${safeText}" data-index="${index}">
-                <span class="remark-suggestion-icon material-symbols-outlined text-[15px]">history</span>
-                <span class="remark-suggestion-title">${prefix}<span class="text-primary font-semibold">${rest}</span></span>
+            <div class="remark-suggestion-item ${index === remarkSuggestionState.activeIndex ? 'active' : ''}" data-index="${index}">
+                <span class="remark-suggestion-icon material-symbols-outlined">history</span>
+                <span class="remark-suggestion-title">${prefix}<span class="font-semibold">${rest}</span></span>
             </div>
         `;
     }).join('');
@@ -425,8 +425,6 @@ function renderRemarkSuggestions(query) {
     panel.innerHTML = visibleItems;
 
     panel.classList.remove('hidden');
-
-    // Use touchend + pointermove guard to allow scrolling without triggering selection
     panel.querySelectorAll('.remark-suggestion-item').forEach((item, index) => {
         let touchStartY = 0;
         let didScroll = false;
@@ -453,7 +451,7 @@ function renderRemarkSuggestions(query) {
             if (value) selectRemarkSuggestion(value);
         });
     });
-}
+ }
 
 function moveRemarkSuggestionActive(delta) {
     const panel = document.getElementById('remark-suggestions-panel');
