@@ -7,6 +7,30 @@ let userProfile = {
     biometricLock: false
 };
 
+// ===== PERFORMANCE UTILITIES =====
+const debounce = (func, delay) => {
+    let timeoutId;
+    return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+};
+
+// Fast DOM clear without full innerHTML - reduces reflow
+const fastClear = (el) => {
+    while (el.firstChild) el.removeChild(el.firstChild);
+};
+
+// Batch DOM updates - wrap multiple renders in requestAnimationFrame
+const batchRender = (callback) => {
+    if (typeof requestAnimationFrame !== 'undefined') {
+        requestAnimationFrame(callback);
+    } else {
+        callback();
+    }
+};
+// ===== END PERFORMANCE UTILITIES =====
+
 function getAvatarHtml(name, colorClass) {
     const firstLetter = name ? name.trim().charAt(0).toUpperCase() : 'U';
     const bgClass = colorClass || 'bg-blue-500';
@@ -383,8 +407,8 @@ function syncCategoryLayoutUI() {
     const btnList = document.getElementById('btn-cat-layout-list');
     if (!btnGrid || !btnList) return;
 
-    const activeCls = "p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center transition-all duration-150";
-    const inactiveCls = "p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all duration-150";
+    const activeCls = "p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center duration-150";
+    const inactiveCls = "p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center duration-150";
 
     if (categoryLayout === 'list') {
         btnList.className = activeCls;
@@ -1735,7 +1759,7 @@ function initAvatars() {
             const btn = document.createElement('button');
             btn.type = 'button';
             const isDefault = index === 0;
-            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border ${isDefault ? 'border-2 border-primary scale-110' : 'border-transparent scale-90'}`;
+            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border ${isDefault ? 'border-2 border-primary scale-110' : 'border-transparent scale-90'}`;
             btn.onclick = () => selectOnboardAvatar(col, btn);
             btn.innerHTML = `<div class="w-full h-full rounded-full ${col} text-white flex items-center justify-center font-bold text-sm uppercase">U</div>`;
             onboardGrid.appendChild(btn);
@@ -1755,7 +1779,7 @@ function initAvatars() {
         colors.forEach((col, index) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90`;
+            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border border-transparent scale-90`;
             btn.onclick = () => selectProfileAvatar(col, btn);
             const initial = userProfile.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'U';
             btn.innerHTML = `<div class="w-full h-full rounded-full ${col} text-white flex items-center justify-center font-bold text-sm uppercase">${initial}</div>`;
@@ -1776,9 +1800,9 @@ function selectOnboardAvatar(col, btn) {
     document.getElementById('onboard-selected-avatar').value = col;
     const buttons = document.querySelectorAll('#onboard-avatar-grid button');
     buttons.forEach(b => {
-        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
+        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border border-transparent scale-90";
     });
-    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
+    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border-2 border-primary scale-110";
 }
 
 function submitOnboarding(event) {
@@ -2021,7 +2045,10 @@ function renderStructuredTx(loadMore = false) {
     }
     const listContainer = document.getElementById('structured-tx-list');
     if (!listContainer) return;
-    listContainer.innerHTML = '';
+    
+    // Batch render to prevent layout thrashing
+    requestAnimationFrame(() => {
+        fastClear(listContainer);
 
     const navContainer = document.getElementById('structured-period-nav');
     const labelEl = document.getElementById('structured-period-label');
@@ -2199,7 +2226,7 @@ function renderStructuredTx(loadMore = false) {
         groups[groupName].forEach(t => {
             const isInc = t.type === 'income';
             const itemEl = document.createElement('div');
-            itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+            itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high cursor-pointer";
             bindLongPress(itemEl, t);
 
             let colorClass = "text-secondary bg-secondary-container/20";
@@ -2231,7 +2258,7 @@ function renderStructuredTx(loadMore = false) {
 
     if (totalMatching > structuredTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md active:scale-[0.98]";
+        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md";
         loadMoreBtn.innerText = `Load More (${totalMatching - structuredTxRenderLimit} remaining)`;
         loadMoreBtn.onclick = () => {
             structuredTxRenderLimit += 50;
@@ -2247,6 +2274,7 @@ function renderStructuredTx(loadMore = false) {
             window.scrollTo(0, scrollPos);
         }, 0);
     }
+    }); // Close requestAnimationFrame
 }
 
 
@@ -2431,7 +2459,7 @@ function renderRecentTransactions(list) {
     list.slice(0, 4).forEach(t => {
         const isInc = t.type === 'income';
         const card = document.createElement('div');
-        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high cursor-pointer";
         bindLongPress(card, t);
 
         // Color accent based on type
@@ -2472,9 +2500,9 @@ function setAnalysisPeriod(period) {
         const btn = document.getElementById(`analysis-pill-${p}`);
         if (!btn) return;
         if (p === period) {
-            btn.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
+            btn.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
         } else {
-            btn.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+            btn.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
         }
     });
     // Show/hide navigators
@@ -2530,9 +2558,9 @@ function setAnalysisCatType(type) {
         const btn = document.getElementById(`analysis-cat-pill-${t}`);
         if (!btn) return;
         if (t === type) {
-            btn.className = "px-md py-xs rounded-full text-label-lg font-bold transition-all bg-primary text-on-primary shadow-sm";
+            btn.className = "px-md py-xs rounded-full text-label-lg font-bold bg-primary text-on-primary shadow-sm";
         } else {
-            btn.className = "px-md py-xs rounded-full text-label-lg font-bold transition-all text-on-surface-variant hover:bg-surface-container-high";
+            btn.className = "px-md py-xs rounded-full text-label-lg font-bold text-on-surface-variant hover:bg-surface-container-high";
         }
     });
     updateAnalysis();
@@ -2665,7 +2693,7 @@ function updateAnalysis() {
     const svg = document.getElementById('donut-svg');
     if (!listContainer || !svg) return;
 
-    listContainer.innerHTML = '';
+    fastClear(listContainer);
     svg.innerHTML = '';
 
     // All known categories per type
@@ -2703,7 +2731,7 @@ function updateAnalysis() {
         const strokeColor = colors[cat.name] || '#899484';
         const strokeDasharray = `${pct} ${100 - pct}`;
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('class', 'donut-segment transition-all duration-500');
+        circle.setAttribute('class', 'donut-segment duration-500');
         circle.setAttribute('cx', '18'); circle.setAttribute('cy', '18');
         circle.setAttribute('fill', 'transparent');
         circle.setAttribute('r', '15.915');
@@ -2784,7 +2812,7 @@ function openCatTransactionsSheet(catName, catIcon) {
 
         filtered.forEach(t => {
             const card = document.createElement('div');
-            card.className = 'bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]';
+            card.className = 'bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high cursor-pointer';
             card.onclick = () => { closeCatTransactionsSheet(); openEditTransactionModal(t); };
             const colorClass = isInc ? 'text-primary bg-primary-container/20' : 'text-secondary bg-secondary-container/20';
             card.innerHTML = `
@@ -2864,7 +2892,7 @@ function updateAccounts() {
 function renderAccountsList() {
     const listContainer = document.querySelector('#view-accounts .flex-col.gap-lg');
     if (!listContainer) return;
-    listContainer.innerHTML = '';
+    fastClear(listContainer);
 
     const categories = [
         { type: 'bank', label: 'Bank Accounts', icon: 'account_balance', color: 'text-tertiary' },
@@ -3260,11 +3288,11 @@ function syncAddTransactionUI() {
     const btnInc = document.getElementById('tx-type-income');
     if (btnExp && btnInc) {
         if (selectedTxType === 'expense') {
-            btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-            btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+            btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+            btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
         } else {
-            btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-            btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+            btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+            btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
         }
     }
 
@@ -3286,13 +3314,13 @@ function switchTransactionType(type) {
     const btnInc = document.getElementById('tx-type-income');
 
     if (type === 'expense') {
-        btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+        btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
         selectedCategory = 'Groceries';
         selectedCategoryIcon = 'shopping_basket';
     } else {
-        btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+        btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        btnExp.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
         selectedCategory = 'Salary';
         selectedCategoryIcon = 'work';
     }
@@ -3325,7 +3353,7 @@ function renderCategories() {
             btn.className = "flex flex-col items-center gap-xs group py-1 overflow-hidden w-full";
             btn.onclick = () => selectCategory(cat.name, cat.icon);
             btn.innerHTML = `
-                <div class="w-11 h-11 rounded-xl ${cat.color} flex items-center justify-center transition-all group-active:scale-90 ${cat.fillClass}">
+                <div class="w-11 h-11 rounded-xl ${cat.color} flex items-center justify-center group-active:scale-90 ${cat.fillClass}">
                     <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">${cat.icon}</span>
                 </div>
                 <span class="text-[10px] font-semibold text-on-surface-variant text-center leading-tight truncate w-full px-0.5" title="${cat.name}">${cat.name}</span>
@@ -3389,7 +3417,7 @@ function renderPaymentModesList() {
     userAccounts.forEach(acc => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = "w-full flex items-center gap-sm py-sm px-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50";
+        btn.className = "w-full flex items-center gap-sm py-sm px-md bg-surface-container hover:bg-surface-container-high rounded-xl active:scale-[0.97] group border border-outline-variant/50";
         const icon = acc.type === 'bank' ? 'account_balance' : acc.type === 'card' ? 'credit_card' : 'payments';
         const colorClass = acc.type === 'bank' ? 'bg-tertiary/10 text-tertiary' : acc.type === 'card' ? 'bg-secondary-container/20 text-secondary' : 'bg-primary/10 text-primary';
 
@@ -3448,9 +3476,9 @@ function renderTagsSelector() {
 
         const tagBtn = document.createElement('button');
         if (isActive) {
-            tagBtn.className = "flex items-center gap-xs bg-primary/20 border-primary text-primary px-md py-sm rounded-full border transition-all active:scale-90 font-label-lg";
+            tagBtn.className = "flex items-center gap-xs bg-primary/20 border-primary text-primary px-md py-sm rounded-full border active:scale-90 font-label-lg";
         } else {
-            tagBtn.className = "flex items-center gap-xs bg-surface-container-high hover:bg-surface-container-highest border-outline-variant text-on-surface px-md py-sm rounded-full border transition-all active:scale-90 font-label-lg";
+            tagBtn.className = "flex items-center gap-xs bg-surface-container-high hover:bg-surface-container-highest border-outline-variant text-on-surface px-md py-sm rounded-full border active:scale-90 font-label-lg";
         }
         tagBtn.onclick = () => toggleTag(tag);
         tagBtn.innerHTML = `<span>#</span><span>${tag}</span>`;
@@ -3588,7 +3616,7 @@ function renderIncomeTransactions(loadMore = false) {
 
     itemsToRender.forEach(t => {
         const card = document.createElement('div');
-        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high cursor-pointer";
         bindLongPress(card, t);
 
         let colorClass = "text-primary bg-primary-container/20";
@@ -3613,7 +3641,7 @@ function renderIncomeTransactions(loadMore = false) {
 
     if (totalMatching > incomeTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md active:scale-[0.98]";
+        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md";
         loadMoreBtn.innerText = `Load More (${totalMatching - incomeTxRenderLimit} remaining)`;
         loadMoreBtn.onclick = () => {
             incomeTxRenderLimit += getTransactionRenderBatchSize();
@@ -3664,7 +3692,7 @@ function renderSpendingTransactions(loadMore = false) {
 
     itemsToRender.forEach(t => {
         const card = document.createElement('div');
-        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high cursor-pointer";
         bindLongPress(card, t);
 
         let colorClass = "text-secondary bg-secondary-container/20";
@@ -3689,7 +3717,7 @@ function renderSpendingTransactions(loadMore = false) {
 
     if (totalMatching > spendingTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md active:scale-[0.98]";
+        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md";
         loadMoreBtn.innerText = `Load More (${totalMatching - spendingTxRenderLimit} remaining)`;
         loadMoreBtn.onclick = () => {
             spendingTxRenderLimit += getTransactionRenderBatchSize();
@@ -4538,9 +4566,9 @@ function selectProfileAvatar(url, btn) {
     document.getElementById('profile-selected-avatar').value = url;
     const buttons = document.querySelectorAll('#profile-avatar-grid button');
     buttons.forEach(b => {
-        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
+        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border border-transparent scale-90";
     });
-    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
+    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border-2 border-primary scale-110";
 }
 
 function openProfileSecuritySheet() {
@@ -4560,9 +4588,9 @@ function openProfileSecuritySheet() {
     buttons.forEach(btn => {
         const div = btn.querySelector('div');
         if (div && div.classList.contains(avatarVal)) {
-            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
+            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border-2 border-primary scale-110";
         } else {
-            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
+            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container border border-transparent scale-90";
         }
     });
 
@@ -4927,8 +4955,8 @@ function updateAccountDetailsTabStyles() {
         expense: document.getElementById('acc-tx-tab-expense')
     };
 
-    const activeClass = "flex-1 py-1.5 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-    const inactiveClass = "flex-1 py-1.5 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+    const activeClass = "flex-1 py-1.5 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+    const inactiveClass = "flex-1 py-1.5 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
 
     for (const key in tabs) {
         if (tabs[key]) {
@@ -5026,7 +5054,7 @@ function renderAccountDetailsTransactions(loadMore = false) {
     itemsToRender.forEach(t => {
         const isInc = t.type === 'income';
         const card = document.createElement('div');
-        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+        card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high cursor-pointer";
 
         card.onclick = () => {
             closeAccountDetailsSheet();
@@ -5056,7 +5084,7 @@ function renderAccountDetailsTransactions(loadMore = false) {
 
     if (totalMatching > accountDetailsTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md active:scale-[0.98]";
+        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md";
         loadMoreBtn.innerText = `Load More (${totalMatching - accountDetailsTxRenderLimit} remaining)`;
         loadMoreBtn.onclick = () => {
             accountDetailsTxRenderLimit += 50;
@@ -5302,9 +5330,9 @@ function bindLongPress(card, t) {
     card.addEventListener('touchstart', start, { passive: true });
 
     card.addEventListener('mouseup', cancel);
-    card.addEventListener('touchend', cancel);
+    card.addEventListener('touchend', cancel, { passive: true });
     card.addEventListener('mouseleave', cancel);
-    card.addEventListener('touchmove', cancel);
+    card.addEventListener('touchmove', cancel, { passive: true });
 
     card.addEventListener('click', (e) => {
         if (longPressTriggered) {
@@ -5422,7 +5450,7 @@ function populateWheel(elementId, items, defaultValue, callback) {
 
     items.forEach((item, index) => {
         const el = document.createElement('div');
-        el.className = "h-[40px] flex items-center justify-center snap-center text-body-lg font-bold select-none text-on-surface-variant transition-all flex-shrink-0 cursor-pointer duration-200";
+        el.className = "h-[40px] flex items-center justify-center snap-center text-body-lg font-bold select-none text-on-surface-variant flex-shrink-0 cursor-pointer duration-200";
         el.innerText = typeof item === 'string' ? item : item.toString().padStart(2, '0');
         el.onclick = () => {
             container.scrollTo({ top: index * 40, behavior: 'smooth' });
@@ -5435,12 +5463,29 @@ function populateWheel(elementId, items, defaultValue, callback) {
     spacerBottom.style.flexShrink = '0';
     container.appendChild(spacerBottom);
 
+    // Cache DOM nodes for faster access
+    const childrenArray = [];
+    let lastScrolledIndex = -1;
+    
+    // Populate children array once
+    setTimeout(() => {
+        container.querySelectorAll('div').forEach((child, i) => {
+            childrenArray[i] = child;
+        });
+    }, 0);
+
     container.onscroll = () => {
         const scrollPos = container.scrollTop;
         const index = Math.round(scrollPos / 40);
         const clampedIndex = Math.max(0, Math.min(index, items.length - 1));
 
-        const children = container.querySelectorAll('div');
+        // Only update if index changed
+        if (clampedIndex === lastScrolledIndex) return;
+        lastScrolledIndex = clampedIndex;
+
+        // Use cached children if available, otherwise query
+        const children = childrenArray.length > 0 ? childrenArray : container.querySelectorAll('div');
+        
         children.forEach((child, i) => {
             if (i === clampedIndex + 1) {
                 child.classList.add('text-primary', 'scale-110');
@@ -5939,7 +5984,7 @@ function updateAllTransactionsView(loadMore = false) {
             group.items.forEach(t => {
                 const isInc = t.type === 'income';
                 const itemEl = document.createElement('div');
-                itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
+                itemEl.className = "p-sm rounded-lg flex items-center gap-md hover:bg-surface-container-high cursor-pointer";
                 bindLongPress(itemEl, t);
 
                 let colorClass = "text-secondary bg-secondary-container/20";
@@ -5970,7 +6015,7 @@ function updateAllTransactionsView(loadMore = false) {
 
     if (totalMatching > allTxRenderLimit) {
         const loadMoreBtn = document.createElement('button');
-        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md active:scale-[0.98]";
+        loadMoreBtn.className = "w-full py-md bg-surface-container hover:bg-surface-container-high text-primary font-bold rounded-xl shadow-sm border border-outline-variant/10 transition-colors my-md";
         loadMoreBtn.innerText = `Load More (${totalMatching - allTxRenderLimit} remaining)`;
         loadMoreBtn.onclick = () => {
             allTxRenderLimit += 50;
@@ -6094,8 +6139,8 @@ function setBudgetPeriod(period) {
     const abtnYearly = document.getElementById('analysis-toggle-budget-yearly');
     const atitleEl = document.getElementById('analysis-budget-card-title');
 
-    const activeCls = "px-md py-xs rounded-full text-label-lg font-bold transition-all bg-primary text-on-primary shadow-sm";
-    const inactiveCls = "px-md py-xs rounded-full text-label-lg font-bold transition-all text-on-surface-variant hover:text-on-surface";
+    const activeCls = "px-md py-xs rounded-full text-label-lg font-bold bg-primary text-on-primary shadow-sm";
+    const inactiveCls = "px-md py-xs rounded-full text-label-lg font-bold text-on-surface-variant hover:text-on-surface";
 
     if (period === 'monthly') {
         if (btnMonthly) btnMonthly.className = activeCls;
@@ -6128,11 +6173,11 @@ function switchBudgetViewTab(tab) {
     const btnYearly = document.getElementById('btn-budget-tab-yearly');
 
     if (tab === 'monthly') {
-        btnMonthly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        btnYearly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+        btnMonthly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        btnYearly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
     } else {
-        btnYearly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        btnMonthly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+        btnYearly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        btnMonthly.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
     }
 
     updateBudget();
@@ -6324,11 +6369,11 @@ function setManageCatTab(tab) {
     const btnSpend = document.getElementById('mgcat-pill-spending');
     const btnInc = document.getElementById('mgcat-pill-income');
     if (tab === 'spending') {
-        if (btnSpend) btnSpend.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        if (btnInc) btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant";
+        if (btnSpend) btnSpend.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        if (btnInc) btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant";
     } else {
-        if (btnInc) btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        if (btnSpend) btnSpend.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant";
+        if (btnInc) btnInc.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        if (btnSpend) btnSpend.className = "flex-1 py-2 rounded-lg text-label-lg font-label-lg text-on-surface-variant";
     }
     renderManagedCategories();
 }
@@ -6336,8 +6381,8 @@ function setManageCatTab(tab) {
 function syncManageCategoryLayoutUI() {
     const gridButton = document.getElementById('mgcat-layout-grid');
     const listButton = document.getElementById('mgcat-layout-list');
-    const activeClass = 'p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center transition-all duration-150';
-    const inactiveClass = 'p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all duration-150';
+    const activeClass = 'p-1 rounded-full bg-primary text-on-primary shadow-sm flex items-center justify-center duration-150';
+    const inactiveClass = 'p-1 rounded-full text-on-surface-variant hover:text-on-surface flex items-center justify-center duration-150';
 
     if (gridButton) gridButton.className = manageCategoryLayout === 'grid' ? activeClass : inactiveClass;
     if (listButton) listButton.className = manageCategoryLayout === 'list' ? activeClass : inactiveClass;
@@ -6698,14 +6743,14 @@ function setPickerTab(tab) {
     togglePickerDropdown('none');
 
     if (tab === 'date') {
-        if (btnDate) btnDate.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        if (btnTime) btnTime.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+        if (btnDate) btnDate.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        if (btnTime) btnTime.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
         if (contentDate) contentDate.classList.remove('hidden');
         if (contentTime) contentTime.classList.add('hidden');
         stopClockTicking();
     } else {
-        if (btnTime) btnTime.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm";
-        if (btnDate) btnDate.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high";
+        if (btnTime) btnTime.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg bg-primary text-on-primary shadow-sm";
+        if (btnDate) btnDate.className = "flex-1 py-1 rounded-lg text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-high";
         if (contentTime) contentTime.classList.remove('hidden');
         if (contentDate) contentDate.classList.add('hidden');
         startClockTicking();
