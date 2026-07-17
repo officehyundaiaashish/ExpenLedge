@@ -251,90 +251,76 @@
             position: absolute;
             left: 0;
             right: 0;
-            top: calc(100% + 8px);
+            top: calc(100% + 4px);
             z-index: 40;
-            max-height: 232px;
+            max-height: 220px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
             touch-action: pan-y;
-            padding: 6px;
-            border-radius: 18px;
-            border: 1px solid rgba(74, 124, 89, 0.10);
-            background: rgba(255, 255, 255, 0.96);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
         }
 
         .dark .remark-suggestions-panel {
-            background: rgba(24, 24, 24, 0.96);
+            background: #1e1e1e;
             border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
         }
 
         .remark-suggestion-item {
             width: 100%;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 10px;
-            padding: 12px 12px;
-            border-radius: 14px;
+            padding: 11px 14px;
             text-align: left;
-            touch-action: manipulation;
-            transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+            background: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            cursor: pointer;
         }
 
-        .remark-suggestion-item:hover,
-        .remark-suggestion-item.active {
-            background: rgba(74, 124, 89, 0.09);
-            transform: translateY(-1px);
-            box-shadow: inset 0 0 0 1px rgba(74, 124, 89, 0.16);
+        .remark-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .remark-suggestion-item.active,
+        .remark-suggestion-item:active {
+            background: rgba(74, 124, 89, 0.07);
         }
 
         .remark-suggestion-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 9999px;
-            background: rgba(74, 124, 89, 0.12);
-            color: #4a7c59;
+            color: #9aa09a;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            margin-top: 1px;
         }
 
-        .remark-suggestion-main {
-            min-width: 0;
-            flex: 1;
+        .dark .remark-suggestion-icon {
+            color: #6b716b;
         }
 
         .remark-suggestion-title {
             font-size: 14px;
             line-height: 20px;
-            font-weight: 700;
+            font-weight: 400;
             color: #1a1c18;
-            word-break: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
         }
 
         .dark .remark-suggestion-title {
-            color: #f1f3ee;
-        }
-
-        .remark-suggestion-meta {
-            font-size: 11px;
-            line-height: 14px;
-            color: #5d635a;
-            margin-top: 2px;
-        }
-
-        .dark .remark-suggestion-meta {
-            color: rgba(241, 243, 238, 0.70);
+            color: #e8ebe6;
         }
 
         .remark-suggestion-empty {
-            padding: 12px 12px;
-            border-radius: 14px;
+            padding: 12px 14px;
             color: #5d635a;
             font-size: 13px;
             line-height: 19px;
