@@ -3555,9 +3555,13 @@
                     })
                     .catch(err => console.warn('[SW] Registration failed:', err));
 
-                // When new SW takes control, reload to get the fresh files
+                // When new SW takes control, reload to get the fresh files (only on updates)
+                let refreshing = false;
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    window.location.reload();
+                    if (navigator.serviceWorker.controller && !refreshing) {
+                        refreshing = true;
+                        window.location.reload();
+                    }
                 });
             });
 
