@@ -7276,14 +7276,23 @@ function renderPickerCalendar() {
     }
 
     // Current Month's days
+    const today = new Date();
     for (let d = 1; d <= totalDays; d++) {
         const cell = document.createElement('div');
         const isSelected = d === pickerSelectedDate.getDate() &&
             month === pickerSelectedDate.getMonth() &&
             year === pickerSelectedDate.getFullYear();
+        const isToday = d === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear();
+
         if (isSelected) {
             cell.className = "relative flex justify-center items-center py-1 cursor-pointer";
             cell.innerHTML = `<span class="absolute w-8 h-8 bg-primary rounded-full shadow-sm"></span><span class="relative text-sm font-bold text-on-primary">${d}</span>`;
+        } else if (isToday) {
+            cell.className = "relative flex justify-center items-center py-1 cursor-pointer text-primary";
+            cell.innerHTML = `<span class="absolute w-8 h-8 border border-primary rounded-full"></span><span class="relative text-sm font-bold">${d}</span>`;
+            cell.onclick = () => selectPickerDate(d);
         } else {
             cell.className = "text-sm font-bold text-on-surface hover:bg-surface-container-high rounded-full py-1.5 cursor-pointer";
             cell.innerText = d;
