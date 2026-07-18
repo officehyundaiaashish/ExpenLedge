@@ -5592,11 +5592,12 @@ function getTxAccountBadge(t) {
     return `<span class="inline-flex items-center gap-[2px] px-[6px] py-[2px] rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20 max-w-[90px] truncate leading-tight ml-1"><span class="material-symbols-outlined" style="font-size:10px">${icon}</span>${label}</span>`;
 }
 
-let longPressTimer = null;
-
 function bindLongPress(card, t) {
     let lastX = 0;
     let lastY = 0;
+    let startTouchX = 0;
+    let startTouchY = 0;
+    let longPressTimer = null;
 
     const start = (e) => {
         if (longPressTimer) {
@@ -5605,6 +5606,8 @@ function bindLongPress(card, t) {
         const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
         lastX = touch ? (touch.clientX || 0) : 0;
         lastY = touch ? (touch.clientY || 0) : 0;
+        startTouchX = lastX;
+        startTouchY = lastY;
 
         longPressTriggered = false;
         longPressTimer = setTimeout(() => {
@@ -5620,13 +5623,25 @@ function bindLongPress(card, t) {
         }
     };
 
+    const move = (e) => {
+        if (!longPressTimer) return;
+        const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+        const curX = touch ? (touch.clientX || 0) : 0;
+        const curY = touch ? (touch.clientY || 0) : 0;
+        const distance = Math.sqrt(Math.pow(curX - startTouchX, 2) + Math.pow(curY - startTouchY, 2));
+        if (distance > 10) {
+            cancel();
+        }
+    };
+
     card.addEventListener('mousedown', start);
     card.addEventListener('touchstart', start, { passive: true });
 
     card.addEventListener('mouseup', cancel);
     card.addEventListener('touchend', cancel);
     card.addEventListener('mouseleave', cancel);
-    card.addEventListener('touchmove', cancel);
+    card.addEventListener('touchmove', move, { passive: true });
+    card.addEventListener('mousemove', move, { passive: true });
 
     card.addEventListener('click', (e) => {
         if (longPressTriggered) {
@@ -5684,6 +5699,7 @@ function openTransactionOptionsSheet(t, cardElement, x, y) {
 
     setTimeout(() => {
         window.addEventListener('click', closeTransactionOptionsSheetOnOutsideClick);
+        window.addEventListener('scroll', closeTransactionOptionsSheetOnScroll, { capture: true, passive: true });
     }, 10);
 }
 
@@ -5697,6 +5713,10 @@ function closeTransactionOptionsSheetOnOutsideClick(e) {
     }
 }
 
+function closeTransactionOptionsSheetOnScroll() {
+    closeTransactionOptionsSheet();
+}
+
 function closeTransactionOptionsSheet() {
     if (activeShakingCard) {
         activeShakingCard.classList.remove('animate-shake');
@@ -5708,6 +5728,7 @@ function closeTransactionOptionsSheet() {
         popup.classList.remove('scale-100', 'opacity-100', 'pointer-events-auto');
     }
     window.removeEventListener('click', closeTransactionOptionsSheetOnOutsideClick);
+    window.removeEventListener('scroll', closeTransactionOptionsSheetOnScroll, { capture: true });
 }
 
 
@@ -5735,8 +5756,10 @@ function duplicateSelectedTransaction() {
 
 function deleteSelectedTransaction() {
     if (!selectedTransactionForOptions) return;
+    const txToDelete = selectedTransactionForOptions;
+    closeTransactionOptionsSheet();
     openConfirmActionSheet("Delete Transaction", "Are you sure you want to delete this transaction?", () => {
-        const deleteKey = getTransactionSyncKey(selectedTransactionForOptions);
+        const deleteKey = getTransactionSyncKey(txToDelete);
         if (deleteKey) {
             const tombstones = getDeletedTransactionLogSnapshot();
             const existing = tombstones.find(item => item.syncId === deleteKey);
@@ -5748,7 +5771,7 @@ function deleteSelectedTransaction() {
             }
             saveDeletedTransactionLogSnapshot(tombstones);
         }
-        transactions = transactions.filter(tx => getTransactionSyncKey(tx) !== getTransactionSyncKey(selectedTransactionForOptions));
+        transactions = transactions.filter(tx => getTransactionSyncKey(tx) !== getTransactionSyncKey(txToDelete));
         saveToLocalStorage();
         updateDashboard();
         updateAnalysis();
@@ -5758,12 +5781,12 @@ function deleteSelectedTransaction() {
         renderSpendingTransactions();
         if (currentView === 'structured-tx') renderStructuredTx();
         showToast("Transaction deleted!");
-        closeTransactionOptionsSheet();
     });
 }
 
 function createScheduledTransaction() {
     if (!selectedTransactionForOptions) return;
+    closeTransactionOptionsSheet();
     openScheduleTransactionSheet();
 }
 
@@ -7806,6 +7829,8 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('analysis-custom-to-label').innerText = `${d.getDate()} ${monthNames[d.getMonth()]}`;
         }
     }, 100);
+
+    initPullToRefresh();
 });
 
 // Format large amounts compactly: ₹2.03L, ₹1.5Cr etc., with auto-size support
@@ -7916,4 +7941,224 @@ function unsavedDialogSave() {
     // A failed validation keeps this original snapshot, so the form remains dirty.
     // Successful save handlers clear the context before closing their sheet.
     currentFormContext.saveFn();
+}
+
+// Pull-to-refresh for mobile
+function initPullToRefresh() {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let activePage = null;
+    let isPulling = false;
+    let ptrIndicator = document.getElementById('ptr-indicator');
+
+    if (!ptrIndicator) {
+        ptrIndicator = document.createElement('div');
+        ptrIndicator.id = 'ptr-indicator';
+        ptrIndicator.className = 'fixed left-1/2 -translate-x-1/2 -top-12 z-[100] bg-surface dark:bg-neutral-900 border border-outline-variant/30 dark:border-white/10 rounded-full p-2 shadow-lg flex items-center justify-center pointer-events-none w-10 h-10 opacity-0 transition-opacity duration-200';
+        ptrIndicator.innerHTML = `
+            <svg id="ptr-svg" class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+        `;
+        document.body.appendChild(ptrIndicator);
+
+        const style = document.createElement('style');
+        style.textContent = `
+            #ptr-indicator { will-change: transform, top, opacity; }
+            .page-view { will-change: transform; transition: transform 0.15s ease-out; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const svg = document.getElementById('ptr-svg');
+
+    window.addEventListener('touchstart', (e) => {
+        // Only trigger when no modal or bottom sheet is open
+        const openSheets = Array.from(document.querySelectorAll('.bottom-sheet-transition')).filter(sheet => !sheet.classList.contains('translate-y-full'));
+        const txModal = document.getElementById('modal-add-transaction');
+        const isTxModalOpen = txModal && !txModal.classList.contains('translate-y-full');
+        if (openSheets.length > 0 || isTxModalOpen) {
+            isPulling = false;
+            return;
+        }
+
+        activePage = document.querySelector('.page-view.active');
+        if (!activePage) return;
+
+        activePage.style.transition = 'none';
+
+        if (activePage.scrollTop <= 0) {
+            touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX;
+            isPulling = true;
+        } else {
+            isPulling = false;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isPulling || !activePage) return;
+
+        const currentY = e.touches[0].clientY;
+        const currentX = e.touches[0].clientX;
+        const deltaY = currentY - touchStartY;
+        const deltaX = currentX - touchStartX;
+
+        if (deltaY > 0 && deltaY > Math.abs(deltaX)) {
+            const pullDistance = Math.min(deltaY * 0.4, 80);
+            activePage.style.transform = `translateY(${pullDistance}px)`;
+
+            const indicatorY = Math.min(deltaY * 0.4, 60);
+            ptrIndicator.style.opacity = Math.min(deltaY / 100, 1);
+            ptrIndicator.style.transform = `translate(-50%, ${indicatorY}px) rotate(${deltaY * 2}deg)`;
+            svg.classList.remove('animate-spin');
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', async () => {
+        if (!isPulling || !activePage) return;
+        isPulling = false;
+
+        const transformVal = activePage.style.transform;
+        const match = transformVal ? transformVal.match(/translateY\((\d+(\.\d+)?)px\)/) : null;
+        const pullDistance = match ? parseFloat(match[1]) : 0;
+
+        activePage.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+        activePage.style.transform = '';
+
+        if (pullDistance >= 50) {
+            ptrIndicator.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
+            ptrIndicator.style.opacity = '1';
+            ptrIndicator.style.transform = `translate(-50%, 60px)`;
+            svg.classList.add('animate-spin');
+
+            try {
+                if (typeof syncSupabaseNow === 'function') {
+                    await syncSupabaseNow({ manual: true });
+                } else {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        ptrIndicator.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
+        ptrIndicator.style.opacity = '0';
+        ptrIndicator.style.transform = `translate(-50%, 0)`;
+        setTimeout(() => {
+            svg.classList.remove('animate-spin');
+        }, 300);
+        activePage = null;
+    });
+}
+
+// Pull-to-refresh for mobile
+function initPullToRefresh() {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let activePage = null;
+    let isPulling = false;
+    let ptrIndicator = document.getElementById('ptr-indicator');
+
+    if (!ptrIndicator) {
+        ptrIndicator = document.createElement('div');
+        ptrIndicator.id = 'ptr-indicator';
+        ptrIndicator.className = 'fixed left-1/2 -translate-x-1/2 -top-12 z-[100] bg-surface dark:bg-neutral-900 border border-outline-variant/30 dark:border-white/10 rounded-full p-2 shadow-lg flex items-center justify-center pointer-events-none w-10 h-10 opacity-0 transition-opacity duration-200';
+        ptrIndicator.innerHTML = `
+            <svg id="ptr-svg" class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+        `;
+        document.body.appendChild(ptrIndicator);
+
+        const style = document.createElement('style');
+        style.textContent = `
+            #ptr-indicator { will-change: transform, top, opacity; }
+            .page-view { will-change: transform; transition: transform 0.15s ease-out; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const svg = document.getElementById('ptr-svg');
+
+    window.addEventListener('touchstart', (e) => {
+        // Only trigger when no modal or bottom sheet is open
+        const openSheets = Array.from(document.querySelectorAll('.bottom-sheet-transition')).filter(sheet => !sheet.classList.contains('translate-y-full'));
+        const txModal = document.getElementById('modal-add-transaction');
+        const isTxModalOpen = txModal && !txModal.classList.contains('translate-y-full');
+        if (openSheets.length > 0 || isTxModalOpen) {
+            isPulling = false;
+            return;
+        }
+
+        activePage = document.querySelector('.page-view.active');
+        if (!activePage) return;
+
+        activePage.style.transition = 'none';
+
+        if (activePage.scrollTop <= 0) {
+            touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX;
+            isPulling = true;
+        } else {
+            isPulling = false;
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isPulling || !activePage) return;
+
+        const currentY = e.touches[0].clientY;
+        const currentX = e.touches[0].clientX;
+        const deltaY = currentY - touchStartY;
+        const deltaX = currentX - touchStartX;
+
+        if (deltaY > 0 && deltaY > Math.abs(deltaX)) {
+            const pullDistance = Math.min(deltaY * 0.4, 80);
+            activePage.style.transform = `translateY(${pullDistance}px)`;
+
+            const indicatorY = Math.min(deltaY * 0.4, 60);
+            ptrIndicator.style.opacity = Math.min(deltaY / 100, 1);
+            ptrIndicator.style.transform = `translate(-50%, ${indicatorY}px) rotate(${deltaY * 2}deg)`;
+            svg.classList.remove('animate-spin');
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', async () => {
+        if (!isPulling || !activePage) return;
+        isPulling = false;
+
+        const transformVal = activePage.style.transform;
+        const match = transformVal ? transformVal.match(/translateY\((\d+(\.\d+)?)px\)/) : null;
+        const pullDistance = match ? parseFloat(match[1]) : 0;
+
+        activePage.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+        activePage.style.transform = '';
+
+        if (pullDistance >= 50) {
+            ptrIndicator.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
+            ptrIndicator.style.opacity = '1';
+            ptrIndicator.style.transform = `translate(-50%, 60px)`;
+            svg.classList.add('animate-spin');
+
+            try {
+                if (typeof syncSupabaseNow === 'function') {
+                    await syncSupabaseNow({ manual: true });
+                } else {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        ptrIndicator.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s';
+        ptrIndicator.style.opacity = '0';
+        ptrIndicator.style.transform = `translate(-50%, 0)`;
+        setTimeout(() => {
+            svg.classList.remove('animate-spin');
+        }, 300);
+        activePage = null;
+    });
 }
