@@ -181,8 +181,8 @@
         html,
         body {
             height: 100%;
-            overflow: hidden;
         }
+
 
         body {
             background-color: #f4f7f5;
@@ -248,7 +248,6 @@
             height: calc(100dvh - 72px);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
             padding-bottom: 96px;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -3501,29 +3500,6 @@
         <img src="tick.svg" alt="Success" class="w-24 h-24" />
     </div>
 
-    <!-- PWA Install Banner -->
-    <div id="pwa-install-banner"
-        class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-32px)] max-w-md z-[110]">
-        <div
-            class="bg-surface border border-outline-variant/30 rounded-2xl shadow-xl px-md py-sm flex items-center gap-md">
-            <img src="icon.png" alt="ExpenLedge" class="w-10 h-10 rounded-xl flex-shrink-0" />
-            <div class="flex-1 min-w-0">
-                <p class="text-body-md font-bold text-on-surface">Install ExpenLedge</p>
-                <p class="text-label-md text-on-surface-variant truncate">Add to home screen for the best experience</p>
-            </div>
-            <div class="flex items-center gap-xs flex-shrink-0">
-                <button onclick="pwaInstallPrompt()"
-                    class="px-md py-xs bg-primary text-on-primary font-bold text-label-lg rounded-full shadow-sm active:scale-95 transition-transform">
-                    Install
-                </button>
-                <button onclick="pwaDismissBanner()"
-                    class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant active:scale-95 transition-transform">
-                    <span class="material-symbols-outlined text-[16px]">close</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- ================== JAVASCRIPT STATE & INTERACTIVE LOGIC ================== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
@@ -3576,42 +3552,6 @@
                 worker.postMessage({ type: 'SKIP_WAITING' });
             }
         }
-
-        // ── Install Prompt (Chrome/Edge native) ─────────────────────────────
-        let _deferredInstallPrompt = null;
-
-        window.addEventListener('beforeinstallprompt', e => {
-            e.preventDefault();
-            _deferredInstallPrompt = e;
-            // Don't show if already dismissed this session
-            if (!sessionStorage.getItem('pwa-banner-dismissed')) {
-                setTimeout(() => {
-                    document.getElementById('pwa-install-banner').classList.remove('hidden');
-                }, 2000);
-            }
-        });
-
-        function pwaInstallPrompt() {
-            if (!_deferredInstallPrompt) return;
-            _deferredInstallPrompt.prompt();
-            _deferredInstallPrompt.userChoice.then(result => {
-                if (result.outcome === 'accepted') {
-                    pwaDismissBanner();
-                }
-                _deferredInstallPrompt = null;
-            });
-        }
-
-        function pwaDismissBanner() {
-            document.getElementById('pwa-install-banner').classList.add('hidden');
-            sessionStorage.setItem('pwa-banner-dismissed', '1');
-        }
-
-        // Hide banner once installed
-        window.addEventListener('appinstalled', () => {
-            pwaDismissBanner();
-            _deferredInstallPrompt = null;
-        });
 
         // ── Adaptive Status Bar (theme-color) ───────────────────────────────
         // Reads the actual background color of whatever element is visually "on top"
