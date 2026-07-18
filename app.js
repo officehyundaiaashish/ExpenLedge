@@ -195,9 +195,8 @@ function suppressBrowserAutofill(root = document) {
         const type = (el.getAttribute('type') || el.type || '').toLowerCase();
         if (['hidden', 'checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range', 'color'].includes(type)) return;
 
-        // Force autocomplete off - some password managers ignore "off" but respect "new-password"
-        // We use a combination: set to "off" and also set data-lpignore etc.
-        el.setAttribute('autocomplete', 'off');
+        // Force autocomplete to "one-time-code" to completely suppress browser and OS autofill/password managers on Android/iOS
+        el.setAttribute('autocomplete', 'one-time-code');
         el.setAttribute('autocapitalize', type === 'email' || type === 'search' ? 'none' : 'off');
         el.setAttribute('autocorrect', 'off');
         el.setAttribute('spellcheck', 'false');
@@ -237,8 +236,10 @@ function suppressBrowserAutofill(root = document) {
         // and interrupt normal typing, especially when suggestion panels rerender.
         const form = el.closest('form');
         if (form) {
-            form.setAttribute('autocomplete', 'off');
+            form.setAttribute('autocomplete', 'one-time-code');
             form.setAttribute('x-autocompletetype', 'none');
+            form.setAttribute('disable-gpay', 'true');
+
             form.setAttribute('data-lpignore', 'true');
         }
     });
@@ -346,7 +347,14 @@ function escapeHtml(text) {
         .replace(/'/g, '&#39;');
 }
 
+let cachedRemarksList = null;
+
+function invalidateRemarksCache() {
+    cachedRemarksList = null;
+}
+
 function getSavedRemarkSource() {
+    if (cachedRemarksList !== null) return cachedRemarksList;
     const latestByRemark = new Map();
     transactions.forEach((tx, index) => {
         const remark = String(tx?.note ?? tx?.description ?? tx?.remarks ?? '').trim();
@@ -360,9 +368,10 @@ function getSavedRemarkSource() {
         }
     });
 
-    return [...latestByRemark.values()]
+    cachedRemarksList = [...latestByRemark.values()]
         .sort((a, b) => b.stamp - a.stamp)
         .map(item => item.text);
+    return cachedRemarksList;
 }
 
 function getRemarkSuggestions(query) {
@@ -577,6 +586,7 @@ function syncCategoryLayoutUI() {
 
 // Local Storage Persistence Helpers
 function saveToLocalStorage() {
+    invalidateRemarksCache();
     try {
         localStorage.setItem('expenledge_transactions', JSON.stringify(transactions));
         localStorage.setItem('expenledge_profile', JSON.stringify(userProfile));
@@ -671,6 +681,7 @@ async function pruneSupabaseVersionHistory() {
 }
 
 function loadFromLocalStorage() {
+    invalidateRemarksCache();
     try {
         const savedT = localStorage.getItem('expenledge_transactions');
         if (savedT) transactions = JSON.parse(savedT);
@@ -2198,6 +2209,28 @@ function renderStructuredTx(loadMore = false) {
     if (customContainer) {
         if (structuredTxMode === 'custom') {
             customContainer.classList.remove('hidden');
+            const fromEl = document.getElementById('structured-date-from');
+            const toEl = document.getElementById('structured-date-to');
+            if (fromEl && fromEl.value) {
+                const parts = fromEl.value.split('-');
+                if (parts.length === 3) {
+                    const y = parseInt(parts[0]);
+                    const m = parseInt(parts[1]) - 1;
+                    const d = parseInt(parts[2]);
+                    const fromLabel = document.getElementById('structured-date-from-label');
+                    if (fromLabel) fromLabel.innerText = `${d} ${monthNames[m]} ${y}`;
+                }
+            }
+            if (toEl && toEl.value) {
+                const parts = toEl.value.split('-');
+                if (parts.length === 3) {
+                    const y = parseInt(parts[0]);
+                    const m = parseInt(parts[1]) - 1;
+                    const d = parseInt(parts[2]);
+                    const toLabel = document.getElementById('structured-date-to-label');
+                    if (toLabel) toLabel.innerText = `${d} ${monthNames[m]} ${y}`;
+                }
+            }
         } else {
             customContainer.classList.add('hidden');
         }
@@ -2232,6 +2265,12 @@ function renderStructuredTx(loadMore = false) {
             });
         }
     }
+
+    filtered.sort((a, b) => {
+        const dateA = getTransactionDate(a);
+        const dateB = getTransactionDate(b);
+        return dateB.getTime() - dateA.getTime();
+    });
 
     // Update compact totals cards (always, including zero state, based on date filter only)
     const totalSpendingEl = document.getElementById('structured-total-spending');
@@ -2291,8 +2330,16 @@ function renderStructuredTx(loadMore = false) {
             const txDate = getTransactionDate(transaction);
             return `${monthNames[txDate.getMonth()]} ${txDate.getFullYear()}`;
         }
-        return transaction.date;
+        if (structuredTxMode === 'custom') {
+            const fromEl = document.getElementById('structured-date-from-label');
+            const toEl = document.getElementById('structured-date-to-label');
+            const fromVal = fromEl ? fromEl.innerText : 'Select Date';
+            const toVal = toEl ? toEl.innerText : 'Select Date';
+            return `${fromVal} to ${toVal}`;
+        }
+        return getTxDisplayDate(transaction);
     };
+
 
     // Keep group totals accurate even when the card initially renders only one batch.
     // Like the header totals, these stay based on the selected date period, not search text.
@@ -2354,7 +2401,7 @@ function renderStructuredTx(loadMore = false) {
                 <div class="flex-1">
                     <div class="flex justify-between">
                         <p class="text-body-lg font-bold text-on-surface">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
-                        <p class="text-label-md font-label-md text-on-surface-variant">${t.date}</p>
+                        <p class="text-label-md font-label-md text-on-surface-variant">${getTxDisplayDate(t)}</p>
                     </div>
                     <div class="flex justify-between items-center gap-sm">
                         <p class="text-body-md text-on-surface-variant break-words whitespace-normal">${t.note || t.category}</p>
@@ -2397,67 +2444,59 @@ function renderStructuredTx(loadMore = false) {
 function updateDashboard() {
     let totalIncome = 0;
     let totalExpense = 0;
-    let dashboardSpent = 0;
+    let allTimeIncome = 0;
+    let allTimeExpense = 0;
+    let yearlyExpense = 0;
 
-    transactions.forEach(t => {
-        if (transactionBelongsToFilter(t)) {
-            if (t.type === 'income') {
-                totalIncome += t.amount;
-            } else {
-                totalExpense += t.amount;
-            }
-        }
+    // Carry forward calculation setup for cash accounts
+    const cashAccounts = userAccounts.filter(acc => acc.type === 'cash');
+    const cashBalances = {};
+    cashAccounts.forEach(acc => {
+        cashBalances[acc.id] = acc.startingBalance;
     });
 
-    const balance = totalIncome - totalExpense;
+    transactions.forEach(t => {
+        // 1. Dashboard filter totals
+        if (transactionBelongsToFilter(t)) {
+            if (t.type === 'income') totalIncome += t.amount;
+            else totalExpense += t.amount;
+        }
 
-    // Calculate carry forward balance
-    let totalAssets = 0;
-    let totalLiabilities = 0;
-    userAccounts.forEach(acc => {
-        if (acc.type !== 'cash') return;
-        let bal = acc.startingBalance;
-        transactions.forEach(t => {
+        // 2. All time net balance
+        if (t.type === 'income') allTimeIncome += t.amount;
+        else allTimeExpense += t.amount;
+
+        // 3. Yearly expense
+        if (t.type === 'expense') {
+            const txDate = getTransactionDate(t);
+            if (txDate.getFullYear() === currentYear) {
+                yearlyExpense += t.amount;
+            }
+        }
+
+        // 4. Carry forward balances
+        cashAccounts.forEach(acc => {
             if (t.paymentMode === acc.name) {
-                if (acc.type === 'card') {
-                    if (t.type === 'expense') bal += t.amount;
-                    else bal -= t.amount;
-                } else {
-                    if (t.type === 'expense') bal -= t.amount;
-                    else bal += t.amount;
-                }
+                if (t.type === 'expense') cashBalances[acc.id] -= t.amount;
+                else cashBalances[acc.id] += t.amount;
             } else if (!userAccounts.some(a => a.name === t.paymentMode)) {
                 // Legacy fallback mapping
-                if (acc.type === 'card' && (t.paymentMode === 'Credit Card' || t.paymentMode === 'card')) {
-                    if (t.type === 'expense') bal += t.amount;
-                    else bal -= t.amount;
-                } else if (acc.type === 'cash' && (t.paymentMode === 'Cash' || t.paymentMode === 'cash')) {
-                    if (t.type === 'expense') bal -= t.amount;
-                    else bal += t.amount;
-                } else if (acc.type === 'bank' && acc.id === 'bank') {
-                    if (t.paymentMode !== 'Cash' && t.paymentMode !== 'cash' && t.paymentMode !== 'Credit Card' && t.paymentMode !== 'card') {
-                        if (t.type === 'expense') bal -= t.amount;
-                        else bal += t.amount;
-                    }
+                if (t.paymentMode === 'Cash' || t.paymentMode === 'cash') {
+                    if (t.type === 'expense') cashBalances[acc.id] -= t.amount;
+                    else cashBalances[acc.id] += t.amount;
                 }
             }
         });
-        if (acc.type === 'card') {
-            totalLiabilities += bal;
-        } else {
-            totalAssets += bal;
-        }
     });
-    const carryForward = totalAssets - totalLiabilities;
 
-    // Calculate all time net balance
-    let allTimeIncome = 0;
-    let allTimeExpense = 0;
-    transactions.forEach(t => {
-        if (t.type === 'income') allTimeIncome += t.amount;
-        else allTimeExpense += t.amount;
-    });
+    const balance = totalIncome - totalExpense;
     const allTimeNet = allTimeIncome - allTimeExpense;
+
+    let totalAssets = 0;
+    cashAccounts.forEach(acc => {
+        totalAssets += cashBalances[acc.id];
+    });
+    const carryForward = totalAssets;
 
     // Select the balance to show
     let displayBalance = balance;
@@ -2487,16 +2526,7 @@ function updateDashboard() {
     });
     renderRecentTransactions(filteredTxs);
 
-    // Calculate yearly expenses
-    let yearlyExpense = 0;
-    transactions.forEach(t => {
-        if (t.type === 'expense') {
-            const txDate = getTransactionDate(t);
-            if (txDate.getFullYear() === currentYear) {
-                yearlyExpense += t.amount;
-            }
-        }
-    });
+    // (Yearly expense calculated in single pass above)
 
     // Budget widget remaining
     let limit = monthlyBudgetLimit;
@@ -2588,7 +2618,7 @@ function renderRecentTransactions(list) {
             <div class="flex-1">
                 <div class="flex justify-between">
                     <p class="text-body-lg font-bold text-on-surface">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
-                    <p class="text-label-md font-label-md text-on-surface-variant">${t.date}</p>
+                    <p class="text-label-md font-label-md text-on-surface-variant">${getTxDisplayDate(t)}</p>
                 </div>
                 <div class="flex justify-between items-center gap-sm">
                     <p class="text-body-md text-on-surface-variant break-words whitespace-normal">${t.note || t.category}</p>
@@ -2940,7 +2970,7 @@ function openCatTransactionsSheet(catName, catIcon) {
                         <p class="text-body-lg font-bold flex-shrink-0 ${isInc ? 'text-primary' : 'text-secondary'}">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
                     </div>
                     <div class="flex justify-between items-center mt-1">
-                        <p class="text-label-md text-on-surface-variant">${t.date}</p>
+                        <p class="text-label-md text-on-surface-variant">${getTxDisplayDate(t)}</p>
                         <span class="flex-shrink-0">${getTxAccountBadge(t)}</span>
                     </div>
                 </div>
@@ -2960,12 +2990,19 @@ function closeCatTransactionsSheet() {
 
 // Accounts tab renderer
 function updateAccounts() {
+    const accByName = {};
+    const accByType = {};
+
     userAccounts.forEach(acc => {
         acc.currentBalance = acc.startingBalance;
+        accByName[acc.name] = acc;
+        if (!accByType[acc.type]) {
+            accByType[acc.type] = acc;
+        }
     });
 
     transactions.forEach(t => {
-        const acc = userAccounts.find(a => a.name === t.paymentMode);
+        const acc = accByName[t.paymentMode];
         if (acc) {
             if (acc.type === 'card') {
                 if (t.type === 'expense') acc.currentBalance += t.amount;
@@ -2977,19 +3014,19 @@ function updateAccounts() {
         } else {
             // Legacy fallbacks
             if (t.paymentMode === 'Credit Card' || t.paymentMode === 'card') {
-                const cardAcc = userAccounts.find(a => a.type === 'card');
+                const cardAcc = accByType['card'];
                 if (cardAcc) {
                     if (t.type === 'expense') cardAcc.currentBalance += t.amount;
                     else cardAcc.currentBalance -= t.amount;
                 }
             } else if (t.paymentMode === 'Cash' || t.paymentMode === 'cash') {
-                const cashAcc = userAccounts.find(a => a.type === 'cash');
+                const cashAcc = accByType['cash'];
                 if (cashAcc) {
                     if (t.type === 'expense') cashAcc.currentBalance -= t.amount;
                     else cashAcc.currentBalance += t.amount;
                 }
             } else {
-                const bankAcc = userAccounts.find(a => a.type === 'bank');
+                const bankAcc = accByType['bank'];
                 if (bankAcc) {
                     if (t.type === 'expense') bankAcc.currentBalance -= t.amount;
                     else bankAcc.currentBalance += t.amount;
@@ -3714,6 +3751,11 @@ function renderIncomeTransactions(loadMore = false) {
     if (incomeTotalEl) incomeTotalEl.innerText = `+₹${incomeTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const incomeList = monthlyIncome.filter(t => matchTransaction(t, searchVal));
+    incomeList.sort((a, b) => {
+        const dateA = getTransactionDate(a);
+        const dateB = getTransactionDate(b);
+        return dateB.getTime() - dateA.getTime();
+    });
 
     if (incomeList.length === 0) {
         container.innerHTML = `<p class="text-center text-on-surface-variant py-md">No income transactions recorded for the selected period.</p>`;
@@ -3790,6 +3832,11 @@ function renderSpendingTransactions(loadMore = false) {
     if (spendingTotalEl) spendingTotalEl.innerText = `-₹${spendingTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const expenseList = monthlyExpenses.filter(t => matchTransaction(t, searchVal));
+    expenseList.sort((a, b) => {
+        const dateA = getTransactionDate(a);
+        const dateB = getTransactionDate(b);
+        return dateB.getTime() - dateA.getTime();
+    });
 
     if (expenseList.length === 0) {
         container.innerHTML = `<p class="text-center text-on-surface-variant py-md">No expenses recorded for the selected period.</p>`;
@@ -3894,7 +3941,23 @@ function runAfterTransition(el, callback, timeoutMs = 380) {
 function saveTransaction() {
     const dtInput = document.getElementById('tx-input-datetime');
     if (dtInput && dtInput.value) {
-        selectedTxDateObj = new Date(dtInput.value);
+        const parts = dtInput.value.split('T');
+        if (parts.length === 2) {
+            const dateParts = parts[0].split('-');
+            const timeParts = parts[1].split(':');
+            if (dateParts.length === 3 && timeParts.length >= 2) {
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1;
+                const day = parseInt(dateParts[2]);
+                const hour = parseInt(timeParts[0]);
+                const minute = parseInt(timeParts[1]);
+                selectedTxDateObj = new Date(year, month, day, hour, minute);
+            } else {
+                selectedTxDateObj = new Date(dtInput.value);
+            }
+        } else {
+            selectedTxDateObj = new Date(dtInput.value);
+        }
     }
     const amtVal = parseFloat(document.getElementById('tx-input-amount').value);
     const descVal = document.getElementById('tx-input-desc').value.trim();
@@ -5146,6 +5209,12 @@ function renderAccountDetailsTransactions(loadMore = false) {
         return true;
     });
 
+    filtered.sort((a, b) => {
+        const dateA = getTransactionDate(a);
+        const dateB = getTransactionDate(b);
+        return dateB.getTime() - dateA.getTime();
+    });
+
     if (filtered.length === 0) {
         container.innerHTML = `<p class="text-center text-on-surface-variant py-md font-bold">No transactions found</p>`;
         return;
@@ -5175,7 +5244,7 @@ function renderAccountDetailsTransactions(loadMore = false) {
             <div class="flex-1">
                 <div class="flex justify-between">
                     <p class="text-body-lg font-bold text-on-surface">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
-                    <p class="text-label-md font-label-md text-on-surface-variant">${t.date}</p>
+                    <p class="text-label-md font-label-md text-on-surface-variant">${getTxDisplayDate(t)}</p>
                 </div>
                 <div class="flex justify-between items-center">
                     <p class="text-body-md text-on-surface-variant">${t.note || t.category}</p>
@@ -6163,7 +6232,8 @@ function updateTxDatePickerLabel() {
 function getRelativeDateString(d) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
     const checkDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
     if (checkDate.getTime() === today.getTime()) {
@@ -6179,12 +6249,17 @@ function getRelativeDateString(d) {
     }
 }
 
+
 function getTransactionDate(t) {
     if (!t) return new Date();
     if (t.rawDate) {
         return new Date(t.rawDate);
     }
     return parseTxDate(t.date);
+}
+
+function getTxDisplayDate(t) {
+    return getRelativeDateString(getTransactionDate(t));
 }
 
 function parseTxDate(dateStr) {
@@ -6496,42 +6571,52 @@ function renderManagedCategories() {
     const container = document.getElementById('mgcat-list');
     if (!container) return;
     container.innerHTML = '';
-    container.className = manageCategoryLayout === 'grid'
-        ? 'grid grid-cols-4 gap-2'
-        : 'space-y-xs';
+
+    if (manageCategoryLayout === 'grid') {
+        container.className = 'grid grid-cols-3 gap-3 bg-transparent p-0';
+    } else {
+        container.className = 'bg-surface-container border border-outline-variant/30 rounded-[24px] divide-y divide-outline-variant/25 overflow-hidden p-0 shadow-sm';
+    }
 
     list.forEach((cat, index) => {
         const item = document.createElement('div');
         item.dataset.categoryIndex = index;
 
         if (manageCategoryLayout === 'grid') {
-            item.className = "relative flex flex-col items-center p-xs bg-surface-container-high rounded-xl border border-outline-variant/30 cursor-grab active:cursor-grabbing w-full overflow-hidden text-center gap-xs";
+            item.className = "group relative flex flex-col items-center p-sm bg-surface-container hover:bg-surface-container-high border border-outline-variant/35 rounded-2xl cursor-grab active:cursor-grabbing transition-all duration-200 shadow-sm text-center gap-xs overflow-hidden";
             item.innerHTML = `
-                <div class="flex justify-between items-center w-full px-1 text-[10px] text-on-surface-variant flex-shrink-0">
-                    <span class="material-symbols-outlined text-[14px] touch-none cursor-move" data-drag-handle title="Drag to reorder">drag_indicator</span>
+                <div class="flex justify-between items-center w-full text-[10px] text-on-surface-variant pb-xs">
+                    <span class="material-symbols-outlined text-[14px] touch-none cursor-move text-on-surface-variant/50 hover:text-on-surface" data-drag-handle title="Drag to reorder">drag_indicator</span>
                     ${cat.builtIn
-                    ? '<span class="text-[9px] text-on-surface-variant opacity-60">Built-in</span>'
-                    : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[14px] p-0.5 rounded-full" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
+                    ? '<span class="px-1.5 py-0.5 text-[8px] font-bold bg-surface-container-highest text-on-surface-variant/60 rounded-full">System</span>'
+                    : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[14px] p-0.5 rounded-full transition-colors" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
                 </div>
-                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                    <span class="material-symbols-outlined text-[20px]">${cat.icon}</span>
+                <div class="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:scale-105 duration-200">
+                    <span class="material-symbols-outlined text-[22px]">${cat.icon}</span>
                 </div>
-                <span class="text-[10px] font-semibold text-on-surface truncate w-full px-0.5" title="${cat.name}">${cat.name}</span>
+                <span class="text-[11px] font-bold text-on-surface truncate w-full px-0.5 mt-1" title="${cat.name}">${cat.name}</span>
             `;
         } else {
-            item.className = "flex items-center justify-between p-xs bg-surface-container-high rounded-xl border border-outline-variant/30 cursor-grab active:cursor-grabbing gap-sm";
+            item.className = "group flex items-center justify-between px-md py-sm hover:bg-surface-container-high cursor-grab active:cursor-grabbing gap-sm transition-colors";
             item.innerHTML = `
-                <div class="flex items-center gap-xs min-w-0 flex-1">
-                    <span class="material-symbols-outlined text-on-surface-variant text-[18px] touch-none cursor-move" data-drag-handle title="Drag to reorder">drag_indicator</span>
-                    <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                <div class="flex items-center gap-sm min-w-0 flex-1">
+                    <span class="material-symbols-outlined text-on-surface-variant/50 hover:text-on-surface text-[18px] touch-none cursor-move" data-drag-handle title="Drag to reorder">drag_indicator</span>
+                    <div class="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 duration-200">
                         <span class="material-symbols-outlined text-[18px]">${cat.icon}</span>
                     </div>
-                    <span class="text-label-md font-semibold text-on-surface truncate min-w-0 flex-1">${cat.name}</span>
+                    <div class="flex flex-col min-w-0 flex-1 pl-1">
+                        <span class="text-body-md font-bold text-on-surface truncate">${cat.name}</span>
+                        <div class="flex items-center gap-xs mt-0.5">
+                            ${cat.builtIn
+                    ? '<span class="text-[8px] font-bold bg-surface-container-highest text-on-surface-variant/60 px-1.5 py-0.5 rounded-full">System Category</span>'
+                    : '<span class="text-[8px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">Custom Category</span>'}
+                        </div>
+                    </div>
                 </div>
                 <div class="flex-shrink-0">
                     ${cat.builtIn
-                    ? '<span class="text-[10px] text-on-surface-variant opacity-60 px-2">Built-in</span>'
-                    : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[18px] p-1 rounded-full" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
+                    ? ''
+                    : `<button class="material-symbols-outlined text-error hover:bg-error-container/20 text-[20px] p-1.5 rounded-full transition-colors" aria-label="Delete ${cat.name}" onclick="requestDeleteManagedCategory(${index}); event.stopPropagation();">delete</button>`}
                 </div>
             `;
         }
