@@ -176,6 +176,15 @@
             pointer-events: none;
         }
 
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px var(--card-bg) inset !important;
+            -webkit-text-fill-color: var(--text-main) !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
 
         .bottom-sheet-transition {
             transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.32s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1581,10 +1590,10 @@
                         class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
                     <input
                         class="bg-transparent border-none p-0 text-headline-md font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-8"
-                        id="tx-input-amount" placeholder="0" required="" type="number"
+                        id="tx-input-amount" placeholder="0" required="" type="text" inputmode="decimal"
                         name="expenledge_transaction_amount" autocomplete="new-password" autocorrect="off"
                         autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
-                        data-bwignore="true" inputmode="decimal" />
+                        data-bwignore="true" />
 
                 </div>
                 <!-- Calculator Button -->
@@ -2563,7 +2572,7 @@
                     <label class="text-label-md font-label-md text-on-surface-variant">Monthly Budget (₹)</label>
                     <input
                         class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="budget-input-limit" placeholder="e.g. 10000" type="number" name="expenledge_budget_limit"
+                        id="budget-input-limit" placeholder="e.g. 10000" type="text" inputmode="decimal" name="expenledge_budget_limit"
                         autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
                 </div>
             </div>
@@ -2575,7 +2584,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Groceries</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-groceries" type="number" name="expenledge_budget_groceries"
+                            id="budget-cat-groceries" type="text" inputmode="decimal" name="expenledge_budget_groceries"
                             autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
                             data-bwignore="true" />
                     </div>
@@ -2583,7 +2592,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Shopping</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-shopping" type="number" name="expenledge_budget_shopping"
+                            id="budget-cat-shopping" type="text" inputmode="decimal" name="expenledge_budget_shopping"
                             autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
                             data-bwignore="true" />
                     </div>
@@ -2591,7 +2600,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Education</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-education" type="number" name="expenledge_budget_education"
+                            id="budget-cat-education" type="text" inputmode="decimal" name="expenledge_budget_education"
                             autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
                             data-bwignore="true" />
                     </div>
@@ -2599,7 +2608,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Transport</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-transport" type="number" name="expenledge_budget_transport"
+                            id="budget-cat-transport" type="text" inputmode="decimal" name="expenledge_budget_transport"
                             autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
                             data-bwignore="true" />
                     </div>
@@ -2607,7 +2616,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Bills &amp; Utilities</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-utilities" type="number" name="expenledge_budget_utilities"
+                            id="budget-cat-utilities" type="text" inputmode="decimal" name="expenledge_budget_utilities"
                             autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
                             data-bwignore="true" />
                     </div>
@@ -2615,7 +2624,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Entertainment</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-entertainment" type="number" name="expenledge_budget_entertainment"
+                            id="budget-cat-entertainment" type="text" inputmode="decimal" name="expenledge_budget_entertainment"
                             autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
                             data-bwignore="true" />
                     </div>
@@ -2623,7 +2632,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Medical</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-medical" type="number" name="expenledge_budget_medical"
+                            id="budget-cat-medical" type="text" inputmode="decimal" name="expenledge_budget_medical"
                             autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
                             data-bwignore="true" />
                     </div>
@@ -2631,7 +2640,7 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Food &amp; Drinks</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-food" type="number" name="expenledge_budget_food" autocomplete="new-password"
+                            id="budget-cat-food" type="text" inputmode="decimal" name="expenledge_budget_food" autocomplete="new-password"
                             data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
                     </div>
                 </div>
@@ -2718,9 +2727,9 @@
                         Balance (₹)</label>
                     <input
                         class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="account-input-balance" type="number" placeholder="0.00" name="expenledge_account_balance"
+                        id="account-input-balance" type="text" inputmode="decimal" placeholder="0.00" name="expenledge_account_balance"
                         autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" inputmode="decimal" />
+                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
                 </div>
             </div>
             <!-- Actions -->
