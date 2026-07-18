@@ -142,13 +142,20 @@
         }
 
         body {
-            background-color: #f4f6f4;
+            background-color: #f4f7f5;
             color: #1a1c18;
             font-family: 'Nunito Sans', sans-serif;
             overflow-x: hidden;
             touch-action: pan-x pan-y;
             -webkit-text-size-adjust: 100%;
+            transition: background-color 0.3s ease;
         }
+
+        .dark body {
+            background-color: #111411;
+            color: #e2e3df;
+        }
+
 
         html.modal-open,
         html.modal-open body {
@@ -256,7 +263,7 @@
 
 
 
-.remark-suggestions-panel {
+        .remark-suggestions-panel {
             position: absolute;
             left: 0;
             right: 0;
@@ -321,7 +328,7 @@
 
         .dark .remark-suggestion-title {
             color: #e8ebe6;
-        } 
+        }
 
         @media (prefers-reduced-motion: reduce) {
 
@@ -405,38 +412,77 @@
             display: block;
         }
 
-        .dashboard-gradient-card {
-            position: relative;
-            isolation: isolate;
+        .dashboard-orb-container {
+            position: absolute;
+            inset: 0;
             overflow: hidden;
+            border-radius: 1rem;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            z-index: 0;
         }
 
-        .dashboard-gradient-card::before {
+        .dashboard-orb-container::before {
             content: '';
             position: absolute;
-            inset: -35%;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 60%, transparent 100%);
+            filter: blur(35px);
+            -webkit-filter: blur(35px);
             z-index: 0;
             pointer-events: none;
-            background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.16) 50%, transparent 65%);
-            transform: translate3d(-14%, 0, 0);
-            animation: dashboard-card-sheen 12s ease-in-out infinite;
+            top: -40px;
+            left: -40px;
+            animation: dashboard-card-orb-1 10s ease-in-out infinite;
             will-change: transform;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
         }
 
-        .dashboard-gradient-card>* {
-            position: relative;
-            z-index: 1;
+        .dashboard-orb-container::after {
+            content: '';
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(110, 231, 183, 0.25) 0%, rgba(110, 231, 183, 0.02) 80%, transparent 100%);
+            filter: blur(25px);
+            -webkit-filter: blur(25px);
+            z-index: 0;
+            pointer-events: none;
+            bottom: -30px;
+            right: -30px;
+            animation: dashboard-card-orb-2 8s ease-in-out infinite;
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
         }
 
-        @keyframes dashboard-card-sheen {
+        @keyframes dashboard-card-orb-1 {
 
             0%,
             100% {
-                transform: translate3d(-14%, 0, 0);
+                transform: translate3d(0, 0, 0) scale(1);
             }
 
             50% {
-                transform: translate3d(14%, 0, 0);
+                transform: translate3d(140px, 40px, 0) scale(1.2);
+            }
+        }
+
+        @keyframes dashboard-card-orb-2 {
+
+            0%,
+            100% {
+                transform: translate3d(0, 0, 0) scale(1.1);
+            }
+
+            50% {
+                transform: translate3d(-100px, -30px, 0) scale(0.9);
             }
         }
 
@@ -721,108 +767,111 @@
                 </div>
             </div>
             <!-- CARD 1: THIS MONTH SUMMARY -->
-            <section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div class="relative inline-block text-left">
-                        <button
-                            class="flex items-center gap-xs text-headline-md font-headline-md text-on-background hover:text-primary transition-colors focus:outline-none"
-                            id="dashboard-filter-btn" onclick="toggleDashboardFilterDropdown()">
-                            <span id="dashboard-filter-label">This month</span>
-                            <span class="material-symbols-outlined text-[20px]">expand_more</span>
+            <section class="bg-primary rounded-2xl p-4 relative shadow-lg">
+                <!-- Glowing Orbs Container (Prevents clipping of dropdowns while containing blurred orbs) -->
+                <div class="dashboard-orb-container"></div>
+
+                <!-- Content Wrapper -->
+                <div class="relative z-10 space-y-4">
+                    <!-- Top row: filter label + dropdown trigger + sparkle icon -->
+                    <div class="flex justify-between items-center">
+                        <div class="relative inline-block text-left">
+                            <button
+                                class="flex items-center gap-xs focus:outline-none active:opacity-70 transition-opacity"
+                                id="dashboard-filter-btn" onclick="toggleDashboardFilterDropdown()">
+                                <span class="text-xs font-bold text-white/70 uppercase tracking-wider"
+                                    id="dashboard-filter-label">NET THIS MONTH</span>
+                                <span class="material-symbols-outlined text-white/60 text-[16px]">expand_more</span>
+                            </button>
+                            <div class="hidden absolute left-0 mt-2 w-44 rounded-2xl bg-white dark:bg-neutral-900 border border-outline-variant/20 shadow-xl z-50 overflow-hidden"
+                                id="dashboard-filter-dropdown">
+                                <div class="py-1">
+                                    <button
+                                        class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface font-semibold"
+                                        onclick="setDashboardFilter('month')">This month</button>
+                                    <button
+                                        class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface font-semibold"
+                                        onclick="setDashboardFilter('year')">This year</button>
+                                    <button
+                                        class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface font-semibold"
+                                        onclick="setDashboardFilter('all')">All time</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sparkle / balance type button -->
+                        <button onclick="openNetBalancesSheet()"
+                            class="text-white/60 hover:text-white/90 active:scale-90 transition-all">
+                            <span class="material-symbols-outlined text-[24px]"
+                                style="font-variation-settings:'FILL' 0,'wght' 200;">auto_awesome</span>
                         </button>
-                        <div class="hidden absolute left-0 mt-2 w-40 rounded-xl bg-surface-container border border-outline-variant/30 shadow-lg z-50 overflow-hidden"
-                            id="dashboard-filter-dropdown">
-                            <div class="py-1">
-                                <button
-                                    class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface"
-                                    onclick="setDashboardFilter('month')">This
-                                    month</button>
-                                <button
-                                    class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface"
-                                    onclick="setDashboardFilter('year')">This
-                                    year</button>
-                                <button
-                                    class="w-full text-left px-md py-sm hover:bg-surface-container-high text-body-md text-on-surface"
-                                    onclick="setDashboardFilter('all')">All
-                                    time</button>
+                    </div>
+
+                    <!-- Hidden search elements required by app.js -->
+                    <div class="hidden" id="search-container">
+                        <input id="search-input" oninput="filterTransactions()" type="text"
+                            name="expenledge_dashboard_search" autocomplete="new-password" autocorrect="off"
+                            autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                            data-bwignore="true" />
+                    </div>
+
+                    <!-- Net Amount -->
+                    <div>
+                        <p class="text-3xl font-bold text-white leading-none tracking-tight truncate" id="stat-balance">
+                            ₹0.00</p>
+                    </div>
+
+                    <!-- Income + Spent sub-cards -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Income sub-card -->
+                        <div class="bg-white/12 rounded-xl p-3 flex flex-col gap-1 cursor-pointer active:scale-95 transition-transform"
+                            onclick="openIncomeDetailsSheet()">
+                            <div class="flex items-center gap-xs">
+                                <span class="material-symbols-outlined text-white/80 text-[16px]"
+                                    style="font-variation-settings:'FILL' 0,'wght' 300;">south_west</span>
+                                <span class="text-[10px] font-bold text-white/70 uppercase tracking-wider">Income</span>
                             </div>
+                            <p class="text-lg font-bold text-white truncate" id="stat-income">₹0</p>
+                        </div>
+                        <!-- Spent sub-card -->
+                        <div class="bg-white/12 rounded-xl p-3 flex flex-col gap-1 cursor-pointer active:scale-95 transition-transform"
+                            onclick="openSpendingDetailsSheet()">
+                            <div class="flex items-center gap-xs">
+                                <span class="material-symbols-outlined text-white/80 text-[16px]"
+                                    style="font-variation-settings:'FILL' 0,'wght' 300;">north_east</span>
+                                <span class="text-[10px] font-bold text-white/70 uppercase tracking-wider">Spent</span>
+                            </div>
+                            <p class="text-lg font-bold text-white truncate" id="stat-spending">₹0</p>
                         </div>
                     </div>
-                </div>
-                <!-- Search input box (hidden by default) -->
-                <div class="hidden transition-all duration-200" id="search-container">
-                    <input
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-md py-sm text-body-md text-on-surface placeholder-on-surface-variant/50 focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="search-input" oninput="filterTransactions()" placeholder="Search transactions..."
-                        type="text" name="expenledge_dashboard_search" autocomplete="new-password" autocorrect="off"
-                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
-                        data-bwignore="true" />
-                </div>
-                <div class="grid grid-cols-2 gap-gutter">
-                    <!-- Spending Spending Card -->
-                    <div class="dashboard-gradient-card bg-secondary rounded-xl p-md flex flex-col gap-sm transition-transform active:scale-95 duration-200 cursor-pointer shadow-sm min-w-0"
-                        onclick="openSpendingDetailsSheet()">
-                        <div class="flex items-center gap-sm">
-                            <div
-                                class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                                <span class="material-symbols-outlined text-white">north_east</span>
-                            </div>
-                            <span class="text-label-lg font-label-lg text-white/90 truncate">Spending</span>
-                        </div>
-                        <p class="text-headline-md font-headline-md text-white truncate min-w-0 w-full"
-                            id="stat-spending">₹0.00</p>
+
+                    <!-- View Options Row -->
+                    <div class="flex items-center justify-around gap-xs bg-white/10 rounded-xl p-1">
+                        <button
+                            class="flex-1 flex flex-col items-center gap-1 py-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
+                            onclick="openStructuredTxView('custom')">
+                            <span class="material-symbols-outlined text-[20px]">date_range</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wide">Custom</span>
+                        </button>
+                        <div class="h-6 w-[1px] bg-white/20"></div>
+                        <button
+                            class="flex-1 flex flex-col items-center gap-1 py-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
+                            onclick="openStructuredTxView('month')">
+                            <span class="material-symbols-outlined text-[20px]">calendar_view_month</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wide">Month-wise</span>
+                        </button>
+                        <div class="h-6 w-[1px] bg-white/20"></div>
+                        <button
+                            class="flex-1 flex flex-col items-center gap-1 py-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 active:scale-95 transition-all"
+                            onclick="openStructuredTxView('day')">
+                            <span class="material-symbols-outlined text-[20px]">calendar_view_day</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wide">Day-wise</span>
+                        </button>
                     </div>
-                    <!-- Income Card -->
-                    <div class="dashboard-gradient-card bg-primary rounded-xl p-md flex flex-col gap-sm transition-transform active:scale-95 duration-200 cursor-pointer shadow-sm min-w-0"
-                        onclick="openIncomeDetailsSheet()">
-                        <div class="flex items-center gap-sm">
-                            <div
-                                class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                                <span class="material-symbols-outlined text-white">south_west</span>
-                            </div>
-                            <span class="text-label-lg font-label-lg text-white/90 truncate">Income</span>
-                        </div>
-                        <p class="text-headline-md font-headline-md text-white truncate min-w-0 w-full"
-                            id="stat-income">₹0.00</p>
-                    </div>
-                </div>
-                <!-- Balance Pill -->
-                <div class="flex justify-center pt-xs min-w-0 overflow-hidden">
-                    <div class="bg-surface-container-high px-xl py-xs rounded-full border border-outline-variant/30 cursor-pointer active:scale-95 transition-transform flex items-center gap-sm max-w-full"
-                        onclick="openNetBalancesSheet()">
-                        <span
-                            class="text-label-lg font-label-lg text-on-surface-variant mr-1 flex-shrink-0">Balance:</span>
-                        <span class="text-label-lg font-label-lg text-on-surface font-bold truncate max-w-[150px]"
-                            id="stat-balance">₹0.00</span>
-                    </div>
-                </div>
-                <!-- View Options Card -->
-                <div
-                    class="bg-surface-container/50 border border-outline-variant/20 rounded-xl p-xs flex items-center justify-around gap-xs shadow-sm">
-                    <button
-                        class="flex-1 flex flex-col items-center gap-xs py-sm hover:bg-surface-container-high rounded-lg transition-all text-on-surface-variant hover:text-primary active:scale-95"
-                        onclick="openStructuredTxView('custom')">
-                        <span class="material-symbols-outlined text-[22px]">date_range</span>
-                        <span class="text-[12px] font-semibold">Custom</span>
-                    </button>
-                    <div class="h-10 w-[1px] bg-outline-variant/20"></div>
-                    <button
-                        class="flex-1 flex flex-col items-center gap-xs py-sm hover:bg-surface-container-high rounded-lg transition-all text-on-surface-variant hover:text-primary active:scale-95"
-                        onclick="openStructuredTxView('month')">
-                        <span class="material-symbols-outlined text-[22px]">calendar_view_month</span>
-                        <span class="text-[12px] font-semibold">Month-wise</span>
-                    </button>
-                    <div class="h-10 w-[1px] bg-outline-variant/20"></div>
-                    <button
-                        class="flex-1 flex flex-col items-center gap-xs py-sm hover:bg-surface-container-high rounded-lg transition-all text-on-surface-variant hover:text-primary active:scale-95"
-                        onclick="openStructuredTxView('day')">
-                        <span class="material-symbols-outlined text-[22px]">calendar_view_day</span>
-                        <span class="text-[12px] font-semibold">Day-wise</span>
-                    </button>
                 </div>
             </section>
             <!-- CARD 2: RECENT TRANSACTIONS -->
-            <section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm">
+            <section
+                class="bg-surface-container p-md rounded-xl border border-outline-variant/10 border-t-2 border-t-primary space-y-md shadow-sm">
                 <div class="flex justify-between items-center">
                     <h2 class="text-headline-md font-headline-md text-on-background">Recent transactions</h2>
                     <button class="text-primary text-label-lg font-label-lg hover:underline"
@@ -863,104 +912,113 @@
         <!-- VIEW: STRUCTURED TRANSACTIONS -->
         <div class="page-view" id="view-structured-tx">
             <!-- Sticky Header for Structured Transactions -->
-            <div class="sticky top-0 bg-background z-20 pb-2 space-y-md border-b border-outline-variant/10">
-                <!-- Header with Back Button -->
-                <div class="flex items-center gap-md py-sm">
-                    <button
-                        class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center active:scale-95 transition-transform shadow-sm"
-                        onclick="backToHomeFromStructuredTx()">
-                        <span class="material-symbols-outlined text-[24px]">arrow_back</span>
-                    </button>
-                    <div>
-                        <h2 class="text-headline-md font-headline-md text-on-background" id="structured-tx-title">
-                            Transactions</h2>
-                        <p class="text-label-md text-on-surface-variant" id="structured-tx-subtitle">Day-wise grouping
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Period Navigator (shown for day + month mode) -->
-                <div class="bg-surface-container rounded-xl border border-outline-variant/10 shadow-sm"
-                    id="structured-period-nav">
-                    <div class="flex items-center justify-between px-md py-sm">
-                        <button
-                            class="w-9 h-9 rounded-full hover:bg-surface-container-high flex items-center justify-center active:scale-90 transition-transform"
-                            onclick="structuredTxNavPrev()">
-                            <span
-                                class="material-symbols-outlined text-[22px] text-on-surface-variant">chevron_left</span>
-                        </button>
-                        <div class="text-center">
-                            <p class="text-body-lg font-bold text-on-surface" id="structured-period-label">Today</p>
-                            <p class="text-label-md text-on-surface-variant" id="structured-period-sublabel"></p>
-                        </div>
-                        <button
-                            class="w-9 h-9 rounded-full hover:bg-surface-container-high flex items-center justify-center active:scale-90 transition-transform"
-                            onclick="structuredTxNavNext()">
-                            <span
-                                class="material-symbols-outlined text-[22px] text-on-surface-variant">chevron_right</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Custom date selector (only visible in custom mode) -->
-                <div class="hidden bg-surface-container p-md rounded-xl border border-outline-variant/10 shadow-sm"
-                    id="structured-custom-date-container">
-                    <div class="grid grid-cols-2 gap-sm">
-                        <div class="space-y-xs">
-                            <label class="text-label-sm font-label-sm text-on-surface-variant">From Date</label>
-                            <button id="structured-date-from-btn" onclick="openCustomPickerForStructured('from')"
-                                class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-sm py-xs text-body-md text-on-surface text-left flex justify-between items-center focus:outline-none h-[38px]">
-                                <span id="structured-date-from-label">Select Date</span>
-                                <span
-                                    class="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_today</span>
+            <div class="sticky top-0 z-20">
+                <!-- Green Section (Header + Period Nav + Totals) -->
+                <div class="bg-primary pb-4 px-4 pt-sm rounded-b-[24px] shadow-sm text-white relative overflow-hidden">
+                    <div class="dashboard-orb-container"></div>
+                    <div class="relative z-10 space-y-md">
+                        <!-- Header with Back Button -->
+                        <div class="flex items-center gap-md py-xs">
+                            <button
+                                class="w-10 h-10 rounded-full bg-white/15 hover:bg-white/20 flex items-center justify-center active:scale-95 transition-transform text-white"
+                                onclick="backToHomeFromStructuredTx()">
+                                <span class="material-symbols-outlined text-[24px]">arrow_back</span>
                             </button>
-                            <input type="hidden" id="structured-date-from" onchange="renderStructuredTx()">
+                            <div>
+                                <h2 class="text-headline-md font-headline-md text-white" id="structured-tx-title">
+                                    Transactions</h2>
+                                <p class="text-label-md text-white/70 font-semibold" id="structured-tx-subtitle">
+                                    Day-wise grouping
+                                </p>
+                            </div>
                         </div>
-                        <div class="space-y-xs">
-                            <label class="text-label-sm font-label-sm text-on-surface-variant">To Date</label>
-                            <button id="structured-date-to-btn" onclick="openCustomPickerForStructured('to')"
-                                class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl px-sm py-xs text-body-md text-on-surface text-left flex justify-between items-center focus:outline-none h-[38px]">
-                                <span id="structured-date-to-label">Select Date</span>
-                                <span
-                                    class="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_today</span>
-                            </button>
-                            <input type="hidden" id="structured-date-to" onchange="renderStructuredTx()">
+
+                        <!-- Period Navigator (shown for day + month mode) -->
+                        <div class="bg-white/12 rounded-xl p-3 border border-white/10" id="structured-period-nav">
+                            <div class="flex items-center justify-between">
+                                <button
+                                    class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center active:scale-90 transition-transform text-white/80 hover:text-white"
+                                    onclick="structuredTxNavPrev()">
+                                    <span class="material-symbols-outlined text-[22px]">chevron_left</span>
+                                </button>
+                                <div class="text-center">
+                                    <p class="text-body-lg font-bold text-white" id="structured-period-label">Today</p>
+                                    <p class="text-label-md text-white/70 font-semibold"
+                                        id="structured-period-sublabel"></p>
+                                </div>
+                                <button
+                                    class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center active:scale-90 transition-transform text-white/80 hover:text-white"
+                                    onclick="structuredTxNavNext()">
+                                    <span class="material-symbols-outlined text-[22px]">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Custom date selector (only visible in custom mode) -->
+                        <div class="hidden bg-white/12 p-3 rounded-xl border border-white/10"
+                            id="structured-custom-date-container">
+                            <div class="grid grid-cols-2 gap-sm">
+                                <div class="space-y-xs">
+                                    <label class="text-label-sm font-bold text-white/85">From Date</label>
+                                    <button id="structured-date-from-btn"
+                                        onclick="openCustomPickerForStructured('from')"
+                                        class="w-full bg-white/15 border border-white/20 rounded-xl px-sm py-xs text-body-md text-white text-left flex justify-between items-center focus:outline-none h-[38px]">
+                                        <span id="structured-date-from-label">Select Date</span>
+                                        <span
+                                            class="material-symbols-outlined text-[16px] text-white/85">calendar_today</span>
+                                    </button>
+                                    <input type="hidden" id="structured-date-from" onchange="renderStructuredTx()">
+                                </div>
+                                <div class="space-y-xs">
+                                    <label class="text-label-sm font-bold text-white/85">To Date</label>
+                                    <button id="structured-date-to-btn" onclick="openCustomPickerForStructured('to')"
+                                        class="w-full bg-white/15 border border-white/20 rounded-xl px-sm py-xs text-body-md text-white text-left flex justify-between items-center focus:outline-none h-[38px]">
+                                        <span id="structured-date-to-label">Select Date</span>
+                                        <span
+                                            class="material-symbols-outlined text-[16px] text-white/85">calendar_today</span>
+                                    </button>
+                                    <input type="hidden" id="structured-date-to" onchange="renderStructuredTx()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Compact Structured Totals: matching day card pills in All Transactions -->
+                        <div class="flex flex-wrap gap-xs justify-center text-[13px] font-bold"
+                            id="structured-totals-cards">
+                            <!-- OUT pill -->
+                            <span
+                                class="bg-white/15 border border-white/10 text-white px-4 py-1.5 rounded-full cursor-pointer active:scale-95 transition-transform"
+                                id="structured-spent-card" onclick="toggleStructuredFilter('expense')">
+                                Out: <span id="structured-total-spending">₹0</span>
+                            </span>
+                            <!-- IN pill -->
+                            <span
+                                class="bg-white/15 border border-white/10 text-white px-4 py-1.5 rounded-full cursor-pointer active:scale-95 transition-transform"
+                                id="structured-income-card" onclick="toggleStructuredFilter('income')">
+                                In: <span id="structured-total-income">₹0</span>
+                            </span>
+                            <!-- Balance pill -->
+                            <span class="bg-white/15 border border-white/10 text-white px-4 py-1.5 rounded-full"
+                                id="structured-balance-card">
+                                Bal: <span id="structured-total-balance">₹0</span>
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Compact Structured Totals: matching day card pills in All Transactions -->
-                <div class="flex flex-wrap gap-xs justify-center text-[14px] font-bold" id="structured-totals-cards">
-                    <!-- OUT pill -->
-                    <span
-                        class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full cursor-pointer active:scale-95 transition-transform"
-                        id="structured-spent-card" onclick="toggleStructuredFilter('expense')">
-                        Out: <span id="structured-total-spending">₹0</span>
-                    </span>
-                    <!-- IN pill -->
-                    <span
-                        class="bg-primary/10 text-primary px-4 py-1.5 rounded-full cursor-pointer active:scale-95 transition-transform"
-                        id="structured-income-card" onclick="toggleStructuredFilter('income')">
-                        In: <span id="structured-total-income">₹0</span>
-                    </span>
-                    <!-- Balance pill -->
-                    <span class="px-4 py-1.5 rounded-full" id="structured-balance-card">
-                        Bal: <span id="structured-total-balance">₹0</span>
-                    </span>
-                </div>
-
-                <!-- Mini Search Bar -->
-                <div class="relative flex items-center">
-                    <span
-                        class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
-                    <input id="structured-search-input" oninput="renderStructuredTx()"
-                        placeholder="Search transactions..." type="text" name="expenledge_structured_search"
-                        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
-                        class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl pl-10 pr-sm py-xs text-body-md text-on-surface focus:outline-none focus:border-primary/50" />
+                <!-- Page Background Section (Search Bar) -->
+                <div class="bg-background py-sm border-b border-outline-variant/10">
+                    <div class="relative flex items-center">
+                        <span
+                            class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[20px]">search</span>
+                        <input id="structured-search-input" oninput="renderStructuredTx()"
+                            placeholder="Search transactions..." type="text" name="expenledge_structured_search"
+                            autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
+                            data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
+                            class="w-full bg-white dark:bg-neutral-900 border border-outline-variant/30 rounded-2xl pl-[40px] pr-sm py-2 text-body-md text-on-surface placeholder-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" />
+                    </div>
                 </div>
             </div>
-
             <!-- Scrollable Content -->
             <div class="space-y-lg pt-4 pb-24">
                 <!-- All Transactions label -->
@@ -994,16 +1052,16 @@
                 <div class="flex items-center gap-sm">
                     <div class="relative flex-1">
                         <span
-                            class="material-symbols-outlined absolute left-md top-1/2 transform -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+                            class="material-symbols-outlined absolute left-[15px] top-1/2 transform -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
                         <input
-                            class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl pl-[44px] pr-md py-sm text-body-md text-on-surface placeholder-on-surface-variant/50 focus:ring-1 focus:ring-primary focus:border-primary"
+                            class="w-full bg-white dark:bg-neutral-900 border border-outline-variant/30 rounded-2xl pl-[44px] pr-md py-2.5 text-body-md text-on-surface placeholder-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                             id="all-tx-search" oninput="debouncedSearch()" placeholder="Search transactions..."
                             type="text" name="expenledge_all_transactions_search" autocomplete="new-password"
                             autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true"
                             data-1p-ignore="true" data-bwignore="true" />
                     </div>
                     <button
-                        class="w-[42px] h-[42px] rounded-xl bg-surface-container flex items-center justify-center hover:bg-surface-container-high border border-outline-variant/30 text-on-surface-variant active:scale-95 transition-transform shadow-sm flex-shrink-0"
+                        class="w-[44px] h-[44px] rounded-2xl bg-white dark:bg-neutral-900 flex items-center justify-center hover:bg-surface-container-high border border-outline-variant/30 text-on-surface-variant active:scale-95 transition-all shadow-sm flex-shrink-0"
                         onclick="openAdvancedSearchSheet()">
                         <span class="material-symbols-outlined text-[20px]">tune</span>
                     </button>
@@ -1018,7 +1076,8 @@
         <!-- VIEW: ANALYSIS / INSIGHTS -->
         <div class="page-view space-y-lg" id="view-analysis">
             <!-- Period Pills -->
-            <div class="flex bg-surface-container rounded-xl p-1 w-full border border-outline-variant/10 shadow-sm">
+            <div
+                class="flex bg-white dark:bg-neutral-900 rounded-xl p-1 w-full border border-outline-variant/10 shadow-sm">
                 <button
                     class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high"
                     id="analysis-pill-week" onclick="setAnalysisPeriod('week')">Week</button>
@@ -1033,54 +1092,63 @@
                     id="analysis-pill-custom" onclick="setAnalysisPeriod('custom')">Custom</button>
             </div>
             <!-- Month/Year Navigator -->
-            <div class="flex items-center justify-between py-sm px-md bg-surface-container rounded-xl shadow-sm"
+            <div class="dashboard-gradient-card bg-primary rounded-xl p-md relative overflow-hidden shadow-md text-white"
                 id="analysis-period-nav">
-                <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors"
-                    onclick="changeAnalysisPeriod(-1)">
-                    <span class="material-symbols-outlined">chevron_left</span>
-                </button>
-                <span class="text-headline-md font-headline-md" id="analysis-month-label">July 2026</span>
-                <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors"
-                    onclick="changeAnalysisPeriod(1)">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                </button>
+                <div class="dashboard-orb-container"></div>
+                <div class="relative z-10 flex items-center justify-between">
+                    <button class="p-sm text-white/80 hover:text-white transition-colors"
+                        onclick="changeAnalysisPeriod(-1)">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <span class="text-headline-md font-headline-md text-white" id="analysis-month-label">July
+                        2026</span>
+                    <button class="p-sm text-white/80 hover:text-white transition-colors"
+                        onclick="changeAnalysisPeriod(1)">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
             </div>
             <!-- Week Range Navigator (shown only in week mode) -->
-            <div class="hidden flex items-center justify-between py-sm px-md bg-surface-container rounded-xl shadow-sm"
+            <div class="hidden dashboard-gradient-card bg-primary rounded-xl p-md relative overflow-hidden shadow-md text-white"
                 id="analysis-week-nav">
-                <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors"
-                    onclick="changeAnalysisWeek(-1)">
-                    <span class="material-symbols-outlined">chevron_left</span>
-                </button>
-                <span class="text-body-lg font-semibold" id="analysis-week-label">12 Jul &ndash; 18 Jul 2026</span>
-                <button class="p-sm text-on-surface-variant hover:text-on-surface transition-colors"
-                    onclick="changeAnalysisWeek(1)">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                </button>
+                <div class="dashboard-orb-container"></div>
+                <div class="relative z-10 flex items-center justify-between">
+                    <button class="p-sm text-white/80 hover:text-white transition-colors"
+                        onclick="changeAnalysisWeek(-1)">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <span class="text-body-lg font-semibold text-white" id="analysis-week-label">12 Jul &ndash; 18 Jul
+                        2026</span>
+                    <button class="p-sm text-white/80 hover:text-white transition-colors"
+                        onclick="changeAnalysisWeek(1)">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
             </div>
             <!-- Custom Date Range (shown only in custom mode) -->
-            <div class="hidden flex gap-sm items-center bg-surface-container rounded-xl p-sm shadow-sm"
+            <div class="hidden dashboard-gradient-card bg-primary rounded-xl p-md relative overflow-hidden shadow-md text-white"
                 id="analysis-custom-nav">
-                <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('from')">
-                    <span class="text-label-sm text-on-surface-variant px-xs">From</span>
-                    <div
-                        class="w-full bg-surface-container-high rounded-lg px-md py-sm text-body-md text-on-surface border border-outline-variant/30 flex justify-between items-center h-10">
-                        <span id="analysis-custom-from-label">Select Date</span>
-                        <span
-                            class="material-symbols-outlined text-[18px] text-on-surface-variant">calendar_today</span>
+                <div class="dashboard-orb-container"></div>
+                <div class="relative z-10 flex gap-sm items-center">
+                    <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('from')">
+                        <span class="text-label-sm text-white/85 px-xs">From</span>
+                        <div
+                            class="w-full bg-white/15 rounded-lg px-md py-sm text-body-md text-white border border-white/15 flex justify-between items-center h-10">
+                            <span id="analysis-custom-from-label">Select Date</span>
+                            <span class="material-symbols-outlined text-[18px] text-white/80">calendar_today</span>
+                        </div>
+                        <input type="hidden" id="analysis-custom-from" />
                     </div>
-                    <input type="hidden" id="analysis-custom-from" />
-                </div>
-                <span class="text-on-surface-variant mt-4">&rarr;</span>
-                <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('to')">
-                    <span class="text-label-sm text-on-surface-variant px-xs">To</span>
-                    <div
-                        class="w-full bg-surface-container-high rounded-lg px-md py-sm text-body-md text-on-surface border border-outline-variant/30 flex justify-between items-center h-10">
-                        <span id="analysis-custom-to-label">Select Date</span>
-                        <span
-                            class="material-symbols-outlined text-[18px] text-on-surface-variant">calendar_today</span>
+                    <span class="text-white/60 mt-4">&rarr;</span>
+                    <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('to')">
+                        <span class="text-label-sm text-white/85 px-xs">To</span>
+                        <div
+                            class="w-full bg-white/15 rounded-lg px-md py-sm text-body-md text-white border border-white/15 flex justify-between items-center h-10">
+                            <span id="analysis-custom-to-label">Select Date</span>
+                            <span class="material-symbols-outlined text-[18px] text-white/80">calendar_today</span>
+                        </div>
+                        <input type="hidden" id="analysis-custom-to" />
                     </div>
-                    <input type="hidden" id="analysis-custom-to" />
                 </div>
             </div>
             <!-- Period totals stay in sync with Week, Month, Year, and Custom analysis ranges. -->
@@ -1221,21 +1289,22 @@
                 <p class="text-on-surface-variant font-label-md text-label-md opacity-70">Transactions based balance,
                     actual may vary.</p>
             </section>
-            <!-- Summary Bento Grid -->
-            <section class="grid grid-cols-2 gap-md">
-                <div
-                    class="bg-surface-container p-md rounded-xl flex flex-col gap-sm shadow-sm border border-outline-variant/10">
-                    <div class="flex items-center gap-xs text-on-surface-variant">
-                        <span class="font-label-md text-label-md">Available Balance</span>
+            <!-- Summary Bento Card -->
+            <section class="dashboard-gradient-card bg-primary rounded-2xl p-4 relative shadow-lg">
+                <!-- Glowing Orbs Container -->
+                <div class="dashboard-orb-container"></div>
+                <div class="relative z-10 grid grid-cols-2 gap-3">
+                    <!-- Available Balance Card -->
+                    <div class="bg-white/12 rounded-xl p-3 flex flex-col gap-1">
+                        <span class="text-[10px] font-bold text-white/70 uppercase tracking-wider">Available
+                            Balance</span>
+                        <p class="text-lg font-bold text-white truncate" id="acc-total-balance">₹0.00</p>
                     </div>
-                    <div class="font-headline-md text-headline-md text-on-surface" id="acc-total-balance">₹0.00</div>
-                </div>
-                <div
-                    class="bg-surface-container p-md rounded-xl flex flex-col gap-sm shadow-sm border border-outline-variant/10">
-                    <div class="flex items-center gap-xs text-on-surface-variant">
-                        <span class="font-label-md text-label-md">Available Credit</span>
-                    </div>
-                    <div class="font-headline-md text-headline-md text-on-surface" id="acc-card-header-balance">₹0.00
+                    <!-- Available Credit Card -->
+                    <div class="bg-white/12 rounded-xl p-3 flex flex-col gap-1">
+                        <span class="text-[10px] font-bold text-white/70 uppercase tracking-wider">Available
+                            Credit</span>
+                        <p class="text-lg font-bold text-white truncate" id="acc-card-header-balance">₹0.00</p>
                     </div>
                 </div>
             </section>
@@ -1353,19 +1422,20 @@
             <!-- Profile Summary Header -->
             <section>
                 <div
-                    class="bg-surface-container rounded-xl p-md flex items-center gap-md border border-outline-variant/10 shadow-sm">
-                    <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-surface-container-high flex items-center justify-center text-3xl select-none"
+                    class="dashboard-gradient-card bg-primary rounded-xl p-md flex items-center gap-md shadow-md relative overflow-hidden text-white animate-hover">
+                    <div class="dashboard-orb-container"></div>
+                    <div class="relative z-10 w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-white/20 flex items-center justify-center text-3xl select-none"
                         id="settings-user-avatar">
                         <div
-                            class="w-full h-full rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-2xl uppercase select-none">
+                            class="w-full h-full rounded-full bg-white/30 text-white flex items-center justify-center font-bold text-2xl uppercase select-none">
                             U</div>
                     </div>
-                    <div class="flex-grow">
-                        <h2 class="font-headline-md text-headline-md text-on-surface" id="profile-name-display"></h2>
-                        <p class="font-body-md text-on-surface-variant" id="profile-email-display"></p>
+                    <div class="relative z-10 flex-grow">
+                        <h2 class="font-headline-md text-headline-md text-white" id="profile-name-display"></h2>
+                        <p class="font-body-md text-white/80" id="profile-email-display"></p>
                     </div>
                     <button
-                        class="material-symbols-outlined text-primary p-2 rounded-full hover:bg-surface-container-high transition-colors"
+                        class="relative z-10 material-symbols-outlined text-white p-2 rounded-full hover:bg-white/10 transition-colors"
                         onclick="openProfileSecuritySheet()">edit</button>
                 </div>
             </section>
@@ -1439,7 +1509,7 @@
     </main>
     <!-- Navigation Footer -->
     <nav
-        class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-40 rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-outline-variant bg-surface-container-lowest">
+        class="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md z-40 rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t-2 border-t-primary bg-white dark:bg-neutral-900">
         <div class="flex justify-around items-end pb-6 pt-sm px-2 max-w-md mx-auto">
             <!-- Home -->
             <button class="flex flex-col items-center justify-center text-primary font-bold transition-all"
@@ -1457,7 +1527,7 @@
             <!-- Central FAB Add -->
             <div class="relative -top-5">
                 <button
-                    class="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform duration-150"
+                    class="w-14 h-14 bg-primary rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform duration-150 ring-2 ring-white"
                     onclick="openAddTransactionModal()">
                     <span class="material-symbols-outlined text-white text-3xl font-bold">add</span>
                 </button>
@@ -1480,10 +1550,10 @@
     </nav>
     <!-- ================= MODALS & BOTTOM SHEETS ================= -->
     <!-- Global FAB: shown only on structured-tx view, aligned inside max-w-md container -->
-    <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-md px-6 pointer-events-none z-[45] flex justify-end hidden"
+    <div class="fixed bottom-6 left-0 right-0 mx-auto w-full max-w-md px-6 pointer-events-none z-[45] flex justify-end hidden"
         id="global-structured-fab">
         <button
-            class="w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-on-primary flex items-center justify-center shadow-xl active:scale-95 transition-all pointer-events-auto"
+            class="w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-on-primary flex items-center justify-center shadow-xl active:scale-95 transition-all pointer-events-auto ring-2 ring-white"
             onclick="openAddTransactionModal()">
             <span class="material-symbols-outlined text-[30px]">add</span>
         </button>
@@ -1527,61 +1597,63 @@
                         id="tx-type-income" onclick="switchTransactionType('income')">Income</button>
                 </div>
             </div>
-<!-- Date & Time Selector -->
-<div class="flex items-center gap-sm py-2 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
-    onclick="openTxDateTimePicker()">
-    <span class="material-symbols-outlined text-secondary text-[22px]">calendar_today</span>
-    <div class="flex-1 flex flex-col">
-        <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
-            Time</span>
-        <span class="text-body-md font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
-            PM</span>
-        <input type="hidden" id="tx-input-datetime" />
-    </div>
-    <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
-</div>
-<!-- Category Setup Header with Pencil -->
-<div class="flex justify-between items-center px-1 pt-1 -mb-0.5">
-    <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
-        Setup</span>
-    <button type="button"
-        class="text-primary hover:bg-surface-container-high rounded-full p-0.5 transition-colors flex items-center justify-center"
-        onclick="openManageCategoriesFromTx()">
-        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-            </path>
-        </svg>
-    </button>
-</div>
-<!-- Category & Payment Mode side by side -->
-<div class="grid grid-cols-2 gap-sm">
-    <!-- Category Selector Trigger -->
-    <div class="flex items-center gap-sm py-2 border border-outline-variant rounded-lg px-2 hover:bg-surface-container-high transition-colors cursor-pointer"
-        onclick="openCategorySheet()">
-        <span class="material-symbols-outlined text-secondary text-[20px]"
-            id="tx-selected-cat-icon">shopping_basket</span>
-        <div class="flex-1 flex flex-col min-w-0">
-            <span
-                class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
-            <span class="text-body-md font-semibold truncate" id="tx-selected-cat-name">Groceries</span>
-        </div>
-        <span class="material-symbols-outlined text-on-surface-variant text-[20px] flex-shrink-0">chevron_right</span>
-    </div>
-    <!-- Payment Mode Trigger -->
-    <div class="flex items-center gap-sm py-2 border border-outline-variant rounded-lg px-2 hover:bg-surface-container-high transition-colors cursor-pointer"
-        onclick="openPaymentSheet()">
-        <span class="material-symbols-outlined text-secondary text-[20px]"
-            id="tx-selected-pay-icon">payments</span>
-        <div class="flex-1 flex flex-col min-w-0">
-            <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
-                Mode</span>
-            <span class="text-body-md font-semibold truncate" id="tx-selected-pay-name">Cash</span>
-        </div>
-        <span class="material-symbols-outlined text-on-surface-variant text-[20px] flex-shrink-0">chevron_right</span>
-    </div>
-</div>
+            <!-- Date & Time Selector -->
+            <div class="flex items-center gap-sm py-2 border-b border-outline-variant px-2 -mx-2 cursor-pointer hover:bg-surface-container-high rounded-lg transition-colors"
+                onclick="openTxDateTimePicker()">
+                <span class="material-symbols-outlined text-secondary text-[22px]">calendar_today</span>
+                <div class="flex-1 flex flex-col">
+                    <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Date &amp;
+                        Time</span>
+                    <span class="text-body-md font-semibold text-on-surface" id="tx-selected-datetime">Today, 12:00
+                        PM</span>
+                    <input type="hidden" id="tx-input-datetime" />
+                </div>
+                <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+            </div>
+            <!-- Category Setup Header with Pencil -->
+            <div class="flex justify-between items-center px-1 pt-1 -mb-0.5">
+                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category
+                    Setup</span>
+                <button type="button"
+                    class="text-primary hover:bg-surface-container-high rounded-full p-0.5 transition-colors flex items-center justify-center"
+                    onclick="openManageCategoriesFromTx()">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <!-- Category & Payment Mode side by side -->
+            <div class="grid grid-cols-2 gap-sm">
+                <!-- Category Selector Trigger -->
+                <div class="flex items-center gap-sm py-2 border border-outline-variant rounded-lg px-2 hover:bg-surface-container-high transition-colors cursor-pointer"
+                    onclick="openCategorySheet()">
+                    <span class="material-symbols-outlined text-secondary text-[20px]"
+                        id="tx-selected-cat-icon">shopping_basket</span>
+                    <div class="flex-1 flex flex-col min-w-0">
+                        <span
+                            class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Category</span>
+                        <span class="text-body-md font-semibold truncate" id="tx-selected-cat-name">Groceries</span>
+                    </div>
+                    <span
+                        class="material-symbols-outlined text-on-surface-variant text-[20px] flex-shrink-0">chevron_right</span>
+                </div>
+                <!-- Payment Mode Trigger -->
+                <div class="flex items-center gap-sm py-2 border border-outline-variant rounded-lg px-2 hover:bg-surface-container-high transition-colors cursor-pointer"
+                    onclick="openPaymentSheet()">
+                    <span class="material-symbols-outlined text-secondary text-[20px]"
+                        id="tx-selected-pay-icon">payments</span>
+                    <div class="flex-1 flex flex-col min-w-0">
+                        <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Payment
+                            Mode</span>
+                        <span class="text-body-md font-semibold truncate" id="tx-selected-pay-name">Cash</span>
+                    </div>
+                    <span
+                        class="material-symbols-outlined text-on-surface-variant text-[20px] flex-shrink-0">chevron_right</span>
+                </div>
+            </div>
             <!-- Amount input -->
             <div class="flex items-center gap-sm py-2 group border-b border-outline-variant">
                 <span class="material-symbols-outlined text-secondary text-[22px]">currency_rupee</span>
@@ -1618,7 +1690,8 @@
                         name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
                         autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
                         data-bwignore="true" data-no-capitalize="true" />
-                    <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden" aria-label="Remark suggestions"></div>
+                    <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden"
+                        aria-label="Remark suggestions"></div>
                 </div>
             </div>
             <!-- Tags selector Trigger -->
@@ -1896,15 +1969,15 @@
             <span class="text-body-lg font-bold text-primary" id="income-sheet-total">+₹0.00</span>
         </div>
         <!-- Pinned Mini Search Bar -->
-        <div class="px-container-padding py-sm bg-surface border-b border-outline-variant/30">
+        <div class="px-container-padding py-sm bg-white dark:bg-neutral-900 border-b border-outline-variant/30">
             <div class="relative flex items-center">
                 <span
-                    class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
+                    class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[20px]">search</span>
                 <input id="income-sheet-search" oninput="queueIncomeTransactionsRender()" placeholder="Search income..."
                     type="text" name="expenledge_income_search" autocomplete="new-password" autocorrect="off"
                     autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
                     data-bwignore="true"
-                    class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl pl-10 pr-sm py-xs text-body-md text-on-surface focus:outline-none focus:border-primary/50" />
+                    class="w-full bg-white dark:bg-neutral-900 border border-outline-variant/30 rounded-2xl pl-[40px] pr-sm py-2 text-body-md text-on-surface placeholder-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" />
             </div>
         </div>
         <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-sm" id="income-transactions-list">
@@ -1942,15 +2015,15 @@
             <span class="text-body-lg font-bold text-secondary" id="spending-sheet-total">-₹0.00</span>
         </div>
         <!-- Pinned Mini Search Bar -->
-        <div class="px-container-padding py-sm bg-surface border-b border-outline-variant/30">
+        <div class="px-container-padding py-sm bg-white dark:bg-neutral-900 border-b border-outline-variant/30">
             <div class="relative flex items-center">
                 <span
-                    class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
+                    class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[20px]">search</span>
                 <input id="spending-sheet-search" oninput="queueSpendingTransactionsRender()"
                     placeholder="Search spending..." type="text" name="expenledge_spending_search"
                     autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
                     data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
-                    class="w-full bg-surface-container-high border border-outline-variant/30 rounded-xl pl-10 pr-sm py-xs text-body-md text-on-surface focus:outline-none focus:border-primary/50" />
+                    class="w-full bg-white dark:bg-neutral-900 border border-outline-variant/30 rounded-2xl pl-[40px] pr-sm py-2 text-body-md text-on-surface placeholder-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" />
             </div>
         </div>
         <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-sm" id="spending-transactions-list">
@@ -2572,8 +2645,9 @@
                     <label class="text-label-md font-label-md text-on-surface-variant">Monthly Budget (₹)</label>
                     <input
                         class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="budget-input-limit" placeholder="e.g. 10000" type="text" inputmode="decimal" name="expenledge_budget_limit"
-                        autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                        id="budget-input-limit" placeholder="e.g. 10000" type="text" inputmode="decimal"
+                        name="expenledge_budget_limit" autocomplete="new-password" data-lpignore="true"
+                        data-1p-ignore="true" data-bwignore="true" />
                 </div>
             </div>
             <!-- Category Limits -->
@@ -2624,9 +2698,9 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Entertainment</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-entertainment" type="text" inputmode="decimal" name="expenledge_budget_entertainment"
-                            autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
-                            data-bwignore="true" />
+                            id="budget-cat-entertainment" type="text" inputmode="decimal"
+                            name="expenledge_budget_entertainment" autocomplete="new-password" data-lpignore="true"
+                            data-1p-ignore="true" data-bwignore="true" />
                     </div>
                     <div class="space-y-xs">
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Medical</label>
@@ -2640,8 +2714,9 @@
                         <label class="text-label-sm font-label-sm text-on-surface-variant">Food &amp; Drinks</label>
                         <input
                             class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="budget-cat-food" type="text" inputmode="decimal" name="expenledge_budget_food" autocomplete="new-password"
-                            data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                            id="budget-cat-food" type="text" inputmode="decimal" name="expenledge_budget_food"
+                            autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"
+                            data-bwignore="true" />
                     </div>
                 </div>
             </div>
@@ -2727,9 +2802,10 @@
                         Balance (₹)</label>
                     <input
                         class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="account-input-balance" type="text" inputmode="decimal" placeholder="0.00" name="expenledge_account_balance"
-                        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                        id="account-input-balance" type="text" inputmode="decimal" placeholder="0.00"
+                        name="expenledge_account_balance" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" />
                 </div>
             </div>
             <!-- Actions -->
