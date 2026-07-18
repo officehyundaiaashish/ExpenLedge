@@ -112,6 +112,7 @@ let selectedPaymentIcon = 'payments';
 let selectedTags = [];
 let allAvailableTags = [];
 let includeCashInBalance = true;
+let includeBalanceInIncome = false;
 const CATEGORY_ORDER_PRESET_VERSION = '2';
 
 // Demo tags from older releases are removed the next time saved data is loaded.
@@ -212,11 +213,10 @@ function suppressBrowserAutofill(root = document) {
         el.setAttribute('x-webkit-autofill', 'off');
         el.setAttribute('x-moz-autofill', 'off');
 
-        // Do not rewrite the field name on every pass.
-        // Renaming a focused input can destabilize mobile keyboards and IMEs.
-        if (!el.name) {
-            const safeId = (el.id || 'field').replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
-            el.setAttribute('name', `expenledge_${safeId}`);
+        // Do not rewrite the field name on every pass to avoid keyboard/IME issues.
+        // Overwrite the name with a generic value if it contains sensitive autofill keywords (like expenledge, amount, card, key).
+        if (!el.name || el.name.includes('expenledge') || el.name.includes('amount') || el.name.includes('card') || el.name.includes('key')) {
+            el.setAttribute('name', 'noop_field_' + Math.random().toString(36).substring(2, 6));
         }
 
         if (type === 'number' && !el.getAttribute('inputmode')) {
@@ -599,6 +599,7 @@ function saveToLocalStorage() {
         localStorage.setItem('expenledge_scheduled', JSON.stringify(scheduledTransactions));
         localStorage.setItem('expenledge_all_tags', JSON.stringify(allAvailableTags));
         localStorage.setItem('expenledge_include_cash', includeCashInBalance.toString());
+        localStorage.setItem('expenledge_include_balance_in_income', includeBalanceInIncome.toString());
         localStorage.removeItem('expenledge_dashboard_filter');
         localStorage.setItem('expenledge_auto_backup_enabled', autoBackupEnabled.toString());
         localStorage.setItem('expenledge_last_backup_at', lastBackupAt || '');
@@ -787,6 +788,9 @@ function loadFromLocalStorage() {
         const savedCash = localStorage.getItem('expenledge_include_cash');
         if (savedCash !== null) includeCashInBalance = savedCash === 'true';
 
+        const savedIncludeBalance = localStorage.getItem('expenledge_include_balance_in_income');
+        if (savedIncludeBalance !== null) includeBalanceInIncome = savedIncludeBalance === 'true';
+
         const savedAutoBackup = localStorage.getItem('expenledge_auto_backup_enabled');
         if (savedAutoBackup) autoBackupEnabled = savedAutoBackup === 'true';
 
@@ -909,6 +913,10 @@ function getSupabaseStorageSnapshot() {
         }
     }
     return storage;
+}
+
+function touchProfileTimestamp() {
+    localStorage.setItem('expenledge_profile_updated_at', new Date().toISOString());
 }
 
 /**
@@ -1129,6 +1137,14 @@ function mergeSupabaseStorageSnapshots(localSnapshot = {}, remoteSnapshot = {}) 
     Object.entries(remote).forEach(([key, value]) => {
         if (key === 'expenledge_transactions' || key === 'expenledge_deleted_transaction_log') return;
         if (value !== undefined && value !== null && value !== '') {
+            if (key === 'expenledge_profile') {
+                const localProfileUpdatedAt = local.expenledge_profile_updated_at || '';
+                const remoteProfileUpdatedAt = remote.expenledge_profile_updated_at || '';
+                if (localProfileUpdatedAt && (!remoteProfileUpdatedAt || new Date(localProfileUpdatedAt) > new Date(remoteProfileUpdatedAt))) {
+                    // Local profile is newer or remote has no timestamp, do not overwrite with remote profile
+                    return;
+                }
+            }
             merged[key] = value;
         }
     });
@@ -1797,6 +1813,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     history.replaceState({ viewId: 'home' }, '', '');
     loadFromLocalStorage();
+    showToast(`Welcome back, ${userProfile.name || 'User'}!`);
     initRemarkSuggestionFeature();
     suppressBrowserAutofill();
     syncCategoryLayoutUI();
@@ -1953,6 +1970,7 @@ function submitOnboarding(event) {
     userProfile.name = name;
     userProfile.email = email;
     userProfile.avatar = avatar;
+    touchProfileTimestamp();
     localStorage.setItem('expenledge_profile', JSON.stringify(userProfile));
     localStorage.setItem('expenledge_onboarded', 'true');
 
@@ -2053,7 +2071,12 @@ function switchView(viewId, isBackNavigation = false) {
     if (viewId === 'structured-tx') renderStructuredTx();
 
     if (!isBackNavigation) {
-        history.pushState({ viewId: viewId }, '', '');
+        const mainViews = ['home', 'analysis', 'accounts', 'more'];
+        if (mainViews.includes(viewId)) {
+            history.replaceState({ viewId: viewId }, '', '');
+        } else {
+            history.pushState({ viewId: viewId }, '', '');
+        }
     }
 }
 
@@ -2439,6 +2462,62 @@ function renderStructuredTx(loadMore = false) {
     }
 }
 
+function getAvailableBalanceHelper() {
+    const accByName = {};
+    const accByType = {};
+    const tempBalances = {};
+    userAccounts.forEach(acc => {
+        tempBalances[acc.id] = acc.startingBalance;
+        accByName[acc.name] = acc;
+        if (!accByType[acc.type]) {
+            accByType[acc.type] = acc;
+        }
+    });
+
+    transactions.forEach(t => {
+        const acc = accByName[t.paymentMode];
+        if (acc) {
+            if (acc.type === 'card') {
+                if (t.type === 'expense') tempBalances[acc.id] += t.amount;
+                else tempBalances[acc.id] -= t.amount;
+            } else {
+                if (t.type === 'expense') tempBalances[acc.id] -= t.amount;
+                else tempBalances[acc.id] += t.amount;
+            }
+        } else {
+            if (t.paymentMode === 'Credit Card' || t.paymentMode === 'card') {
+                const cardAcc = accByType['card'];
+                if (cardAcc) {
+                    if (t.type === 'expense') tempBalances[cardAcc.id] += t.amount;
+                    else tempBalances[cardAcc.id] -= t.amount;
+                }
+            } else if (t.paymentMode === 'Cash' || t.paymentMode === 'cash') {
+                const cashAcc = accByType['cash'];
+                if (cashAcc) {
+                    if (t.type === 'expense') tempBalances[cashAcc.id] -= t.amount;
+                    else tempBalances[cashAcc.id] += t.amount;
+                }
+            } else {
+                const bankAcc = accByType['bank'];
+                if (bankAcc) {
+                    if (t.type === 'expense') tempBalances[bankAcc.id] -= t.amount;
+                    else tempBalances[bankAcc.id] += t.amount;
+                }
+            }
+        }
+    });
+
+    let totalAvailableBalance = 0;
+    userAccounts.forEach(acc => {
+        const accBal = tempBalances[acc.id] || 0;
+        if (acc.type !== 'card') {
+            if (!(acc.type === 'cash' && !includeCashInBalance)) {
+                totalAvailableBalance += accBal;
+            }
+        }
+    });
+    return totalAvailableBalance;
+}
 
 // Dashboard renderer
 function updateDashboard() {
@@ -2488,6 +2567,10 @@ function updateDashboard() {
             }
         });
     });
+
+    if (includeBalanceInIncome) {
+        totalIncome += getAvailableBalanceHelper();
+    }
 
     const balance = totalIncome - totalExpense;
     const allTimeNet = allTimeIncome - allTimeExpense;
@@ -3047,10 +3130,10 @@ function renderAccountsList() {
     listContainer.innerHTML = '';
 
     const categories = [
+        { type: 'cash', label: 'Cash', icon: 'payments', color: 'text-primary' },
         { type: 'bank', label: 'Bank Accounts', icon: 'account_balance', color: 'text-tertiary' },
         { type: 'saving', label: 'Savings', icon: 'savings', color: 'text-primary' },
         { type: 'card', label: 'Credit Cards', icon: 'credit_card', color: 'text-secondary' },
-        { type: 'cash', label: 'Cash', icon: 'payments', color: 'text-primary' },
         { type: 'other', label: 'Other', icon: 'account_balance_wallet', color: 'text-secondary' }
     ];
 
@@ -3098,33 +3181,6 @@ function renderAccountsList() {
             sec.appendChild(card);
         });
 
-        if (cat.type === 'cash') {
-            const banner = document.createElement('button');
-            banner.type = 'button';
-            banner.className = "mt-2 w-full text-left bg-primary/10 hover:bg-primary/15 border border-primary/15 rounded-2xl px-4 py-4 flex items-center justify-between gap-4 transition-colors active:scale-[0.99]";
-            banner.onclick = () => toggleIncludeCashInBalance();
-
-            banner.innerHTML = `
-                <div class="flex items-center gap-3 min-w-0">
-                    <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings: 'FILL' 1;">payments</span>
-                    <div class="min-w-0">
-                        <div class="text-[13px] font-bold text-on-surface truncate">Include Cash in Balance</div>
-                        <div class="text-[11px] text-on-surface-variant truncate">
-                            ${includeCashInBalance ? 'Cash wallet is included in totals' : 'Cash wallet is hidden from totals'}
-                        </div>
-                    </div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0" onclick="event.stopPropagation()">
-                    <input class="sr-only peer" id="acc-include-cash-toggle" onchange="toggleIncludeCashInBalance()"
-                        type="checkbox" ${includeCashInBalance ? 'checked' : ''} />
-                    <div
-                        class="w-12 h-7 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary">
-                    </div>
-                </label>
-            `;
-            sec.appendChild(banner);
-        }
-
         listContainer.appendChild(sec);
     });
 
@@ -3132,6 +3188,20 @@ function renderAccountsList() {
     const creditHeaderEl = document.getElementById('acc-card-header-balance');
     if (totalEl) totalEl.innerText = `₹${totalAvailableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     if (creditHeaderEl) creditHeaderEl.innerText = `₹${totalAvailableCredit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const cashToggle = document.getElementById('acc-include-cash-toggle');
+    if (cashToggle) {
+        cashToggle.checked = includeCashInBalance;
+    }
+    const cashSubtext = document.getElementById('acc-include-cash-subtext');
+    if (cashSubtext) {
+        cashSubtext.innerText = includeCashInBalance ? 'Cash wallet is included in totals' : 'Cash wallet is hidden from totals';
+    }
+
+    const balanceIncomeToggle = document.getElementById('acc-include-balance-in-income-toggle');
+    if (balanceIncomeToggle) {
+        balanceIncomeToggle.checked = includeBalanceInIncome;
+    }
 }
 
 // Budget tab rendering
@@ -3350,7 +3420,7 @@ function openAddTransactionModal() {
     if (deleteBtn) deleteBtn.classList.add('hidden');
 
     // Reset modal values
-    document.getElementById('tx-input-amount').value = '';
+    document.getElementById('tx-input-qty').value = '';
     document.getElementById('tx-input-desc').value = '';
     hideRemarkSuggestions();
 
@@ -3779,7 +3849,7 @@ function renderIncomeTransactions(loadMore = false) {
             <div class="flex-1">
                 <div class="flex justify-between">
                     <p class="text-body-lg font-bold text-on-surface">+₹${t.amount.toFixed(2)}</p>
-                    <p class="text-label-md font-label-md text-on-surface-variant">${t.date}</p>
+                    <p class="text-label-md font-label-md text-on-surface-variant">${getTxDisplayDate(t)}</p>
                 </div>
                 <div class="flex justify-between items-center gap-sm">
                     <p class="text-body-md text-on-surface-variant break-words whitespace-normal">${t.note || t.category}</p>
@@ -3860,7 +3930,7 @@ function renderSpendingTransactions(loadMore = false) {
             <div class="flex-1">
                 <div class="flex justify-between">
                     <p class="text-body-lg font-bold text-on-surface">-₹${t.amount.toFixed(2)}</p>
-                    <p class="text-label-md font-label-md text-on-surface-variant">${t.date}</p>
+                    <p class="text-label-md font-label-md text-on-surface-variant">${getTxDisplayDate(t)}</p>
                 </div>
                 <div class="flex justify-between items-center gap-sm">
                     <p class="text-body-md text-on-surface-variant break-words whitespace-normal">${t.note || t.category}</p>
@@ -3959,7 +4029,7 @@ function saveTransaction() {
             selectedTxDateObj = new Date(dtInput.value);
         }
     }
-    const amtVal = parseFloat(document.getElementById('tx-input-amount').value);
+    const amtVal = parseFloat(document.getElementById('tx-input-qty').value);
     const descVal = document.getElementById('tx-input-desc').value.trim();
 
     if (isNaN(amtVal) || amtVal < 0) {
@@ -4096,6 +4166,8 @@ function exitApp() {
     window.close();
 }
 
+let lastBackPressTime = 0;
+
 window.addEventListener('popstate', (event) => {
     if (isManuallyClosing) {
         isManuallyClosing = false;
@@ -4110,7 +4182,21 @@ window.addEventListener('popstate', (event) => {
     const isDashboardSearchOpen = dashboardSearchOpen || (searchContainer && !searchContainer.classList.contains('hidden'));
 
     if (openSheets.length > 0 || isTxModalOpen) {
-        performCloseAllSheets();
+        if (openSheets.length > 1) {
+            // Sort sheets by z-index to close the top-most one first
+            openSheets.sort((a, b) => {
+                const zA = parseInt(window.getComputedStyle(a).zIndex) || 0;
+                const zB = parseInt(window.getComputedStyle(b).zIndex) || 0;
+                return zB - zA;
+            });
+            const topSheet = openSheets[0];
+            topSheet.classList.add('translate-y-full');
+            checkBackdropNeeded();
+            // Restore a history state so that the next back press functions correctly
+            history.pushState({ viewId: currentView }, '', '');
+        } else {
+            performCloseAllSheets();
+        }
         return;
     }
 
@@ -4122,11 +4208,19 @@ window.addEventListener('popstate', (event) => {
         return;
     }
 
-    // Handle view change back navigation
-    if (event.state && event.state.viewId) {
-        switchView(event.state.viewId, true);
+    // Handle view change back navigation - redirect non-home views to home, double-press to exit on home
+    if (currentView !== 'home') {
+        switchView('home', true);
+        history.pushState({ viewId: 'home' }, '', '');
     } else {
-        exitApp();
+        const currentTime = new Date().getTime();
+        if (currentTime - lastBackPressTime < 2000) {
+            exitApp();
+        } else {
+            lastBackPressTime = currentTime;
+            showToast("Press back again to exit");
+            history.pushState({ viewId: 'home' }, '', '');
+        }
     }
 });
 
@@ -4221,7 +4315,7 @@ function showToast(msg) {
     const toast = document.getElementById('toast');
 
     // Check if this is a success message
-    const isSuccess = msg.toLowerCase().includes('success') || msg.toLowerCase().includes('saved') || msg.toLowerCase().includes('updated') || msg.toLowerCase().includes('created') || msg.toLowerCase().includes('deleted') || msg.toLowerCase().includes('welcome');
+    const isSuccess = (msg.toLowerCase().includes('success') || msg.toLowerCase().includes('saved') || msg.toLowerCase().includes('updated') || msg.toLowerCase().includes('created') || msg.toLowerCase().includes('deleted')) && !msg.toLowerCase().includes('profile') && !msg.toLowerCase().includes('welcome');
 
     if (isSuccess) {
         // Show tick.svg for success - remove black background
@@ -4282,7 +4376,7 @@ function showTransactionDetails(t) {
 function openEditTransactionModal(t) {
     editingTransactionId = t.id;
 
-    document.getElementById('tx-input-amount').value = t.amount;
+    document.getElementById('tx-input-qty').value = t.amount;
     document.getElementById('tx-input-desc').value = t.note;
     hideRemarkSuggestions();
 
@@ -4805,6 +4899,17 @@ function toggleIncludeCashInBalance() {
     showToast(includeCashInBalance ? 'Cash Wallet included in balance' : 'Cash Wallet excluded from balance');
 }
 
+function toggleIncludeBalanceInIncome() {
+    const toggle = document.getElementById('acc-include-balance-in-income-toggle');
+    if (toggle) {
+        includeBalanceInIncome = toggle.checked;
+    } else {
+        includeBalanceInIncome = !includeBalanceInIncome;
+    }
+    saveToLocalStorage();
+    updateDashboard();
+}
+
 function saveProfileSecurity() {
     const newName = document.getElementById('profile-input-name').value.trim();
     const newEmail = document.getElementById('profile-input-email').value.trim();
@@ -4818,6 +4923,7 @@ function saveProfileSecurity() {
     userProfile.name = newName;
     userProfile.email = newEmail;
     userProfile.avatar = newAvatar;
+    touchProfileTimestamp();
 
     const nameDisplay = document.getElementById('profile-name-display');
     const emailDisplay = document.getElementById('profile-email-display');
@@ -7452,7 +7558,7 @@ let calcCurrentVal = '0';
 let calcResetOnNext = false;
 
 function openCalculatorSheet() {
-    const amt = document.getElementById('tx-input-amount').value;
+    const amt = document.getElementById('tx-input-qty').value;
     calcCurrentVal = amt && !isNaN(amt) ? String(amt) : '0';
     calcExpression = '';
     calcResetOnNext = false;
@@ -7544,7 +7650,7 @@ function safeEvaluate(str) {
 
 function confirmCalculatorValue() {
     if (calcCurrentVal !== 'Error') {
-        const amtInput = document.getElementById('tx-input-amount');
+        const amtInput = document.getElementById('tx-input-qty');
         if (amtInput) {
             amtInput.value = calcCurrentVal;
             amtInput.dispatchEvent(new Event('input'));
@@ -7673,7 +7779,7 @@ let currentFormContext = null;
 function snapshotFormState(formName) {
     const state = {};
     if (formName === 'transaction') {
-        const amountEl = document.getElementById('tx-input-amount');
+        const amountEl = document.getElementById('tx-input-qty');
         const descEl = document.getElementById('tx-input-desc');
         state.amount = amountEl ? amountEl.value : '';
         state.desc = descEl ? descEl.value : '';
