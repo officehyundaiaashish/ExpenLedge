@@ -5593,6 +5593,13 @@ function getTxAccountBadge(t) {
 }
 
 function bindLongPress(card, t) {
+    // Keep shaking active and update reference if list re-renders in background
+    if (selectedTransactionForOptions &&
+        (selectedTransactionForOptions.syncId === t.syncId || selectedTransactionForOptions.id === t.id)) {
+        card.classList.add('animate-shake');
+        activeShakingCard = card;
+    }
+
     let lastX = 0;
     let lastY = 0;
     let startTouchX = 0;
