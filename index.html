@@ -3915,16 +3915,36 @@
                 const container = document.getElementById('accent-integration-container');
                 if (container) {
                     container.innerHTML = html;
-                    // Execute script tags inside the imported HTML
+                    // Execute script tags inside the imported HTML.
+                    // Guard rails: this HTML is fetched async, *after* first paint, so anything it
+                    // injects must never re-load the Tailwind CDN or redefine tailwind.config —
+                    // doing so wipes the custom theme (colors/spacing/fontSize) mid-session and
+                    // makes the whole layout appear to "break" once the fetch resolves.
                     const scripts = container.querySelectorAll('script');
                     scripts.forEach(oldScript => {
-                        const newScript = document.createElement('script');
                         if (oldScript.src) {
+                            // Never re-inject a script that's already loaded on the page
+                            // (e.g. the Tailwind Play CDN) — re-executing it resets Tailwind's
+                            // runtime and regenerates every utility class from scratch.
+                            const alreadyLoaded = Array.from(document.scripts)
+                                .some(s => s.src && s.src === oldScript.src);
+                            const isTailwindCdn = /cdn\.tailwindcss\.com/i.test(oldScript.src);
+                            if (alreadyLoaded || isTailwindCdn) return;
+
+                            const newScript = document.createElement('script');
                             newScript.src = oldScript.src;
+                            document.body.appendChild(newScript);
                         } else {
+                            // Never allow injected inline scripts to reassign tailwind.config —
+                            // that would silently reset the whole design system.
+                            if (/tailwind\s*\.\s*config\s*=/.test(oldScript.textContent)) {
+                                console.warn('[accent.html] Blocked an inline script that tried to reassign tailwind.config.');
+                                return;
+                            }
+                            const newScript = document.createElement('script');
                             newScript.textContent = oldScript.textContent;
+                            document.body.appendChild(newScript);
                         }
-                        document.body.appendChild(newScript);
                     });
                 }
             })
