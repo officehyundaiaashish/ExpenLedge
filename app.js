@@ -3634,18 +3634,18 @@ function renderPaymentModesList() {
     userAccounts.forEach(acc => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = "w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50";
+        btn.className = "w-full flex items-center gap-3 px-3 py-2.5 bg-surface-container hover:bg-surface-container-high rounded-xl transition-all active:scale-[0.97] group border border-outline-variant/50";
         const icon = acc.type === 'bank' ? 'account_balance' : acc.type === 'card' ? 'credit_card' : 'payments';
         const colorClass = acc.type === 'bank' ? 'bg-tertiary/10 text-tertiary' : acc.type === 'card' ? 'bg-secondary-container/20 text-secondary' : 'bg-primary/10 text-primary';
 
         btn.onclick = () => selectPaymentMode(acc.name, icon);
         btn.innerHTML = `
-            <div class="w-12 h-12 rounded-full ${colorClass} flex items-center justify-center group-hover:scale-115 transition-transform">
-                <span class="material-symbols-outlined text-[28px]">${icon}</span>
+            <div class="w-9 h-9 rounded-full ${colorClass} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-[20px]">${icon}</span>
             </div>
             <div class="flex-grow text-left min-w-0">
-                <span class="block text-body-lg font-semibold text-on-background truncate">${acc.name}</span>
-                <span class="block text-label-md text-on-surface-variant truncate">${acc.holderName ? acc.holderName + '  ·  ' : ''}${acc.type === 'bank' ? 'Bank Account' : acc.type === 'card' ? 'Credit Card' : 'Cash'}</span>
+                <span class="block text-sm font-semibold text-on-background truncate">${acc.name}</span>
+                <span class="block text-[11px] text-on-surface-variant truncate">${acc.holderName ? acc.holderName + '  ·  ' : ''}${acc.type === 'bank' ? 'Bank Account' : acc.type === 'card' ? 'Credit Card' : 'Cash'}</span>
             </div>
         `;
         container.appendChild(btn);
