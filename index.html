@@ -141,6 +141,12 @@
             user-select: text;
         }
 
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             background-color: #f4f7f5;
             color: #1a1c18;
@@ -195,6 +201,36 @@
 
         .bottom-sheet-transition {
             transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .page-view {
+            display: none;
+            height: calc(100vh - 72px);
+            height: calc(100dvh - 72px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+            padding-bottom: 96px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .page-view::-webkit-scrollbar {
+            display: none;
+            width: 0px;
+            background: transparent;
+        }
+
+        .sticky {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0 !important;
+            z-index: 20;
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
@@ -906,7 +942,7 @@
         <!-- VIEW: STRUCTURED TRANSACTIONS -->
         <div class="page-view" id="view-structured-tx">
             <!-- Sticky Header for Structured Transactions -->
-            <div class="sticky top-0 z-20">
+            <div class="sticky top-0 bg-background z-20">
                 <!-- Green Section (Header + Period Nav + Totals) -->
                 <div class="bg-primary pb-4 px-4 pt-sm rounded-[24px] shadow-sm text-white relative overflow-hidden">
 
@@ -1285,7 +1321,7 @@
                     actual may vary.</p>
             </section>
             <!-- Summary Bento Card -->
-            <section class="dashboard-gradient-card bg-primary rounded-2xl p-4 relative shadow-lg">
+            <section class="dashboard-gradient-card bg-primary rounded-2xl p-4 relative shadow-lg space-y-4">
                 <!-- Glowing Orbs Container -->
                 <div class="dashboard-orb-container"></div>
                 <div class="relative z-10 grid grid-cols-2 gap-3">
@@ -1302,7 +1338,49 @@
                         <p class="text-lg font-bold text-white truncate" id="acc-card-header-balance">₹0.00</p>
                     </div>
                 </div>
+                <!-- Settings Options merged inside the Bento Card -->
+                <div class="relative z-10 border-t border-white/10 pt-3 flex flex-col gap-3">
+                    <!-- Include Cash in Balance -->
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="material-symbols-outlined text-white/80 text-[20px]"
+                                style="font-variation-settings: 'FILL' 1;">payments</span>
+                            <div class="min-w-0">
+                                <div class="text-[12px] font-bold text-white truncate">Include Cash in Balance</div>
+                                <div class="text-[10px] text-white/70 truncate" id="acc-include-cash-subtext">Cash
+                                    wallet is included in totals</div>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input class="sr-only peer" id="acc-include-cash-toggle"
+                                onchange="toggleIncludeCashInBalance()" type="checkbox" />
+                            <div
+                                class="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40">
+                            </div>
+                        </label>
+                    </div>
+                    <!-- Include Balance in Income -->
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="material-symbols-outlined text-white/80 text-[20px]"
+                                style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+                            <div class="min-w-0">
+                                <div class="text-[12px] font-bold text-white truncate">Include Balance in Income</div>
+                                <div class="text-[10px] text-white/70 truncate">Add available balance to dashboard
+                                    income</div>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input class="sr-only peer" id="acc-include-balance-in-income-toggle"
+                                onchange="toggleIncludeBalanceInIncome()" type="checkbox" />
+                            <div
+                                class="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/40">
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </section>
+
             <!-- Dynamic accounts list container -->
             <div class="flex flex-col gap-lg">
                 <!-- Will be populated dynamically by JS -->
@@ -1434,62 +1512,54 @@
                         onclick="openProfileSecuritySheet()">edit</button>
                 </div>
             </section>
-            <!-- Settings list -->
-            <section class="space-y-sm">
-                <h3
-                    class="font-label-lg text-label-lg text-on-surface-variant px-sm uppercase tracking-widest opacity-60">
-                    Account &amp; Security</h3>
-                <div
-                    class="bg-surface-container rounded-xl overflow-hidden divide-y divide-outline-variant/20 shadow-sm border border-outline-variant/10">
-                    <div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer"
-                        onclick="openProfileSecuritySheet()">
-                        <div class="flex items-center gap-md">
-                            <span class="material-symbols-outlined text-primary">security</span>
-                            <span class="font-body-lg text-body-lg">Profile &amp; Security</span>
-                        </div>
-                        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+            <!-- Settings Grid -->
+            <section class="grid grid-cols-2 gap-3 mt-4">
+                <!-- Profile & Security -->
+                <div class="bg-surface-container hover:bg-surface-container-high border border-outline-variant/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                    onclick="openProfileSecuritySheet()">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[24px]">security</span>
                     </div>
-                    <div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer"
-                        onclick="openManageCategoriesSheet()">
-                        <div class="flex items-center gap-md">
-                            <span class="material-symbols-outlined text-primary">category</span>
-                            <span class="font-body-lg text-body-lg">Manage Categories</span>
-                        </div>
-                        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
-                    </div>
-                    <div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer"
-                        onclick="switchView('budget')">
-                        <div class="flex items-center gap-md">
-                            <span class="material-symbols-outlined text-primary">target</span>
-                            <span class="font-body-lg text-body-lg">Budgets &amp; Goals</span>
-                        </div>
-                        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
-                    </div>
+                    <span class="font-bold text-body-md text-on-surface">Profile &amp; Security</span>
                 </div>
-            </section>
-            <!-- Data & sync -->
-            <section class="space-y-sm">
-                <h3
-                    class="font-label-lg text-label-lg text-on-surface-variant px-sm uppercase tracking-widest opacity-60">
-                    Data Management</h3>
-                <div
-                    class="bg-surface-container rounded-xl overflow-hidden divide-y divide-outline-variant/20 shadow-sm border border-outline-variant/10">
-                    <div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer"
-                        onclick="openExportDataSheet()">
-                        <div class="flex items-center gap-md">
-                            <span class="material-symbols-outlined text-tertiary">file_export</span>
-                            <span class="font-body-lg text-body-lg">Export & Import Transaction</span>
-                        </div>
-                        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                <!-- Manage Categories -->
+                <div class="bg-surface-container hover:bg-surface-container-high border border-outline-variant/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                    onclick="openManageCategoriesSheet()">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[24px]">category</span>
                     </div>
-                    <div class="flex items-center justify-between p-md hover:bg-surface-container-high transition-colors cursor-pointer"
-                        onclick="openBackupRestoreSheet()">
-                        <div class="flex items-center gap-md">
-                            <span class="material-symbols-outlined text-tertiary">cloud_sync</span>
-                            <span class="font-body-lg text-body-lg">Backup &amp; Restore</span>
-                        </div>
-                        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                    <span class="font-bold text-body-md text-on-surface">Manage Categories</span>
+                </div>
+                <!-- Budgets & Goals -->
+                <div class="bg-surface-container hover:bg-surface-container-high border border-outline-variant/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                    onclick="switchView('budget')">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[24px]">target</span>
                     </div>
+                    <span class="font-bold text-body-md text-on-surface">Budgets &amp; Goals</span>
+                </div>
+                <!-- Export & Import -->
+                <div class="bg-surface-container hover:bg-surface-container-high border border-outline-variant/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                    onclick="openExportDataSheet()">
+                    <div class="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary">
+                        <span class="material-symbols-outlined text-[24px]">file_export</span>
+                    </div>
+                    <span class="font-bold text-body-md text-on-surface">Export &amp; Import</span>
+                </div>
+                <!-- Backup & Restore -->
+                <div class="col-span-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/10 rounded-2xl p-4 flex items-center justify-between gap-4 transition-all active:scale-[0.99] cursor-pointer"
+                    onclick="openBackupRestoreSheet()">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary">
+                            <span class="material-symbols-outlined text-[24px]">cloud_sync</span>
+                        </div>
+                        <div class="text-left">
+                            <div class="font-bold text-body-md text-on-surface">Backup &amp; Restore</div>
+                            <div class="text-[11px] text-on-surface-variant">Cloud sync and recovery options</div>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
                 </div>
             </section>
             <!-- Log out button -->
@@ -1517,7 +1587,8 @@
                 class="flex flex-col items-center justify-center text-on-surface-variant opacity-70 hover:opacity-100 transition-all"
                 id="nav-btn-analysis" onclick="switchView('analysis')">
                 <span class="material-symbols-outlined">bar_chart</span>
-                <span class="text-label-md font-label-md">Analysis</span>
+                <span class="text-label-md font-label-md">Insights</span>
+
             </button>
             <!-- Central FAB Add -->
             <div class="relative -top-5">
