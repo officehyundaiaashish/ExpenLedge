@@ -752,6 +752,14 @@
                     </button>
                 </div>
 
+                <!-- Hidden search elements required by app.js -->
+                <div class="hidden" id="search-container">
+                    <input id="search-input" oninput="filterTransactions()" type="text"
+                        name="expenledge_dashboard_search" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" />
+                </div>
+
                 <!-- Net Amount -->
                 <div>
                     <p class="text-[44px] font-bold text-white leading-none tracking-tight truncate" id="stat-balance">₹0.00</p>
@@ -1759,13 +1767,4 @@
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
-            <h2 class="text-headline-md font-headline-md text-on-background">Select Payment Mode</h2>
-            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
-                onclick="closePaymentSheet()">
-                <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
-        </div>
-        <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-sm">
-            <!-- Cash -->
-            <button
-        
+            <h2
