@@ -3,11 +3,27 @@ let transactions = [];
 let userProfile = {
     name: "",
     email: "",
-    avatar: "bg-blue-500",
+    avatar: "avatar-plant",
     biometricLock: false
 };
 
+const SVGA_AVATARS = {
+    'avatar-plant': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#e8f5e9"/><path d="M50 22 C35 42, 45 75, 50 75 C55 75, 65 42, 50 22 Z" fill="#4caf50"/><path d="M50 32 C40 48, 48 70, 50 70 C52 70, 60 48, 50 32 Z" fill="#81c784"/><line x1="50" y1="22" x2="50" y2="75" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/></svg>`,
+    'avatar-coffee': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#efebe9"/><path d="M30 42 H70 L65 72 C64 78, 36 78, 35 72 Z" fill="#8d6e63"/><path d="M70 48 H78 C82 48, 82 58, 78 58 H70 Z" fill="none" stroke="#8d6e63" stroke-width="5" stroke-linecap="round"/><path d="M30 42 Q50 46 70 42 Z" fill="#5d4037"/><path d="M42 22 Q45 28 42 34" fill="none" stroke="#bcaaa4" stroke-width="3" stroke-linecap="round"/><path d="M50 18 Q53 25 50 32" fill="none" stroke="#bcaaa4" stroke-width="3" stroke-linecap="round"/><path d="M58 22 Q61 28 58 34" fill="none" stroke="#bcaaa4" stroke-width="3" stroke-linecap="round"/></svg>`,
+    'avatar-globe': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#e3f2fd"/><circle cx="50" cy="50" r="26" fill="none" stroke="#2196f3" stroke-width="3"/><ellipse cx="50" cy="50" rx="14" ry="26" fill="none" stroke="#2196f3" stroke-width="2.5"/><ellipse cx="50" cy="50" rx="6" ry="26" fill="none" stroke="#2196f3" stroke-width="2.5"/><line x1="24" y1="50" x2="76" y2="50" stroke="#2196f3" stroke-width="3"/><line x1="27" y1="37" x2="73" y2="37" stroke="#2196f3" stroke-width="2"/><line x1="27" y1="63" x2="73" y2="63" stroke="#2196f3" stroke-width="2"/></svg>`,
+    'avatar-lightbulb': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#fffde7"/><path d="M50 24 C36 24, 34 42, 42 52 C46 58, 44 68, 44 70 H56 C56 68, 54 58, 58 52 C66 42, 64 24, 50 24 Z" fill="#ffd54f"/><rect x="44" y="70" width="12" height="4" rx="2" fill="#b0bec5"/><rect x="42" y="74" width="16" height="4" rx="2" fill="#90a4ae"/><circle cx="50" cy="80" r="3" fill="#78909c"/></svg>`,
+    'avatar-wallet': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#f3e5f5"/><rect x="26" y="36" width="48" height="34" rx="6" fill="#ab47bc"/><path d="M44 36 H70 V48 H44 C38 48, 38 36, 44 36 Z" fill="#8e24aa"/><circle cx="50" cy="42" r="3" fill="#ffd700"/><circle cx="36" cy="30" r="5" fill="#ffb300"/><circle cx="64" cy="28" r="4" fill="#ffb300"/></svg>`,
+    'avatar-geometric-stars': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#e8eaf6"/><circle cx="50" cy="50" r="28" fill="#c5cae9"/><path d="M50 32 L53 45 L66 45 L56 53 L60 66 L50 58 L40 66 L44 53 L34 45 L47 45 Z" fill="#3f51b5"/></svg>`,
+    'avatar-landscape': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#e0f2f1"/><circle cx="50" cy="32" r="10" fill="#ff7043"/><path d="M15 75 L38 42 L62 75 Z" fill="#00897b"/><path d="M42 75 L62 50 L85 75 Z" fill="#004d40"/><rect x="0" y="74" width="100" height="26" fill="#00695c"/></svg>`,
+    'avatar-rocket': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#ede7f6"/><path d="M50 20 C42 35, 42 60, 42 70 H58 C58 60, 58 35, 50 20 Z" fill="#5e35b1"/><path d="M42 60 C32 66, 32 74, 30 76 C32 76, 40 76, 42 70 Z" fill="#7e57c2"/><path d="M58 60 C68 66, 68 74, 70 76 C68 76, 60 76, 58 70 Z" fill="#7e57c2"/><circle cx="50" cy="44" r="5" fill="#ffffff"/><path d="M46 76 Q50 86 54 76 Z" fill="#ff7043"/></svg>`,
+    'avatar-headphones': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#fce4ec"/><path d="M26 50 C26 30, 74 30, 74 50" fill="none" stroke="#d81b60" stroke-width="6" stroke-linecap="round"/><rect x="22" y="46" width="10" height="18" rx="4" fill="#d81b60"/><rect x="68" y="46" width="10" height="18" rx="4" fill="#d81b60"/><rect x="20" y="50" width="4" height="10" rx="2" fill="#ad1457"/><rect x="76" y="50" width="4" height="10" rx="2" fill="#ad1457"/></svg>`,
+    'avatar-book': `<svg viewBox="0 0 100 100" class="w-full h-full"><rect width="100" height="100" rx="50" fill="#eceff1"/><path d="M18 64 C25 60, 45 60, 50 64 C55 60, 75 60, 82 64 V38 C75 34, 55 34, 50 38 C45 34, 25 34, 18 38 Z" fill="#546e7a"/><path d="M50 38 V64" stroke="#37474f" stroke-width="2"/><path d="M22 43 C30 40, 45 40, 46 41 V61 C45 60, 30 60, 22 61 Z" fill="#78909c"/><path d="M78 43 C70 40, 55 40, 54 41 V61 C55 60, 70 60, 78 61 Z" fill="#78909c"/></svg>`
+};
+
 function getAvatarHtml(name, colorClass) {
+    if (colorClass && SVGA_AVATARS[colorClass]) {
+        return SVGA_AVATARS[colorClass];
+    }
     const firstLetter = name ? name.trim().charAt(0).toUpperCase() : 'U';
     const bgClass = colorClass || 'bg-blue-500';
     return `<div class="w-full h-full rounded-full ${bgClass} text-white flex items-center justify-center font-bold text-lg uppercase select-none">${firstLetter}</div>`;
@@ -113,6 +129,7 @@ let selectedTags = [];
 let allAvailableTags = [];
 let includeCashInBalance = true;
 let includeBalanceInIncome = false;
+let realtimeSyncEnabled = true;
 const CATEGORY_ORDER_PRESET_VERSION = '2';
 
 // Demo tags from older releases are removed the next time saved data is loaded.
@@ -600,6 +617,7 @@ function saveToLocalStorage() {
         localStorage.setItem('expenledge_all_tags', JSON.stringify(allAvailableTags));
         localStorage.setItem('expenledge_include_cash', includeCashInBalance.toString());
         localStorage.setItem('expenledge_include_balance_in_income', includeBalanceInIncome.toString());
+        localStorage.setItem('expenledge_realtime_sync', realtimeSyncEnabled.toString());
         localStorage.removeItem('expenledge_dashboard_filter');
         localStorage.setItem('expenledge_auto_backup_enabled', autoBackupEnabled.toString());
         localStorage.setItem('expenledge_last_backup_at', lastBackupAt || '');
@@ -615,7 +633,7 @@ function saveToLocalStorage() {
 }
 
 function shouldQueueSupabaseSync() {
-    return !!supabaseClient && supabaseIntegration.connected && !supabaseIntegration.booting && !supabaseIntegration.applyingRemote;
+    return !!supabaseClient && supabaseIntegration.connected && !supabaseIntegration.booting && !supabaseIntegration.applyingRemote && realtimeSyncEnabled;
 }
 
 function getSupabaseVersionTable() {
@@ -790,6 +808,9 @@ function loadFromLocalStorage() {
 
         const savedIncludeBalance = localStorage.getItem('expenledge_include_balance_in_income');
         if (savedIncludeBalance !== null) includeBalanceInIncome = savedIncludeBalance === 'true';
+
+        const savedRealtimeSync = localStorage.getItem('expenledge_realtime_sync');
+        if (savedRealtimeSync !== null) realtimeSyncEnabled = savedRealtimeSync === 'true';
 
         const savedAutoBackup = localStorage.getItem('expenledge_auto_backup_enabled');
         if (savedAutoBackup) autoBackupEnabled = savedAutoBackup === 'true';
@@ -1321,6 +1342,23 @@ function applySupabasePayloadToApp(payload, options = {}) {
     return true;
 }
 function refreshAppUiFromState() {
+    // Re-apply synced accent theme to document styles
+    try {
+        const savedTheme = localStorage.getItem('expenledge_accent_theme');
+        if (savedTheme) {
+            const theme = JSON.parse(savedTheme);
+            document.documentElement.style.setProperty('--primary', theme.primary);
+            document.documentElement.style.setProperty('--primary-rgb', theme.primaryRgb);
+            if (theme.gradient) {
+                document.documentElement.style.setProperty('--primary-gradient', theme.gradient);
+            } else {
+                document.documentElement.style.setProperty('--primary-gradient', theme.primary);
+            }
+        }
+    } catch (e) {
+        console.error("Failed to re-apply synced accent theme:", e);
+    }
+
     suppressBrowserAutofill();
     syncCategoryLayoutUI();
     syncManageCategoryLayoutUI();
@@ -1447,6 +1485,10 @@ async function syncSupabaseNow(options) {
         setSupabaseStatus('Supabase is not connected', false, true);
         showToast('Connect Supabase first');
         return false;
+    }
+
+    if (manual) {
+        showToast("Syncing started...");
     }
 
     // Call the internal implementation
@@ -1721,6 +1763,24 @@ async function connectSupabaseFromSheet() {
             }
         });
 
+        if (!isManual) {
+            // Auto-init on app launch: Connect client but skip downloading and merging remote snapshot
+            subscribeSupabaseRealtime();
+            supabaseIntegration.connected = true;
+            supabaseIntegration.pendingSync = false;
+            supabaseIntegration.lastError = '';
+            setSupabaseStatus('Connected', true, false);
+
+            const connectedStatus = document.getElementById('supabase-connected-status');
+            const credentialsInputs = document.getElementById('supabase-credentials-inputs');
+            if (connectedStatus) connectedStatus.classList.remove('hidden');
+            if (credentialsInputs) credentialsInputs.classList.add('hidden');
+
+            supabaseIntegration.connecting = false;
+            return;
+        }
+
+        // Manual Connect: Download, merge and perform initial sync
         setSupabaseStatus('Connecting…', false, false);
         const latest = await pullSupabaseSnapshot();
         const localStorageSnapshot = getSupabaseStorageSnapshot();
@@ -1745,9 +1805,8 @@ async function connectSupabaseFromSheet() {
         if (connectedStatus) connectedStatus.classList.remove('hidden');
         if (credentialsInputs) credentialsInputs.classList.add('hidden');
 
-        await syncSupabaseNow();
-
-        if (isManual) showToast('Connected to Supabase ✔');
+        await syncSupabaseNow({ manual: true });
+        showToast('Connected to Supabase ✔');
 
     } catch (error) {
         supabaseIntegration.connected = false;
@@ -1887,6 +1946,10 @@ window.addEventListener('DOMContentLoaded', () => {
     const accCashToggle = document.getElementById('acc-include-cash-toggle');
     if (accCashToggle) accCashToggle.checked = includeCashInBalance;
 
+    // Initialize Real-time sync toggle
+    const realtimeToggle = document.getElementById('settings-realtime-sync-toggle');
+    if (realtimeToggle) realtimeToggle.checked = realtimeSyncEnabled;
+
     // Block Google Payments overlay: add autocomplete=off to all number/text inputs
     document.querySelectorAll('input[type="number"], input[type="text"], input[type="email"]').forEach(el => {
         if (!el.hasAttribute('autocomplete')) el.setAttribute('autocomplete', 'off');
@@ -1901,61 +1964,42 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 function initAvatars() {
-    const colors = [
-        'bg-red-500', 'bg-pink-500', 'bg-purple-500', 'bg-indigo-500', 'bg-blue-500',
-        'bg-sky-500', 'bg-cyan-500', 'bg-teal-500', 'bg-green-500', 'bg-orange-500'
-    ];
+    const avatarKeys = Object.keys(SVGA_AVATARS);
     const onboardGrid = document.getElementById('onboard-avatar-grid');
     if (onboardGrid) {
         onboardGrid.innerHTML = '';
-        colors.forEach((col, index) => {
+        avatarKeys.forEach((key, index) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            const isDefault = index === 0;
-            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border ${isDefault ? 'border-2 border-primary scale-110' : 'border-transparent scale-90'}`;
-            btn.onclick = () => selectOnboardAvatar(col, btn);
-            btn.innerHTML = `<div class="w-full h-full rounded-full ${col} text-white flex items-center justify-center font-bold text-sm uppercase">U</div>`;
+            const isDefault = key === 'avatar-plant';
+            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border ${isDefault ? 'border-2 border-primary scale-110' : 'border-transparent scale-90'}`;
+            btn.onclick = () => selectOnboardAvatar(key, btn);
+            btn.innerHTML = `<div class="w-full h-full rounded-full overflow-hidden">${SVGA_AVATARS[key]}</div>`;
             onboardGrid.appendChild(btn);
         });
-        const nameInput = document.getElementById('onboard-name');
-        if (nameInput) {
-            nameInput.addEventListener('input', () => {
-                const val = nameInput.value.trim().charAt(0).toUpperCase() || 'U';
-                const circles = document.querySelectorAll('#onboard-avatar-grid button div');
-                circles.forEach(c => c.innerText = val);
-            });
-        }
     }
     const profileGrid = document.getElementById('profile-avatar-grid');
     if (profileGrid) {
         profileGrid.innerHTML = '';
-        colors.forEach((col, index) => {
+        avatarKeys.forEach((key) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90`;
-            btn.onclick = () => selectProfileAvatar(col, btn);
-            const initial = userProfile.name ? userProfile.name.trim().charAt(0).toUpperCase() : 'U';
-            btn.innerHTML = `<div class="w-full h-full rounded-full ${col} text-white flex items-center justify-center font-bold text-sm uppercase">${initial}</div>`;
+            const isCurrent = key === (userProfile.avatar || 'avatar-plant');
+            btn.className = `w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border ${isCurrent ? 'border-2 border-primary scale-110' : 'border-transparent scale-90'}`;
+            btn.onclick = () => selectProfileAvatar(key, btn);
+            btn.innerHTML = `<div class="w-full h-full rounded-full overflow-hidden">${SVGA_AVATARS[key]}</div>`;
             profileGrid.appendChild(btn);
         });
-        const profNameInput = document.getElementById('profile-input-name');
-        if (profNameInput) {
-            profNameInput.addEventListener('input', () => {
-                const val = profNameInput.value.trim().charAt(0).toUpperCase() || 'U';
-                const circles = document.querySelectorAll('#profile-avatar-grid button div');
-                circles.forEach(c => c.innerText = val);
-            });
-        }
     }
 }
 
-function selectOnboardAvatar(col, btn) {
-    document.getElementById('onboard-selected-avatar').value = col;
+function selectOnboardAvatar(key, btn) {
+    document.getElementById('onboard-selected-avatar').value = key;
     const buttons = document.querySelectorAll('#onboard-avatar-grid button');
     buttons.forEach(b => {
-        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
+        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
     });
-    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
+    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
 }
 
 function submitOnboarding(event) {
@@ -2001,6 +2045,7 @@ function submitOnboarding(event) {
 
 // View router
 function switchView(viewId, isBackNavigation = false) {
+    selectedTransactionForOptions = null; // Reset transaction options selection on view switch
     document.querySelectorAll('.page-view').forEach(view => {
         view.classList.remove('active');
     });
@@ -3408,6 +3453,89 @@ function filterTransactions() {
 }
 
 // Add Transaction Modal controls
+function openScheduledTransactionsSheet() {
+    renderScheduledTransactions();
+    document.getElementById('sheet-scheduled-transactions').classList.remove('translate-y-full');
+    showBackdrop();
+}
+
+function closeScheduledTransactionsSheet() {
+    document.getElementById('sheet-scheduled-transactions').classList.add('translate-y-full');
+    checkBackdropNeeded();
+}
+
+function renderScheduledTransactions() {
+    const container = document.getElementById('scheduled-tx-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (scheduledTransactions.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-on-surface-variant/60">
+                <span class="material-symbols-outlined text-[48px] block mb-2 opacity-40">schedule</span>
+                <p class="text-body-md font-semibold">No scheduled transactions</p>
+                <p class="text-label-md">Tap the button above to schedule one.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort by execution time
+    const sorted = [...scheduledTransactions].sort((a, b) => a.scheduledTime - b.scheduledTime);
+
+    sorted.forEach(item => {
+        const t = item.transaction;
+        if (!t) return;
+        const isInc = t.type === 'income';
+        const itemEl = document.createElement('div');
+        itemEl.className = "p-md bg-surface-container-high border border-outline-variant/30 rounded-xl flex items-center gap-md hover:bg-surface-container-highest transition-all relative";
+
+        let colorClass = "text-secondary bg-secondary-container/20";
+        if (isInc) colorClass = "text-primary bg-primary-container/20";
+
+        const executionDate = new Date(item.scheduledTime);
+        const dateStr = executionDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        itemEl.innerHTML = `
+            <div class="w-12 h-12 rounded-full flex items-center justify-center ${colorClass} flex-shrink-0">
+                <span class="material-symbols-outlined">${t.categoryIcon || 'payments'}</span>
+            </div>
+            <div class="flex-grow pr-8 min-w-0">
+                <div class="flex justify-between items-baseline">
+                    <p class="text-body-lg font-bold text-on-surface truncate">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
+                </div>
+                <div class="flex justify-between items-center gap-sm">
+                    <p class="text-body-md text-on-surface-variant truncate">${t.note || t.category}</p>
+                </div>
+                <div class="flex items-center gap-xs mt-1 text-[11px] text-tertiary font-semibold">
+                    <span class="material-symbols-outlined text-[14px]">alarm</span>
+                    <span>Runs: ${dateStr}</span>
+                </div>
+            </div>
+            <button class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-error/10 hover:bg-error/20 flex items-center justify-center text-error transition-all"
+                onclick="deleteScheduledTransaction(${item.id})">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+        `;
+        container.appendChild(itemEl);
+    });
+}
+
+function deleteScheduledTransaction(id) {
+    scheduledTransactions = scheduledTransactions.filter(item => item.id !== id);
+    saveToLocalStorage();
+    renderScheduledTransactions();
+    showToast("Scheduled transaction deleted");
+}
+
+let isCreatingScheduledTransaction = false;
+function openCreateScheduledTransactionModal() {
+    isCreatingScheduledTransaction = true;
+    openAddTransactionModal();
+    const titleEl = document.querySelector('#modal-add-transaction h1');
+    if (titleEl) titleEl.innerText = "Schedule Transaction";
+}
+
 function openAddTransactionModal() {
     editingTransactionId = null;
 
@@ -4044,6 +4172,46 @@ function saveTransaction() {
     }
 
     let toastMessage = "Transaction saved successfully!";
+    if (isCreatingScheduledTransaction) {
+        if (selectedTxDateObj.getTime() <= Date.now()) {
+            showToast("Scheduled time must be in the future");
+            return;
+        }
+        const newScheduled = {
+            id: Date.now(),
+            scheduledTime: selectedTxDateObj.getTime(),
+            transaction: {
+                id: transactions.length + 1,
+                syncId: generateTransactionSyncId(),
+                amount: amtVal,
+                rawDate: selectedTxDateObj.toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                date: 'Today',
+                category: selectedCategory,
+                categoryIcon: selectedCategoryIcon,
+                note: descVal || selectedCategory,
+                type: selectedTxType,
+                paymentMode: selectedPaymentMode,
+                tags: [...selectedTags]
+            }
+        };
+        scheduledTransactions.push(newScheduled);
+        saveToLocalStorage();
+        showToast("Transaction scheduled successfully!");
+        isCreatingScheduledTransaction = false;
+        hideRemarkSuggestions();
+        currentFormContext = null;
+        closeAddTransactionModal();
+
+        // Refresh the scheduled list view if it's currently open
+        const sheet = document.getElementById('sheet-scheduled-transactions');
+        if (sheet && !sheet.classList.contains('translate-y-full')) {
+            renderScheduledTransactions();
+        }
+        return;
+    }
+
     if (editingTransactionId !== null) {
         const tx = transactions.find(x => x.id === editingTransactionId);
         if (tx) {
@@ -4324,9 +4492,9 @@ function showToast(msg) {
     const isSuccess = msg === "Transaction saved successfully!" || msg === "Transaction updated successfully!";
 
     if (isSuccess) {
-        // Show tick.svg for success - remove black background
+        // Show premium success ripple ring - remove black background
         toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-transparent backdrop-blur-none px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center';
-        toast.innerHTML = '<img src="tick.svg" alt="Success" class="w-12 h-12" />';
+        toast.innerHTML = `<div class="premium-success-ring"><div class="success-dot"></div><div class="success-pulse pulse-1"></div><div class="success-pulse pulse-2"></div></div>`;
     } else {
         // Show text for other messages - keep dark background
         toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center text-white';
@@ -4346,11 +4514,14 @@ function showTickAnimation() {
     const overlay = document.getElementById('tick-overlay');
     if (!overlay) return;
 
-    // Force SVG animation restart by reloading the image
-    const img = overlay.querySelector('img');
-    if (img) {
-        img.src = 'tick.svg?' + Date.now();
-    }
+    // Force animation reset by re-inserting elements
+    overlay.innerHTML = `
+        <div class="premium-success-ring scale-[1.5]">
+            <div class="success-dot"></div>
+            <div class="success-pulse pulse-1"></div>
+            <div class="success-pulse pulse-2"></div>
+        </div>
+    `;
 
     overlay.classList.remove('hidden', 'opacity-0');
     overlay.classList.add('opacity-100');
@@ -4830,13 +5001,13 @@ function importCSV(event) {
     event.target.value = '';
 }
 
-function selectProfileAvatar(url, btn) {
-    document.getElementById('profile-selected-avatar').value = url;
+function selectProfileAvatar(key, btn) {
+    document.getElementById('profile-selected-avatar').value = key;
     const buttons = document.querySelectorAll('#profile-avatar-grid button');
     buttons.forEach(b => {
-        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
+        b.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
     });
-    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
+    btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
 }
 
 function openProfileSecuritySheet() {
@@ -4849,16 +5020,17 @@ function openProfileSecuritySheet() {
     const cashToggle = document.getElementById('pref-include-cash-toggle');
     if (cashToggle) cashToggle.checked = includeCashInBalance;
 
-    const avatarVal = userProfile.avatar || 'bg-blue-500';
+    const avatarVal = userProfile.avatar || 'avatar-plant';
     document.getElementById('profile-selected-avatar').value = avatarVal;
 
     const buttons = document.querySelectorAll('#profile-avatar-grid button');
-    buttons.forEach(btn => {
-        const div = btn.querySelector('div');
-        if (div && div.classList.contains(avatarVal)) {
-            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
+    const avatarKeys = Object.keys(SVGA_AVATARS);
+    buttons.forEach((btn, index) => {
+        const key = avatarKeys[index];
+        if (key === avatarVal) {
+            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border-2 border-primary scale-110";
         } else {
-            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-1 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
+            btn.className = "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center p-0.5 bg-surface hover:bg-surface-container transition-all border border-transparent scale-90";
         }
     });
 
@@ -5593,8 +5765,10 @@ function getTxAccountBadge(t) {
 }
 
 function bindLongPress(card, t) {
-    // Keep shaking active and update reference if list re-renders in background
-    if (selectedTransactionForOptions &&
+    // Keep shaking active and update reference if list re-renders in background and menu is still open
+    const popup = document.getElementById('sheet-transaction-options');
+    const isMenuOpen = popup && !popup.classList.contains('opacity-0');
+    if (isMenuOpen && selectedTransactionForOptions &&
         (selectedTransactionForOptions.syncId === t.syncId || selectedTransactionForOptions.id === t.id)) {
         card.classList.add('animate-shake');
         activeShakingCard = card;
@@ -5725,6 +5899,7 @@ function closeTransactionOptionsSheetOnScroll() {
 }
 
 function closeTransactionOptionsSheet() {
+    longPressTriggered = false; // Reset long press trigger state
     if (activeShakingCard) {
         activeShakingCard.classList.remove('animate-shake');
         activeShakingCard = null;
@@ -5793,8 +5968,22 @@ function deleteSelectedTransaction() {
 
 function createScheduledTransaction() {
     if (!selectedTransactionForOptions) return;
+    const tx = selectedTransactionForOptions;
     closeTransactionOptionsSheet();
-    openScheduleTransactionSheet();
+
+    isCreatingScheduledTransaction = true;
+    openEditTransactionModal(tx);
+
+    // Override editing state so it creates a new schedule instead of modifying the transaction
+    editingTransactionId = null;
+
+    // Hide Delete Button in Schedule Mode
+    const deleteBtn = document.getElementById('header-delete-btn');
+    if (deleteBtn) deleteBtn.classList.add('hidden');
+
+    // Change title to reflect scheduling action
+    const titleEl = document.querySelector('#modal-add-transaction h1');
+    if (titleEl) titleEl.innerText = "Schedule Transaction";
 }
 
 let selectedDayVal = 1;
@@ -5857,6 +6046,28 @@ function populateWheel(elementId, items, defaultValue, callback) {
     }
 }
 
+function validateFutureTime() {
+    const now = new Date();
+    if (selectedYearVal === now.getFullYear() && selectedMonthVal === now.getMonth() && selectedDayVal === now.getDate()) {
+        let changed = false;
+        if (selectedHourVal < now.getHours()) {
+            selectedHourVal = now.getHours();
+            const hourContainer = document.getElementById('wheel-hour');
+            if (hourContainer) hourContainer.scrollTop = selectedHourVal * 40;
+            changed = true;
+        }
+        if (selectedHourVal === now.getHours() && selectedMinuteVal < now.getMinutes()) {
+            selectedMinuteVal = now.getMinutes();
+            const minuteContainer = document.getElementById('wheel-minute');
+            if (minuteContainer) minuteContainer.scrollTop = selectedMinuteVal * 40;
+            changed = true;
+        }
+        if (changed) {
+            showToast("Past times are not allowed for today");
+        }
+    }
+}
+
 function openScheduleTransactionSheet() {
     const now = new Date();
 
@@ -5872,11 +6083,14 @@ function openScheduleTransactionSheet() {
     selectedHourVal = now.getHours();
     selectedMinuteVal = now.getMinutes();
 
-    populateWheel('wheel-day', days, selectedDayVal, (val) => { selectedDayVal = val; });
-    populateWheel('wheel-month', monthNames, monthNames[selectedMonthVal], (val) => { selectedMonthVal = monthNames.indexOf(val); });
-    populateWheel('wheel-year', years, selectedYearVal, (val) => { selectedYearVal = val; });
-    populateWheel('wheel-hour', hours, selectedHourVal, (val) => { selectedHourVal = val; });
-    populateWheel('wheel-minute', minutes, selectedMinuteVal, (val) => { selectedMinuteVal = val; });
+    // Map month names to 3-letter abbreviations to fit the compact grid
+    const shortMonthNames = monthNames.map(m => m.slice(0, 3));
+
+    populateWheel('wheel-day', days, selectedDayVal, (val) => { selectedDayVal = val; validateFutureTime(); });
+    populateWheel('wheel-month', shortMonthNames, shortMonthNames[selectedMonthVal], (val) => { selectedMonthVal = shortMonthNames.indexOf(val); validateFutureTime(); });
+    populateWheel('wheel-year', years, selectedYearVal, (val) => { selectedYearVal = val; validateFutureTime(); });
+    populateWheel('wheel-hour', hours, selectedHourVal, (val) => { selectedHourVal = val; validateFutureTime(); });
+    populateWheel('wheel-minute', minutes, selectedMinuteVal, (val) => { selectedMinuteVal = val; validateFutureTime(); });
 
     closeTransactionOptionsSheet();
 
@@ -5886,11 +6100,8 @@ function openScheduleTransactionSheet() {
 
 function closeScheduleTransactionSheet(saved = false) {
     document.getElementById('sheet-schedule-transaction').classList.add('translate-y-full');
-    if (!saved && selectedTransactionForOptions) {
-        openTransactionOptionsSheet(selectedTransactionForOptions);
-    } else {
-        checkBackdropNeeded();
-    }
+    selectedTransactionForOptions = null; // Clean up transaction reference and stop card shaking
+    checkBackdropNeeded(); // Completely dismiss backdrop overlay
 }
 
 function confirmScheduleTransaction() {
@@ -5927,33 +6138,61 @@ function confirmScheduleTransaction() {
     saveToLocalStorage();
     showToast("Transaction scheduled successfully!");
     closeScheduleTransactionSheet(true);
+    // Refresh the scheduled list view if it's currently open
+    const sheet = document.getElementById('sheet-scheduled-transactions');
+    if (sheet && !sheet.classList.contains('translate-y-full')) {
+        renderScheduledTransactions();
+    }
 }
 
 function checkScheduledTransactions() {
     const now = new Date().getTime();
     let executedAny = false;
+    const executedIds = [];
 
-    scheduledTransactions = scheduledTransactions.filter(item => {
+    // 1. Process due transactions and add them to the main transactions list
+    scheduledTransactions.forEach(item => {
         if (item.scheduledTime <= now) {
-            transactions.unshift({
+            const execDate = new Date(item.scheduledTime);
+            const newTx = {
                 ...item.transaction,
+                id: transactions.length + 1, // Generate fresh ID to prevent conflicts
+                rawDate: execDate.toISOString(),
+                date: getRelativeDateString(execDate),
                 syncId: item.transaction.syncId || generateTransactionSyncId(),
                 updatedAt: new Date().toISOString(),
                 createdAt: item.transaction.createdAt || new Date().toISOString()
-            });
-            showToast(`Auto-Executed Scheduled: ${item.transaction.category} (₹${item.transaction.amount})`);
+            };
+
+            transactions.unshift(newTx);
+            executedIds.push(item.id);
             executedAny = true;
-            return false;
+            showToast(`Auto-Executed Scheduled: ${item.transaction.category} (₹${item.transaction.amount})`);
         }
-        return true;
     });
 
     if (executedAny) {
-        saveToLocalStorage();
-        updateDashboard();
-        updateAnalysis();
-        updateAccounts();
-        updateBudget();
+        try {
+            // 2. Persist the main transactions database first
+            localStorage.setItem('expenledge_transactions', JSON.stringify(transactions));
+
+            // 3. Remove executed transactions from the scheduled list ONLY after successful database write
+            scheduledTransactions = scheduledTransactions.filter(item => !executedIds.includes(item.id));
+
+            // 4. Save the updated schedule list and update all views
+            saveToLocalStorage();
+            syncAllViews(); // Synchronize and refresh all UI lists and charts
+
+            // Refresh scheduled list if currently visible
+            const sheet = document.getElementById('sheet-scheduled-transactions');
+            if (sheet && !sheet.classList.contains('translate-y-full')) {
+                renderScheduledTransactions();
+            }
+        } catch (e) {
+            console.error("Failed to persist auto-executed scheduled transactions. Rolling back changes.", e);
+            // Rollback local array changes if persistence failed to prevent desync
+            executedIds.forEach(() => transactions.shift());
+        }
     }
 }
 
@@ -7122,6 +7361,14 @@ function setPickerTab(tab) {
 }
 
 function changePickerMonth(dir) {
+    if (isCreatingScheduledTransaction) {
+        const today = new Date();
+        const target = new Date(pickerSelectedDate.getFullYear(), pickerSelectedDate.getMonth() + dir, 1);
+        if (target.getFullYear() < today.getFullYear() || (target.getFullYear() === today.getFullYear() && target.getMonth() < today.getMonth())) {
+            showToast("Cannot select a past month");
+            return;
+        }
+    }
     // Start at day 1 before changing months so Jan 29-31 never skips February.
     const originalDay = pickerSelectedDate.getDate();
     pickerSelectedDate.setDate(1);
@@ -7191,7 +7438,7 @@ function openPickerYearSelector() {
         yearList = [...txYears].sort((a, b) => b - a);
         if (yearList.length === 0) yearList = [new Date().getFullYear()];
     } else {
-        const minY = 2000;
+        const minY = isCreatingScheduledTransaction ? new Date().getFullYear() : 2000;
         const maxY = new Date().getFullYear() + 5;
         for (let y = maxY; y >= minY; y--) yearList.push(y);
     }
@@ -7277,7 +7524,10 @@ function renderPickerCalendar() {
 
     // Current Month's days
     const today = new Date();
+    const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     for (let d = 1; d <= totalDays; d++) {
+        const cellDate = new Date(year, month, d);
+        const isPast = isCreatingScheduledTransaction && (cellDate < todayZero);
         const cell = document.createElement('div');
         const isSelected = d === pickerSelectedDate.getDate() &&
             month === pickerSelectedDate.getMonth() &&
@@ -7286,7 +7536,10 @@ function renderPickerCalendar() {
             month === today.getMonth() &&
             year === today.getFullYear();
 
-        if (isSelected) {
+        if (isPast) {
+            cell.className = "text-sm text-on-surface-variant/30 py-1.5 cursor-not-allowed pointer-events-none";
+            cell.innerText = d;
+        } else if (isSelected) {
             cell.className = "relative flex justify-center items-center py-1 cursor-pointer";
             cell.innerHTML = `<span class="absolute w-8 h-8 bg-primary rounded-full shadow-sm"></span><span class="relative text-sm font-bold text-on-primary">${d}</span>`;
         } else if (isToday) {
@@ -7510,6 +7763,10 @@ function confirmDateTimePickerSelection() {
         if (ampm === 'AM' && hr === 12) hr = 0;
 
         pickerSelectedDate.setHours(hr, min, 0, 0);
+        if (isCreatingScheduledTransaction && pickerSelectedDate.getTime() <= Date.now()) {
+            showToast("Scheduled time must be in the future");
+            return;
+        }
         selectedTxDateObj = new Date(pickerSelectedDate);
         updateTxDatePickerLabel();
 
@@ -7927,3 +8184,10 @@ function unsavedDialogSave() {
     // Successful save handlers clear the context before closing their sheet.
     currentFormContext.saveFn();
 }
+
+function toggleRealTimeSync(enabled) {
+    realtimeSyncEnabled = enabled;
+    saveToLocalStorage();
+    showToast(realtimeSyncEnabled ? "Real-time sync enabled" : "Real-time sync disabled");
+}
+window.toggleRealTimeSync = toggleRealTimeSync;
