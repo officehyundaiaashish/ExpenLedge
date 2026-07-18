@@ -7802,36 +7802,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Auto-prefill transaction details based on past description
-    const descInput = document.getElementById('tx-input-desc');
-    if (descInput) {
-        const handlePrefill = () => {
-            const val = descInput.value.trim().toLowerCase();
-            if (!val || !transactions) return;
-
-            // Find most recent transaction with this description (case insensitive)
-            const match = transactions.slice().reverse().find(t => {
-                const descStr = t.description || t.note || "";
-                return descStr.trim().toLowerCase() === val;
-            });
-
-            if (match) {
-                selectedCategory = match.category;
-                selectedCategoryIcon = match.categoryIcon || 'payments';
-
-                selectedPaymentMode = match.paymentMode;
-                if (match.paymentMode === 'Bank/UPI') selectedPaymentIcon = 'account_balance';
-                else if (match.paymentMode === 'Credit Card') selectedPaymentIcon = 'credit_card';
-                else selectedPaymentIcon = 'account_balance_wallet';
-
-                selectedTags = [...(match.tags || [])];
-
-                syncAddTransactionUI();
-            }
-        };
-        descInput.addEventListener('blur', handlePrefill);
-        descInput.addEventListener('change', handlePrefill);
-    }
+    // Note: auto-prefill of category/payment from description is intentionally disabled.
 
     setTimeout(() => {
         const fromVal = document.getElementById('analysis-custom-from');
