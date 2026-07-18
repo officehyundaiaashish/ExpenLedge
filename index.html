@@ -1317,8 +1317,7 @@
                 id="analysis-budget-card">
                 <div class="flex justify-between items-center">
                     <div class="cursor-pointer flex-1" onclick="switchView('budget')">
-                        <h3 class="text-headline-md font-headline-md text-on-background"
-                            id="analysis-budget-card-title">Monthly
+                        <h3 class="text-sm font-bold text-on-surface" id="analysis-budget-card-title">Monthly
                             budget</h3>
                         <p class="text-body-md text-on-surface-variant" id="analysis-budget-widget-remaining">Remaining:
                             ₹0.00
@@ -1803,11 +1802,10 @@
     <!-- BOTTOM SHEET: CATEGORY TRANSACTIONS (Analysis view) -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-cat-transactions">
-        <div class="w-full flex justify-center pt-md pb-xs flex-shrink-0">
+        <div class="w-full flex justify-center pt-3 pb-1 flex-shrink-0">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
-        <div
-            class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant flex-shrink-0">
+        <div class="px-4 py-2 flex justify-between items-center flex-shrink-0">
             <div>
                 <h2 class="text-headline-md font-headline-md text-on-background" id="cat-tx-sheet-title">Category</h2>
                 <p class="text-label-md text-on-surface-variant" id="cat-tx-sheet-subtitle"></p>
@@ -1825,7 +1823,7 @@
     <div class="fixed bottom-0 left-0 right-0 z-[80] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[92vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-manage-categories">
         <!-- Drag handle -->
-        <div class="w-full flex justify-center pt-md pb-xs flex-shrink-0">
+        <div class="w-full flex justify-center pt-3 pb-1 flex-shrink-0">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <!-- Header -->
@@ -1995,12 +1993,12 @@
     <!-- BOTTOM SHEET: TAGS SELECTOR -->
     <div class="fixed bottom-0 left-0 right-0 z-[75] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-tags">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
-        <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
+        <div class="px-4 py-2 flex justify-between items-center">
             <h2 class="text-headline-md font-headline-md text-on-background">Manage Tags</h2>
-            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
+            <button class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center"
                 onclick="closeTagsSheet()">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
@@ -2029,7 +2027,7 @@
     <!-- BOTTOM SHEET: INCOME DETAILS -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-income-details">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2075,7 +2073,7 @@
     <!-- BOTTOM SHEET: SPENDING DETAILS -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-spending-details">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2121,7 +2119,7 @@
     <!-- BOTTOM SHEET: ADVANCED SEARCH / FILTER -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-advanced-search">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2234,7 +2232,7 @@
     <!-- BOTTOM SHEET: SELECT CSV EXPORT RANGE -->
     <div class="fixed bottom-0 left-0 right-0 z-[65] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-export-range">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2327,7 +2325,7 @@
     <!-- BOTTOM SHEET: ADD CATEGORY -->
     <div class="fixed bottom-0 left-0 right-0 z-[65] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-add-category">
-        <div class="w-full flex justify-center pt-md pb-xs flex-shrink-0">
+        <div class="w-full flex justify-center pt-3 pb-1 flex-shrink-0">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div
@@ -2380,7 +2378,7 @@
     <!-- BOTTOM SHEET: LOGOUT CONFIRMATION WITH TEXT VERIFICATION -->
     <div class="fixed bottom-0 left-0 right-0 z-[65] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-logout-confirm">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2414,7 +2412,7 @@
     <!-- BOTTOM SHEET: PROFILE & SECURITY -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-profile-security">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2495,7 +2493,7 @@
     <!-- BOTTOM SHEET: EXPORT DATA -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-export-data">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2545,7 +2543,7 @@
     <!-- BOTTOM SHEET: BACKUP & RESTORE -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-backup-restore">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2610,7 +2608,7 @@
     <!-- BOTTOM SHEET: SUPABASE SYNC -->
     <div class="fixed bottom-0 left-0 right-0 z-[65] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-supabase-sync">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2703,7 +2701,7 @@
     <!-- BOTTOM SHEET: EDIT BUDGETS -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-edit-budget">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -2823,7 +2821,7 @@
     <!-- BOTTOM SHEET: EDIT / ADD ACCOUNT -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-edit-account">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -3024,7 +3022,7 @@
     <!-- BOTTOM SHEET: SCHEDULE TRANSACTION -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-schedule-transaction">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -3136,7 +3134,7 @@
     <!-- BOTTOM SHEET: CONFIRM ACTION -->
     <div class="fixed bottom-0 left-0 right-0 z-[80] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-confirm-action">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
@@ -3332,7 +3330,7 @@
     <!-- BOTTOM SHEET: NET BALANCE DETAILS -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-net-balances">
-        <div class="w-full flex justify-center pt-md pb-xs">
+        <div class="w-full flex justify-center pt-3 pb-1">
             <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
         </div>
         <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
