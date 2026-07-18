@@ -2384,7 +2384,8 @@ function renderStructuredTx(loadMore = false) {
 
     for (const groupName in groups) {
         const groupCard = document.createElement('div');
-        groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm";
+        groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 border-t-2 border-t-primary space-y-md shadow-sm";
+
 
         const safeId = groupName.replace(/[^a-zA-Z0-9]/g, '-');
 
@@ -6214,7 +6215,7 @@ function updateAllTransactionsView(loadMore = false) {
         .sort((a, b) => b[1].date.getTime() - a[1].date.getTime())
         .forEach(([groupKey, group]) => {
             const groupCard = document.createElement('div');
-            groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md";
+            groupCard.className = "bg-surface-container p-md rounded-xl border border-outline-variant/10 border-t-2 border-t-primary space-y-md";
 
             // Calculate daily totals for badges
             let dayIn = 0;
