@@ -1,0 +1,173 @@
+<div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[85vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.15)]"
+    id="sheet-accent-theme">
+    
+    <!-- Drag Handle -->
+    <div class="w-12 h-1.5 bg-outline-variant/30 rounded-full mx-auto my-3 flex-shrink-0"></div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-container-padding pb-sm border-b border-outline-variant/10">
+        <h2 class="text-headline-md font-headline-md text-on-background">Accent Theme</h2>
+        <button onclick="closeAccentThemeSheet()" 
+            class="w-8 h-8 rounded-full hover:bg-surface-container-high active:scale-90 transition-transform flex items-center justify-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+    </div>
+
+    <!-- Content -->
+    <div class="overflow-y-auto px-container-padding py-md space-y-6 flex-1">
+        <!-- Category: Gradient -->
+        <div>
+            <h3 class="text-label-lg font-bold text-on-surface-variant uppercase tracking-wider mb-3">Elegant Gradients</h3>
+            <div class="grid grid-cols-5 gap-3" id="grid-gradient-themes"></div>
+        </div>
+
+        <!-- Category: Matte -->
+        <div>
+            <h3 class="text-label-lg font-bold text-on-surface-variant uppercase tracking-wider mb-3">Matte Tones</h3>
+            <div class="grid grid-cols-5 gap-3" id="grid-matte-themes"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling overrides for elements that need accent gradient support */
+    .dashboard-gradient-card {
+        background: var(--primary-gradient, var(--primary)) !important;
+    }
+
+    /* Color option button hover/active transitions */
+    .accent-option-btn {
+        position: relative;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        background-clip: padding-box;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+    
+    .accent-option-btn:hover {
+        transform: scale(1.1) translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .accent-option-btn:active {
+        transform: scale(0.92);
+    }
+
+    .accent-option-btn.active::after {
+        content: '\e5ca'; /* Material Symbol check code */
+        font-family: 'Material Symbols Outlined';
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<script>
+    (function() {
+        const themes = {
+            gradient: [
+                { id: 'sunset-glow', name: 'Sunset Glow', primary: '#ff7e5f', primaryRgb: '255 126 95', gradient: 'linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)' },
+                { id: 'ocean-breeze', name: 'Ocean Breeze', primary: '#00c6ff', primaryRgb: '0 198 255', gradient: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)' },
+                { id: 'purple-haze', name: 'Purple Haze', primary: '#7028e4', primaryRgb: '112 40 228', gradient: 'linear-gradient(135deg, #7028e4 0%, #e5b2ca 100%)' },
+                { id: 'forest-dawn', name: 'Forest Dawn', primary: '#11998e', primaryRgb: '17 153 142', gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
+                { id: 'aurora-lights', name: 'Aurora Lights', primary: '#8e2de2', primaryRgb: '142 45 226', gradient: 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)' },
+                { id: 'coral-reef', name: 'Coral Reef', primary: '#f12711', primaryRgb: '241 39 17', gradient: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)' },
+                { id: 'deep-sea', name: 'Deep Sea', primary: '#2c3e50', primaryRgb: '44 62 80', gradient: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)' },
+                { id: 'neon-dream', name: 'Neon Dream', primary: '#ff007f', primaryRgb: '255 0 127', gradient: 'linear-gradient(135deg, #ff007f 0%, #7f00ff 100%)' },
+                { id: 'minty-fresh', name: 'Minty Fresh', primary: '#a8ff78', primaryRgb: '168 255 120', gradient: 'linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%)' },
+                { id: 'midnight-rose', name: 'Midnight Rose', primary: '#3a1c71', primaryRgb: '58 28 113', gradient: 'linear-gradient(135deg, #3a1c71 0%, #d76d77 50%, #ffaf7b 100%)' }
+            ],
+            matte: [
+                { id: 'classic-sage', name: 'Classic Sage (Default)', primary: '#4a7c59', primaryRgb: '74 124 89' },
+                { id: 'slate-blue', name: 'Slate Blue', primary: '#475569', primaryRgb: '71 85 105' },
+                { id: 'dusty-rose', name: 'Dusty Rose', primary: '#a37070', primaryRgb: '163 112 112' },
+                { id: 'olive-grove', name: 'Olive Grove', primary: '#606c38', primaryRgb: '96 108 56' },
+                { id: 'terracotta', name: 'Terracotta', primary: '#b25e43', primaryRgb: '178 94 67' },
+                { id: 'steel-teal', name: 'Steel Teal', primary: '#4e8080', primaryRgb: '78 128 128' },
+                { id: 'dark-plum', name: 'Dark Plum', primary: '#6b4e71', primaryRgb: '107 78 113' },
+                { id: 'sand-dune', name: 'Sand Dune', primary: '#9c8060', primaryRgb: '156 128 96' },
+                { id: 'warm-clay', name: 'Warm Clay', primary: '#aa6b58', primaryRgb: '170 107 88' },
+                { id: 'cool-eucalyptus', name: 'Cool Eucalyptus', primary: '#50757a', primaryRgb: '80 117 122' }
+            ]
+        };
+
+        window.openAccentThemeSheet = function() {
+            const sheet = document.getElementById('sheet-accent-theme');
+            if (sheet) {
+                renderAccentGrids();
+                sheet.classList.remove('translate-y-full');
+                showBackdrop();
+            }
+        };
+
+        window.closeAccentThemeSheet = function() {
+            const sheet = document.getElementById('sheet-accent-theme');
+            if (sheet) {
+                sheet.classList.add('translate-y-full');
+                checkBackdropNeeded();
+            }
+        };
+
+        function getActiveThemeId() {
+            try {
+                const saved = localStorage.getItem('expenledge_accent_theme');
+                if (saved) {
+                    const theme = JSON.parse(saved);
+                    return theme.id;
+                }
+            } catch (e) {}
+            return 'classic-sage';
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.style.setProperty('--primary', theme.primary);
+            document.documentElement.style.setProperty('--primary-rgb', theme.primaryRgb);
+            if (theme.gradient) {
+                document.documentElement.style.setProperty('--primary-gradient', theme.gradient);
+            } else {
+                document.documentElement.style.setProperty('--primary-gradient', theme.primary);
+            }
+            localStorage.setItem('expenledge_accent_theme', JSON.stringify(theme));
+            
+            // Re-render grids to update active checkmark
+            renderAccentGrids();
+
+            // Refresh charts or other canvases to reflect color change
+            if (window.syncAllViews) {
+                window.syncAllViews();
+            }
+        }
+
+        function renderAccentGrids() {
+            const activeId = getActiveThemeId();
+            
+            Object.keys(themes).forEach(category => {
+                const grid = document.getElementById(`grid-${category}-themes`);
+                if (!grid) return;
+                grid.innerHTML = '';
+
+                themes[category].forEach(theme => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.title = theme.name;
+                    btn.className = `accent-option-btn w-12 h-12 rounded-full border-2 border-outline-variant/20 shadow-sm flex items-center justify-center flex-shrink-0 ${theme.id === activeId ? 'active ring-2 ring-primary ring-offset-2' : ''}`;
+                    
+                    if (theme.gradient) {
+                        btn.style.background = theme.gradient;
+                    } else {
+                        btn.style.backgroundColor = theme.primary;
+                    }
+
+                    btn.onclick = () => applyTheme(theme);
+                    grid.appendChild(btn);
+                });
+            });
+        }
+    })();
+</script>
