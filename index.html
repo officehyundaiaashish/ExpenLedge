@@ -124,6 +124,43 @@
         })();
     </script>
     <style>
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            20% {
+                transform: rotate(-1deg) scale(0.98);
+            }
+
+            40% {
+                transform: rotate(1deg) scale(0.98);
+            }
+
+            60% {
+                transform: rotate(-1deg) scale(0.98);
+            }
+
+            80% {
+                transform: rotate(1deg) scale(0.98);
+            }
+        }
+
+        .animate-shake {
+            animation: shake 0.25s infinite ease-in-out;
+            border: 1.5px dashed #ff4d4f !important;
+            box-shadow: 0 0 12px rgba(255, 77, 79, 0.2) !important;
+        }
+
+        .backdrop-transparent {
+            background-color: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+
         * {
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -912,8 +949,10 @@
                 </div>
             </section>
             <!-- CARD 3: BUDGET -->
-            <section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm"
+            <section
+                class="bg-surface-container p-md rounded-xl border border-outline-variant/10 border-t-2 border-t-primary space-y-md shadow-sm"
                 id="dashboard-budget-card">
+
                 <div class="flex justify-between items-center">
                     <div class="cursor-pointer flex-1" onclick="switchView('budget')">
                         <h3 class="text-headline-md font-headline-md text-on-background" id="budget-card-title">Monthly
@@ -1272,7 +1311,8 @@
                 </div>
             </div>
             <!-- CARD: BUDGET (in Analysis view) -->
-            <section class="bg-surface-container p-md rounded-xl border border-outline-variant/10 space-y-md shadow-sm"
+            <section
+                class="bg-surface-container p-md rounded-xl border border-outline-variant/10 border-t-2 border-t-primary space-y-md shadow-sm"
                 id="analysis-budget-card">
                 <div class="flex justify-between items-center">
                     <div class="cursor-pointer flex-1" onclick="switchView('budget')">
@@ -1728,7 +1768,7 @@
                         class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Amount</label>
                     <input
                         class="bg-transparent border-none p-0 text-headline-md font-bold text-on-surface w-full focus:ring-0 focus:border-none border-0 h-8"
-                        id="tx-input-amount" placeholder="0" required="" type="text" inputmode="decimal"
+                        id="tx-input-qty" placeholder="0" required="" type="text" inputmode="decimal"
                         name="expenledge_transaction_amount" autocomplete="new-password" autocorrect="off"
                         autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
                         data-bwignore="true" />
@@ -2971,53 +3011,34 @@
             </div>
         </main>
     </div>
-    <!-- BOTTOM SHEET: TRANSACTION OPTIONS -->
-    <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+    <!-- WINDOWS STYLE CONTEXT MENU -->
+    <div class="fixed z-[60] bg-surface rounded-xl border border-outline-variant shadow-lg py-1 w-48 opacity-0 scale-95 pointer-events-none transition-all duration-150 origin-top-left"
         id="sheet-transaction-options">
-        <div class="w-full flex justify-center pt-md pb-xs">
-            <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
-        </div>
-        <div class="px-container-padding py-md flex justify-between items-center border-b border-outline-variant">
-            <h2 class="text-headline-md font-headline-md text-on-background">Options</h2>
-            <button class="w-8 h-10 rounded-full bg-surface-container-high flex items-center justify-center"
-                onclick="closeTransactionOptionsSheet()">
-                <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
-        </div>
-        <div class="flex-1 overflow-y-auto px-container-padding py-lg space-y-lg">
-            <!-- Selected Entry Preview -->
-            <div class="space-y-sm">
-                <span class="text-label-md text-on-surface-variant uppercase tracking-wider block">Selected Entry</span>
-                <div class="p-0" id="options-entry-preview">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-            <!-- Options buttons -->
-            <div class="space-y-sm pt-md border-t border-outline-variant">
-                <!-- Duplicate -->
-                <button
-                    class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant"
-                    onclick="duplicateSelectedTransaction()">
-                    <span class="material-symbols-outlined text-primary text-[24px]">content_copy</span>
-                    <span class="text-body-lg font-semibold">Duplicate Transaction</span>
-                </button>
-                <!-- Create Schedule -->
-                <button
-                    class="w-full flex items-center gap-md p-md bg-surface-container hover:bg-surface-container-high rounded-xl transition-colors text-left border border-outline-variant"
-                    onclick="createScheduledTransaction()">
-                    <span class="material-symbols-outlined text-tertiary text-[24px]">schedule</span>
-                    <span class="text-body-lg font-semibold">Create Scheduled Transaction</span>
-                </button>
-                <!-- Delete -->
-                <button
-                    class="w-full flex items-center gap-md p-md bg-error-container hover:bg-error-container/80 text-error rounded-xl transition-colors text-left"
-                    onclick="deleteSelectedTransaction()">
-                    <span class="material-symbols-outlined text-error text-[24px]">delete</span>
-                    <span class="text-body-lg font-semibold">Delete Entry</span>
-                </button>
-            </div>
-        </div>
+        <!-- Duplicate -->
+        <button
+            class="w-full flex items-center gap-sm px-4 py-2 hover:bg-surface-container-high transition-colors text-left"
+            onclick="duplicateSelectedTransaction()">
+            <span class="material-symbols-outlined text-primary text-[18px]">content_copy</span>
+            <span class="text-body-md font-semibold">Duplicate</span>
+        </button>
+        <!-- Create Schedule -->
+        <button
+            class="w-full flex items-center gap-sm px-4 py-2 hover:bg-surface-container-high transition-colors text-left"
+            onclick="createScheduledTransaction()">
+            <span class="material-symbols-outlined text-tertiary text-[18px]">schedule</span>
+            <span class="text-body-md font-semibold">Schedule</span>
+        </button>
+        <!-- Divider -->
+        <div class="h-[1px] bg-outline-variant/20 my-1"></div>
+        <!-- Delete -->
+        <button
+            class="w-full flex items-center gap-sm px-4 py-2 hover:bg-error/10 text-error transition-colors text-left"
+            onclick="deleteSelectedTransaction()">
+            <span class="material-symbols-outlined text-error text-[18px]">delete</span>
+            <span class="text-body-md font-semibold">Delete Entry</span>
+        </button>
     </div>
+
     <!-- BOTTOM SHEET: SCHEDULE TRANSACTION -->
     <div class="fixed bottom-0 left-0 right-0 z-[60] bg-surface rounded-t-[32px] transform translate-y-full bottom-sheet-transition max-h-[80vh] overflow-hidden flex flex-col border-t border-outline-variant max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
         id="sheet-schedule-transaction">
