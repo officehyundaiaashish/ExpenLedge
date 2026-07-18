@@ -1144,96 +1144,100 @@
         </div>
         <!-- VIEW: ANALYSIS / INSIGHTS -->
         <div class="page-view space-y-lg" id="view-analysis">
-            <!-- Period Pills -->
+            <!-- Sticky Header for Period switcher & Totals -->
             <div
-                class="flex bg-white dark:bg-neutral-900 rounded-xl p-1 w-full border border-outline-variant/10 shadow-sm">
-                <button
-                    class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high"
-                    id="analysis-pill-week" onclick="setAnalysisPeriod('week')">Week</button>
-                <button
-                    class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all bg-primary text-on-primary shadow-sm"
-                    id="analysis-pill-month" onclick="setAnalysisPeriod('month')">Month</button>
-                <button
-                    class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high"
-                    id="analysis-pill-year" onclick="setAnalysisPeriod('year')">Year</button>
-                <button
-                    class="flex-1 py-2 rounded-lg text-label-lg font-label-lg transition-all text-on-surface-variant hover:bg-surface-container-high"
-                    id="analysis-pill-custom" onclick="setAnalysisPeriod('custom')">Custom</button>
-            </div>
-            <!-- Month/Year Navigator -->
-            <div class="dashboard-gradient-card bg-primary rounded-xl p-md relative overflow-hidden shadow-md text-white"
-                id="analysis-period-nav">
-                <div class="dashboard-orb-container"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                    <button class="p-sm text-white/80 hover:text-white transition-colors"
-                        onclick="changeAnalysisPeriod(-1)">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <span class="text-headline-md font-headline-md text-white" id="analysis-month-label">July
-                        2026</span>
-                    <button class="p-sm text-white/80 hover:text-white transition-colors"
-                        onclick="changeAnalysisPeriod(1)">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
+                class="sticky top-0 bg-background dark:bg-[#111411] pt-2 pb-2 z-30 space-y-2 border-b border-outline-variant/10 shadow-sm -mx-4 px-4">
+                <!-- Period Pills -->
+                <div
+                    class="flex bg-white dark:bg-neutral-900 rounded-xl p-0.5 w-full border border-outline-variant/10 shadow-sm">
+                    <button
+                        class="flex-1 py-1 rounded-lg text-label-md font-label-md transition-all text-on-surface-variant hover:bg-surface-container-high"
+                        id="analysis-pill-week" onclick="setAnalysisPeriod('week')">Week</button>
+                    <button
+                        class="flex-1 py-1 rounded-lg text-label-md font-label-md transition-all bg-primary text-on-primary shadow-sm"
+                        id="analysis-pill-month" onclick="setAnalysisPeriod('month')">Month</button>
+                    <button
+                        class="flex-1 py-1 rounded-lg text-label-md font-label-md transition-all text-on-surface-variant hover:bg-surface-container-high"
+                        id="analysis-pill-year" onclick="setAnalysisPeriod('year')">Year</button>
+                    <button
+                        class="flex-1 py-1 rounded-lg text-label-md font-label-md transition-all text-on-surface-variant hover:bg-surface-container-high"
+                        id="analysis-pill-custom" onclick="setAnalysisPeriod('custom')">Custom</button>
                 </div>
-            </div>
-            <!-- Week Range Navigator (shown only in week mode) -->
-            <div class="hidden dashboard-gradient-card bg-primary rounded-xl p-md relative overflow-hidden shadow-md text-white"
-                id="analysis-week-nav">
-                <div class="dashboard-orb-container"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                    <button class="p-sm text-white/80 hover:text-white transition-colors"
-                        onclick="changeAnalysisWeek(-1)">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <span class="text-body-lg font-semibold text-white" id="analysis-week-label">12 Jul &ndash; 18 Jul
-                        2026</span>
-                    <button class="p-sm text-white/80 hover:text-white transition-colors"
-                        onclick="changeAnalysisWeek(1)">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
-                </div>
-            </div>
-            <!-- Custom Date Range (shown only in custom mode) -->
-            <div class="hidden dashboard-gradient-card bg-primary rounded-xl p-md relative overflow-hidden shadow-md text-white"
-                id="analysis-custom-nav">
-                <div class="dashboard-orb-container"></div>
-                <div class="relative z-10 flex gap-sm items-center">
-                    <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('from')">
-                        <span class="text-label-sm text-white/85 px-xs">From</span>
-                        <div
-                            class="w-full bg-white/15 rounded-lg px-md py-sm text-body-md text-white border border-white/15 flex justify-between items-center h-10">
-                            <span id="analysis-custom-from-label">Select Date</span>
-                            <span class="material-symbols-outlined text-[18px] text-white/80">calendar_today</span>
-                        </div>
-                        <input type="hidden" id="analysis-custom-from" />
-                    </div>
-                    <span class="text-white/60 mt-4">&rarr;</span>
-                    <div class="flex-1 flex flex-col gap-xs cursor-pointer" onclick="openCustomDatePicker('to')">
-                        <span class="text-label-sm text-white/85 px-xs">To</span>
-                        <div
-                            class="w-full bg-white/15 rounded-lg px-md py-sm text-body-md text-white border border-white/15 flex justify-between items-center h-10">
-                            <span id="analysis-custom-to-label">Select Date</span>
-                            <span class="material-symbols-outlined text-[18px] text-white/80">calendar_today</span>
-                        </div>
-                        <input type="hidden" id="analysis-custom-to" />
+                <!-- Month/Year Navigator -->
+                <div class="dashboard-gradient-card bg-primary rounded-xl py-1 px-3 relative overflow-hidden shadow-md text-white"
+                    id="analysis-period-nav">
+                    <div class="dashboard-orb-container"></div>
+                    <div class="relative z-10 flex items-center justify-between">
+                        <button class="p-1 text-white/80 hover:text-white transition-colors"
+                            onclick="changeAnalysisPeriod(-1)">
+                            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                        </button>
+                        <span class="text-body-lg font-bold text-white" id="analysis-month-label">July 2026</span>
+                        <button class="p-1 text-white/80 hover:text-white transition-colors"
+                            onclick="changeAnalysisPeriod(1)">
+                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                        </button>
                     </div>
                 </div>
-            </div>
-            <!-- Period totals stay in sync with Week, Month, Year, and Custom analysis ranges. -->
-            <div class="flex flex-wrap gap-xs justify-center text-[14px] font-bold" id="analysis-totals-cards">
-                <button
-                    class="bg-secondary/10 text-secondary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
-                    onclick="setAnalysisCatType('spending')">
-                    Out: <span id="analysis-total-spending">₹0</span>
-                </button>
-                <button class="bg-primary/10 text-primary px-4 py-1.5 rounded-full active:scale-95 transition-transform"
-                    onclick="setAnalysisCatType('income')">
-                    In: <span id="analysis-total-income">₹0</span>
-                </button>
-                <span class="px-4 py-1.5 rounded-full bg-primary/15 text-primary" id="analysis-balance-card">
-                    Bal: <span id="analysis-total-balance">₹0</span>
-                </span>
+                <!-- Week Range Navigator (shown only in week mode) -->
+                <div class="hidden dashboard-gradient-card bg-primary rounded-xl py-1 px-3 relative overflow-hidden shadow-md text-white"
+                    id="analysis-week-nav">
+                    <div class="dashboard-orb-container"></div>
+                    <div class="relative z-10 flex items-center justify-between">
+                        <button class="p-1 text-white/80 hover:text-white transition-colors"
+                            onclick="changeAnalysisWeek(-1)">
+                            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                        </button>
+                        <span class="text-body-md font-semibold text-white" id="analysis-week-label">12 Jul &ndash; 18
+                            Jul 2026</span>
+                        <button class="p-1 text-white/80 hover:text-white transition-colors"
+                            onclick="changeAnalysisWeek(1)">
+                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Custom Date Range (shown only in custom mode) -->
+                <div class="hidden dashboard-gradient-card bg-primary rounded-xl py-1.5 px-3 relative overflow-hidden shadow-md text-white"
+                    id="analysis-custom-nav">
+                    <div class="dashboard-orb-container"></div>
+                    <div class="relative z-10 flex gap-sm items-center">
+                        <div class="flex-1 flex flex-col cursor-pointer" onclick="openCustomDatePicker('from')">
+                            <span class="text-[10px] text-white/85 px-xs">From</span>
+                            <div
+                                class="w-full bg-white/15 rounded-lg px-2 py-0.5 text-xs text-white border border-white/15 flex justify-between items-center h-7">
+                                <span id="analysis-custom-from-label">Select Date</span>
+                                <span class="material-symbols-outlined text-[14px] text-white/80">calendar_today</span>
+                            </div>
+                            <input type="hidden" id="analysis-custom-from" />
+                        </div>
+                        <span class="text-white/60 mt-3 text-xs">&rarr;</span>
+                        <div class="flex-1 flex flex-col cursor-pointer" onclick="openCustomDatePicker('to')">
+                            <span class="text-[10px] text-white/85 px-xs">To</span>
+                            <div
+                                class="w-full bg-white/15 rounded-lg px-2 py-0.5 text-xs text-white border border-white/15 flex justify-between items-center h-7">
+                                <span id="analysis-custom-to-label">Select Date</span>
+                                <span class="material-symbols-outlined text-[14px] text-white/80">calendar_today</span>
+                            </div>
+                            <input type="hidden" id="analysis-custom-to" />
+                        </div>
+                    </div>
+                </div>
+                <!-- Period totals stay in sync with Week, Month, Year, and Custom analysis ranges. -->
+                <div class="flex flex-wrap gap-xs justify-center text-[12px] font-bold" id="analysis-totals-cards">
+                    <button
+                        class="bg-secondary/10 text-secondary px-3 py-1 rounded-full active:scale-95 transition-transform"
+                        onclick="setAnalysisCatType('spending')">
+                        Out: <span id="analysis-total-spending">₹0</span>
+                    </button>
+                    <button
+                        class="bg-primary/10 text-primary px-3 py-1 rounded-full active:scale-95 transition-transform"
+                        onclick="setAnalysisCatType('income')">
+                        In: <span id="analysis-total-income">₹0</span>
+                    </button>
+                    <span class="px-3 py-1 rounded-full bg-primary/15 text-primary" id="analysis-balance-card">
+                        Bal: <span id="analysis-total-balance">₹0</span>
+                    </span>
+                </div>
             </div>
             <!-- Average Stats Card -->
             <section class="bg-surface-container p-md rounded-xl shadow-sm border border-outline-variant/10 space-y-sm">
