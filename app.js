@@ -4129,8 +4129,8 @@ function showBackdrop() {
 }
 
 function performCloseAllSheets() {
-    hideCustomFilterDropdowns();
-    document.querySelectorAll('.bottom-sheet-transition').forEach(sheet => {
+    closeTransactionOptionsSheet();
+    hideCustomFilterDropdowns(); document.querySelectorAll('.bottom-sheet-transition').forEach(sheet => {
         sheet.classList.add('translate-y-full');
     });
     const txModal = document.getElementById('modal-add-transaction');
@@ -4301,6 +4301,11 @@ function checkBackdropNeeded() {
         openedSheet = true;
     }
 
+    const optionsPopup = document.getElementById('sheet-transaction-options');
+    if (optionsPopup && !optionsPopup.classList.contains('pointer-events-none')) {
+        openedSheet = true;
+    }
+
     if (!openedSheet) {
         const overlay = document.getElementById('modal-overlay');
         if (overlay) {
@@ -4316,7 +4321,7 @@ function showToast(msg) {
     const toast = document.getElementById('toast');
 
     // Check if this is a success message
-    const isSuccess = (msg.toLowerCase().includes('success') || msg.toLowerCase().includes('saved') || msg.toLowerCase().includes('updated') || msg.toLowerCase().includes('created') || msg.toLowerCase().includes('deleted')) && !msg.toLowerCase().includes('profile') && !msg.toLowerCase().includes('welcome');
+    const isSuccess = msg === "Transaction saved successfully!" || msg === "Transaction updated successfully!";
 
     if (isSuccess) {
         // Show tick.svg for success - remove black background
@@ -5590,11 +5595,21 @@ function getTxAccountBadge(t) {
 let longPressTimer = null;
 
 function bindLongPress(card, t) {
+    let lastX = 0;
+    let lastY = 0;
+
     const start = (e) => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+        }
+        const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+        lastX = touch ? (touch.clientX || 0) : 0;
+        lastY = touch ? (touch.clientY || 0) : 0;
+
         longPressTriggered = false;
         longPressTimer = setTimeout(() => {
             longPressTriggered = true;
-            openTransactionOptionsSheet(t);
+            openTransactionOptionsSheet(t, card, lastX, lastY);
         }, 600);
     };
 
@@ -5617,46 +5632,85 @@ function bindLongPress(card, t) {
         if (longPressTriggered) {
             e.preventDefault();
             e.stopPropagation();
+            longPressTriggered = false;
             return;
         }
         showTransactionDetails(t);
     });
 }
 
-function openTransactionOptionsSheet(t) {
+let activeShakingCard = null;
+let lastMenuOpenTime = 0;
+
+function openTransactionOptionsSheet(t, cardElement, x, y) {
+    lastMenuOpenTime = Date.now();
     selectedTransactionForOptions = t;
 
-    const previewContainer = document.getElementById('options-entry-preview');
-    const isInc = t.type === 'income';
-    let colorClass = "text-secondary bg-secondary-container/20";
-    if (isInc) colorClass = "text-primary bg-primary-container/20";
+    if (activeShakingCard) {
+        activeShakingCard.classList.remove('animate-shake');
+    }
+    activeShakingCard = cardElement;
+    if (activeShakingCard) {
+        activeShakingCard.classList.add('animate-shake');
+    }
 
-    previewContainer.innerHTML = `
-        <div class="bg-surface-container p-md rounded-xl flex items-center gap-md border border-outline-variant/20">
-            <div class="w-12 h-12 rounded-full flex items-center justify-center ${colorClass}">
-                <span class="material-symbols-outlined">${t.categoryIcon || 'payments'}</span>
-            </div>
-            <div class="flex-1">
-                <div class="flex justify-between">
-                    <p class="text-body-lg font-bold text-on-surface">${isInc ? '+' : '-'}₹${t.amount.toFixed(2)}</p>
-                    <p class="text-label-md font-label-md text-on-surface-variant">${t.date}</p>
-                </div>
-                <div class="flex justify-between items-center gap-sm">
-                    <p class="text-body-md text-on-surface-variant break-words whitespace-normal">${t.note || t.category}</p>
-                    <span class="flex-shrink-0">${getTxAccountBadge(t)}</span>
-                </div>
-            </div>
-        </div>
-    `;
+    const popup = document.getElementById('sheet-transaction-options');
+    if (popup) {
+        // w-48 is 12rem = 192px
+        const menuWidth = 192;
+        const menuHeight = 120;
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
 
-    document.getElementById('sheet-transaction-options').classList.remove('translate-y-full');
-    showBackdrop();
+        let left = typeof x === 'number' ? x : 100;
+        let top = typeof y === 'number' ? y : 100;
+
+        if (left + menuWidth > screenWidth) {
+            left = screenWidth - menuWidth - 8;
+        }
+        if (top + menuHeight > screenHeight) {
+            top = screenHeight - menuHeight - 8;
+        }
+
+        left = Math.max(8, left);
+        top = Math.max(8, top);
+
+        popup.style.left = `${left}px`;
+        popup.style.top = `${top}px`;
+
+        popup.classList.remove('scale-95', 'opacity-0', 'pointer-events-none');
+        popup.classList.add('scale-100', 'opacity-100', 'pointer-events-auto');
+    }
+
+    setTimeout(() => {
+        window.addEventListener('click', closeTransactionOptionsSheetOnOutsideClick);
+    }, 10);
+}
+
+function closeTransactionOptionsSheetOnOutsideClick(e) {
+    if (Date.now() - lastMenuOpenTime < 350) {
+        return;
+    }
+    const popup = document.getElementById('sheet-transaction-options');
+    if (!popup || !popup.contains(e.target)) {
+        closeTransactionOptionsSheet();
+    }
 }
 
 function closeTransactionOptionsSheet() {
-    document.getElementById('sheet-transaction-options').classList.add('translate-y-full');
-    checkBackdropNeeded();
+    if (activeShakingCard) {
+        activeShakingCard.classList.remove('animate-shake');
+        activeShakingCard = null;
+    }
+    const popup = document.getElementById('sheet-transaction-options');
+    if (popup) {
+        popup.classList.add('scale-95', 'opacity-0', 'pointer-events-none');
+        popup.classList.remove('scale-100', 'opacity-100', 'pointer-events-auto');
+    }
+    window.removeEventListener('click', closeTransactionOptionsSheetOnOutsideClick);
 }
+
+
 
 function duplicateSelectedTransaction() {
     if (!selectedTransactionForOptions) return;
@@ -5681,29 +5735,31 @@ function duplicateSelectedTransaction() {
 
 function deleteSelectedTransaction() {
     if (!selectedTransactionForOptions) return;
-    const deleteKey = getTransactionSyncKey(selectedTransactionForOptions);
-    if (deleteKey) {
-        const tombstones = getDeletedTransactionLogSnapshot();
-        const existing = tombstones.find(item => item.syncId === deleteKey);
-        const now = new Date().toISOString();
-        if (existing) {
-            existing.deletedAt = now;
-        } else {
-            tombstones.push({ syncId: deleteKey, deletedAt: now, deletedBy: supabaseConfig.deviceId || 'local' });
+    openConfirmActionSheet("Delete Transaction", "Are you sure you want to delete this transaction?", () => {
+        const deleteKey = getTransactionSyncKey(selectedTransactionForOptions);
+        if (deleteKey) {
+            const tombstones = getDeletedTransactionLogSnapshot();
+            const existing = tombstones.find(item => item.syncId === deleteKey);
+            const now = new Date().toISOString();
+            if (existing) {
+                existing.deletedAt = now;
+            } else {
+                tombstones.push({ syncId: deleteKey, deletedAt: now, deletedBy: supabaseConfig.deviceId || 'local' });
+            }
+            saveDeletedTransactionLogSnapshot(tombstones);
         }
-        saveDeletedTransactionLogSnapshot(tombstones);
-    }
-    transactions = transactions.filter(tx => getTransactionSyncKey(tx) !== getTransactionSyncKey(selectedTransactionForOptions));
-    saveToLocalStorage();
-    updateDashboard();
-    updateAnalysis();
-    updateAccounts();
-    updateBudget();
-    renderIncomeTransactions();
-    renderSpendingTransactions();
-    if (currentView === 'structured-tx') renderStructuredTx();
-    showToast("Transaction deleted!");
-    closeTransactionOptionsSheet();
+        transactions = transactions.filter(tx => getTransactionSyncKey(tx) !== getTransactionSyncKey(selectedTransactionForOptions));
+        saveToLocalStorage();
+        updateDashboard();
+        updateAnalysis();
+        updateAccounts();
+        updateBudget();
+        renderIncomeTransactions();
+        renderSpendingTransactions();
+        if (currentView === 'structured-tx') renderStructuredTx();
+        showToast("Transaction deleted!");
+        closeTransactionOptionsSheet();
+    });
 }
 
 function createScheduledTransaction() {
