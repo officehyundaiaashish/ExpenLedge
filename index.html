@@ -261,9 +261,10 @@
 
 
         .bottom-sheet-transition {
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            will-change: transform;
         }
 
         .page-view {
