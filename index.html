@@ -139,26 +139,6 @@
         })();
     </script>
     <style>
-        .lbl-amount::before {
-            content: "Amount";
-        }
-
-        .lbl-balance::before {
-            content: "Starting Balance (₹)";
-        }
-
-        .lbl-acc-name::before {
-            content: "Account Name";
-        }
-
-        .lbl-acc-holder::before {
-            content: "Account Holder Name";
-        }
-
-        .lbl-note::before {
-            content: "Note";
-        }
-
         :root {
             --primary: #4a7c59;
             --primary-rgb: 74 124 89;
@@ -2020,13 +2000,13 @@
             <div class="bg-primary/10 rounded-2xl px-4 py-4 flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary text-[24px] flex-shrink-0">currency_rupee</span>
                 <div class="flex-1 flex flex-col items-center">
-                    <label
-                        class="text-[9px] font-bold text-primary/60 uppercase tracking-widest mb-0.5 lbl-amount"></label>
+                    <label class="text-[9px] font-bold text-primary/60 uppercase tracking-widest mb-0.5">Amount</label>
                     <input
                         class="bg-transparent border-none p-0 text-3xl font-bold text-primary w-full focus:ring-0 focus:outline-none text-center placeholder:text-primary/30"
-                        id="tx-input-qty" placeholder="0" required="" type="text" inputmode="decimal" name="tx_qty_val"
-                        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                        id="tx-input-qty" placeholder="0" required="" type="text" inputmode="decimal"
+                        name="expenledge_transaction_amount" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" />
                 </div>
                 <button type="button"
                     class="text-primary/60 hover:text-primary rounded-full p-1 transition-colors flex-shrink-0"
@@ -2042,15 +2022,15 @@
             <div class="bg-surface-container rounded-2xl px-4 py-3 relative">
                 <div class="flex items-center gap-1.5 mb-1">
                     <span class="material-symbols-outlined text-on-surface-variant text-[15px]">description</span>
-                    <span
-                        class="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest lbl-note"></span>
+                    <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">Note</span>
                 </div>
                 <div class="relative">
                     <input
                         class="bg-transparent border-none p-0 text-sm text-on-surface w-full focus:ring-0 focus:outline-none"
-                        id="tx-input-desc" placeholder="e.g. Lunch with team" type="text" name="tx_desc_val"
-                        autocomplete="new-password" autocorrect="off" autocapitalize="sentences" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                        id="tx-input-desc" placeholder="e.g. Lunch with team" type="text"
+                        name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="sentences" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" />
                     <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden"
                         aria-label="Remark suggestions"></div>
                 </div>
@@ -3120,21 +3100,23 @@
             <div class="space-y-sm">
                 <!-- Account Name -->
                 <div class="space-y-xs">
-                    <label class="text-label-md font-label-md text-on-surface-variant lbl-acc-name"></label>
+                    <label class="text-label-md font-label-md text-on-surface-variant">Account Name</label>
                     <input
                         class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="account-input-name" placeholder="e.g. Chase Personal Checking" type="text" name="acc_n_val"
-                        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                        id="account-input-name" placeholder="e.g. Chase Personal Checking" type="text"
+                        name="expenledge_account_name" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" />
                 </div>
                 <!-- Account Holder Name -->
                 <div class="space-y-xs">
-                    <label class="text-label-md font-label-md text-on-surface-variant lbl-acc-holder"></label>
+                    <label class="text-label-md font-label-md text-on-surface-variant">Account Holder Name</label>
                     <input
                         class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="account-input-holder" placeholder="e.g. Account holder name" type="text" name="acc_h_val"
-                        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                        id="account-input-holder" placeholder="e.g. Account holder name" type="text"
+                        name="expenledge_account_holder" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" />
                 </div>
                 <!-- Category Type (Custom Dropdown) -->
                 <div class="space-y-xs relative" id="account-type-dropdown-container">
@@ -3169,13 +3151,14 @@
                 </div>
                 <!-- Starting Balance -->
                 <div class="space-y-xs">
-                    <label class="text-label-md font-label-md text-on-surface-variant lbl-balance"
-                        id="account-input-label"></label>
+                    <label class="text-label-md font-label-md text-on-surface-variant" id="account-input-label">Starting
+                        Balance (₹)</label>
                     <input
                         class="w-full bg-surface-container-high border border-outline-variant rounded-xl px-md py-sm text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary"
-                        id="account-input-balance" type="text" inputmode="decimal" placeholder="0.00" name="acc_b_val"
-                        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        data-lpignore="true" data-1p-ignore="true" data-bwignore="true" />
+                        id="account-input-balance" type="text" inputmode="decimal" placeholder="0.00"
+                        name="expenledge_account_balance" autocomplete="new-password" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
+                        data-bwignore="true" />
                 </div>
             </div>
             <!-- Actions -->
