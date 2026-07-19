@@ -6398,12 +6398,19 @@ function positionCustomFilterDropdown(dropdown, button) {
 
     dropdown.style.position = 'fixed';
     dropdown.style.left = `${Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - width - viewportPadding))}px`;
-    dropdown.style.top = `${openAbove ? Math.max(viewportPadding, rect.top - maxHeight - viewportPadding) : rect.bottom + viewportPadding}px`;
     dropdown.style.right = 'auto';
     dropdown.style.width = `${width}px`;
     dropdown.style.maxHeight = `${maxHeight}px`;
     dropdown.style.marginTop = '0';
     dropdown.style.zIndex = '250';
+
+    if (openAbove) {
+        dropdown.style.top = 'auto';
+        dropdown.style.bottom = `${window.innerHeight - rect.top + viewportPadding}px`;
+    } else {
+        dropdown.style.top = `${rect.bottom + viewportPadding}px`;
+        dropdown.style.bottom = 'auto';
+    }
 }
 
 function toggleCustomFilterDropdown(type) {
@@ -6790,12 +6797,6 @@ function updateAllTransactionsView(loadMore = false) {
 function openSearchOnTransactionsPage() {
     closeDashboardSearch(false);
     switchView('transactions-all');
-    setTimeout(() => {
-        const searchInput = document.getElementById('all-tx-search');
-        if (searchInput) {
-            searchInput.focus();
-        }
-    }, 150);
 }
 
 function deleteCurrentEditingTransaction() {
