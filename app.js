@@ -4507,7 +4507,36 @@ function showToast(msg) {
     if (isSuccess) {
         // Show premium success ripple ring - remove black background
         toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-transparent backdrop-blur-none px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center';
-        toast.innerHTML = `<img src="tick.svg?t=${Date.now()}" alt="Success" class="w-10 h-10" />`;
+        toast.innerHTML = `
+            <svg class="w-10 h-10" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <style>
+                        @keyframes scaleIn {
+                            0% { transform: scale(0); }
+                            50% { transform: scale(1.1); }
+                            100% { transform: scale(1); }
+                        }
+                        .tick-bg {
+                            animation: scaleIn 0.6s cubic-bezier(0.36, 0, 0.66, 1) forwards;
+                            transform-origin: center;
+                        }
+                        @keyframes drawTick {
+                            0% { stroke-dasharray: 60; stroke-dashoffset: 60; opacity: 0; }
+                            50% { opacity: 1; }
+                            100% { stroke-dasharray: 60; stroke-dashoffset: 0; opacity: 1; }
+                        }
+                        .tick-check {
+                            animation: drawTick 0.8s ease-out 0.2s forwards;
+                            stroke-dasharray: 60;
+                            stroke-dashoffset: 60;
+                            opacity: 0;
+                        }
+                    </style>
+                </defs>
+                <circle class="tick-bg" cx="50" cy="50" r="46" fill="var(--primary)"/>
+                <polyline class="tick-check" points="28,50 42,64 72,34" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        `;
     } else {
         // Show text for other messages - keep dark background
         toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center text-white';
@@ -4529,7 +4558,34 @@ function showTickAnimation() {
 
     // Force animation reset by re-inserting elements
     overlay.innerHTML = `
-        <img src="tick.svg?t=${Date.now()}" alt="Success" class="w-20 h-20" />
+        <svg class="w-20 h-20" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <style>
+                    @keyframes scaleIn {
+                        0% { transform: scale(0); }
+                        50% { transform: scale(1.1); }
+                        100% { transform: scale(1); }
+                    }
+                    .tick-bg {
+                        animation: scaleIn 0.6s cubic-bezier(0.36, 0, 0.66, 1) forwards;
+                        transform-origin: center;
+                    }
+                    @keyframes drawTick {
+                        0% { stroke-dasharray: 60; stroke-dashoffset: 60; opacity: 0; }
+                        50% { opacity: 1; }
+                        100% { stroke-dasharray: 60; stroke-dashoffset: 0; opacity: 1; }
+                    }
+                    .tick-check {
+                        animation: drawTick 0.8s ease-out 0.2s forwards;
+                        stroke-dasharray: 60;
+                        stroke-dashoffset: 60;
+                        opacity: 0;
+                    }
+                </style>
+            </defs>
+            <circle class="tick-bg" cx="50" cy="50" r="46" fill="var(--primary)"/>
+            <polyline class="tick-check" points="28,50 42,64 72,34" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
     `;
 
     overlay.classList.remove('hidden', 'opacity-0');
