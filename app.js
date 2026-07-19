@@ -609,6 +609,70 @@ function syncCategoryLayoutUI() {
 function saveToLocalStorage() {
     invalidateRemarksCache();
     try {
+        const oldProfile = localStorage.getItem('expenledge_profile');
+        if (JSON.stringify(userProfile) !== oldProfile) {
+            localStorage.setItem('expenledge_profile_updated_at', new Date().toISOString());
+        }
+
+        const oldAccounts = localStorage.getItem('expenledge_user_accounts');
+        if (JSON.stringify(userAccounts) !== oldAccounts) {
+            localStorage.setItem('expenledge_user_accounts_updated_at', new Date().toISOString());
+        }
+
+        const oldScheduled = localStorage.getItem('expenledge_scheduled');
+        if (JSON.stringify(scheduledTransactions) !== oldScheduled) {
+            localStorage.setItem('expenledge_scheduled_updated_at', new Date().toISOString());
+        }
+
+        const oldBudgetEnabled = localStorage.getItem('expenledge_budget_enabled') || '';
+        const oldBudgetLimit = localStorage.getItem('expenledge_budget_limit') || '';
+        const oldYearlyBudgetLimit = localStorage.getItem('expenledge_yearly_budget_limit') || '';
+        const oldCategoryLimits = localStorage.getItem('expenledge_category_limits') || '';
+        if (budgetEnabled.toString() !== oldBudgetEnabled ||
+            monthlyBudgetLimit.toString() !== oldBudgetLimit ||
+            yearlyBudgetLimit.toString() !== oldYearlyBudgetLimit ||
+            JSON.stringify(categoryBudgetLimits) !== oldCategoryLimits) {
+            localStorage.setItem('expenledge_budget_updated_at', new Date().toISOString());
+        }
+
+        const oldActiveBalanceType = localStorage.getItem('expenledge_active_balance_type') || '';
+        const oldAllTags = localStorage.getItem('expenledge_all_tags') || '';
+        const oldIncludeCash = localStorage.getItem('expenledge_include_cash') || '';
+        const oldIncludeBalanceInIncome = localStorage.getItem('expenledge_include_balance_in_income') || '';
+        const oldRealtimeSync = localStorage.getItem('expenledge_realtime_sync') || '';
+        const oldAutoBackupEnabled = localStorage.getItem('expenledge_auto_backup_enabled') || '';
+
+        const oldCategoryOrders = localStorage.getItem('expenledge_category_orders') || '';
+        const newCategoryOrders = JSON.stringify({
+            expense: expenseCategories.map(category => category.name),
+            income: incomeCategories.map(category => category.name)
+        });
+
+        const oldCustomCategories = localStorage.getItem('expenledge_custom_categories') || '';
+        const newCustomCategories = JSON.stringify({
+            expense: expenseCategories.filter(category => !category.builtIn),
+            income: incomeCategories.filter(category => !category.builtIn)
+        });
+
+        const oldInterfacePreferences = localStorage.getItem('expenledge_interface_preferences') || '';
+        const newInterfacePreferences = JSON.stringify({
+            categoryLayout,
+            manageCategoryLayout,
+            budgetPeriod
+        });
+
+        if (activeDashboardBalanceType !== oldActiveBalanceType ||
+            JSON.stringify(allAvailableTags) !== oldAllTags ||
+            includeCashInBalance.toString() !== oldIncludeCash ||
+            includeBalanceInIncome.toString() !== oldIncludeBalanceInIncome ||
+            realtimeSyncEnabled.toString() !== oldRealtimeSync ||
+            autoBackupEnabled.toString() !== oldAutoBackupEnabled ||
+            newCategoryOrders !== oldCategoryOrders ||
+            newCustomCategories !== oldCustomCategories ||
+            newInterfacePreferences !== oldInterfacePreferences) {
+            localStorage.setItem('expenledge_settings_updated_at', new Date().toISOString());
+        }
+
         localStorage.setItem('expenledge_transactions', JSON.stringify(transactions));
         localStorage.setItem('expenledge_profile', JSON.stringify(userProfile));
         localStorage.setItem('expenledge_budget_enabled', budgetEnabled.toString());
@@ -1175,6 +1239,38 @@ function mergeSupabaseStorageSnapshots(localSnapshot = {}, remoteSnapshot = {}) 
                 const remoteThemeUpdatedAt = remote.expenledge_accent_theme_updated_at || '';
                 if (localThemeUpdatedAt && (!remoteThemeUpdatedAt || new Date(localThemeUpdatedAt) > new Date(remoteThemeUpdatedAt))) {
                     // Local theme is newer or remote has no timestamp, do not overwrite with remote theme
+                    return;
+                }
+            }
+            if (key === 'expenledge_user_accounts' || key === 'expenledge_user_accounts_updated_at') {
+                const localAccountsUpdatedAt = local.expenledge_user_accounts_updated_at || '';
+                const remoteAccountsUpdatedAt = remote.expenledge_user_accounts_updated_at || '';
+                if (localAccountsUpdatedAt && (!remoteAccountsUpdatedAt || new Date(localAccountsUpdatedAt) > new Date(remoteAccountsUpdatedAt))) {
+                    // Local accounts are newer or remote has no timestamp, do not overwrite with remote accounts
+                    return;
+                }
+            }
+            if (key === 'expenledge_scheduled' || key === 'expenledge_scheduled_updated_at') {
+                const localScheduledUpdatedAt = local.expenledge_scheduled_updated_at || '';
+                const remoteScheduledUpdatedAt = remote.expenledge_scheduled_updated_at || '';
+                if (localScheduledUpdatedAt && (!remoteScheduledUpdatedAt || new Date(localScheduledUpdatedAt) > new Date(remoteScheduledUpdatedAt))) {
+                    // Local scheduled transactions are newer or remote has no timestamp, do not overwrite with remote scheduled transactions
+                    return;
+                }
+            }
+            if (key === 'expenledge_budget_enabled' || key === 'expenledge_budget_limit' || key === 'expenledge_yearly_budget_limit' || key === 'expenledge_category_limits' || key === 'expenledge_budget_updated_at') {
+                const localBudgetUpdatedAt = local.expenledge_budget_updated_at || '';
+                const remoteBudgetUpdatedAt = remote.expenledge_budget_updated_at || '';
+                if (localBudgetUpdatedAt && (!remoteBudgetUpdatedAt || new Date(localBudgetUpdatedAt) > new Date(remoteBudgetUpdatedAt))) {
+                    // Local budget settings are newer or remote has no timestamp, do not overwrite with remote budget settings
+                    return;
+                }
+            }
+            if (key === 'expenledge_active_balance_type' || key === 'expenledge_all_tags' || key === 'expenledge_include_cash' || key === 'expenledge_include_balance_in_income' || key === 'expenledge_realtime_sync' || key === 'expenledge_auto_backup_enabled' || key === 'expenledge_category_orders' || key === 'expenledge_custom_categories' || key === 'expenledge_interface_preferences' || key === 'expenledge_settings_updated_at') {
+                const localSettingsUpdatedAt = local.expenledge_settings_updated_at || '';
+                const remoteSettingsUpdatedAt = remote.expenledge_settings_updated_at || '';
+                if (localSettingsUpdatedAt && (!remoteSettingsUpdatedAt || new Date(localSettingsUpdatedAt) > new Date(remoteSettingsUpdatedAt))) {
+                    // Local settings are newer or remote has no timestamp, do not overwrite with remote settings
                     return;
                 }
             }
