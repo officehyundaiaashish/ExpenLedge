@@ -856,16 +856,6 @@
                     el.setAttribute('data-bwignore', 'true');
                     el.setAttribute('data-google-autofill', 'off');
 
-                    // Chromium Autofill Prevention: Temporarily set input to readonly on focus
-                    if (el.tagName === 'INPUT' && el.type !== 'checkbox' && el.type !== 'radio') {
-                        el.addEventListener('focus', function () {
-                            const isReadOnly = this.readOnly;
-                            this.readOnly = true;
-                            setTimeout(() => {
-                                this.readOnly = isReadOnly;
-                            }, 30);
-                        });
-                    }
                 }
             };
             // Apply to all current inputs on launch
