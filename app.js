@@ -215,7 +215,11 @@ function suppressBrowserAutofill(root = document) {
 
         // Force autocomplete to "one-time-code" to completely suppress browser and OS autofill/password managers on Android/iOS
         el.setAttribute('autocomplete', 'one-time-code');
-        el.setAttribute('autocapitalize', type === 'email' || type === 'search' ? 'none' : 'off');
+        if (el.id === 'tx-input-desc') {
+            el.setAttribute('autocapitalize', 'sentences');
+        } else {
+            el.setAttribute('autocapitalize', type === 'email' || type === 'search' ? 'none' : 'off');
+        }
         el.setAttribute('autocorrect', 'off');
         el.setAttribute('spellcheck', 'false');
         el.setAttribute('data-form-type', 'other');
@@ -1158,11 +1162,19 @@ function mergeSupabaseStorageSnapshots(localSnapshot = {}, remoteSnapshot = {}) 
     Object.entries(remote).forEach(([key, value]) => {
         if (key === 'expenledge_transactions' || key === 'expenledge_deleted_transaction_log') return;
         if (value !== undefined && value !== null && value !== '') {
-            if (key === 'expenledge_profile') {
+            if (key === 'expenledge_profile' || key === 'expenledge_profile_updated_at') {
                 const localProfileUpdatedAt = local.expenledge_profile_updated_at || '';
                 const remoteProfileUpdatedAt = remote.expenledge_profile_updated_at || '';
                 if (localProfileUpdatedAt && (!remoteProfileUpdatedAt || new Date(localProfileUpdatedAt) > new Date(remoteProfileUpdatedAt))) {
                     // Local profile is newer or remote has no timestamp, do not overwrite with remote profile
+                    return;
+                }
+            }
+            if (key === 'expenledge_accent_theme' || key === 'expenledge_accent_theme_updated_at') {
+                const localThemeUpdatedAt = local.expenledge_accent_theme_updated_at || '';
+                const remoteThemeUpdatedAt = remote.expenledge_accent_theme_updated_at || '';
+                if (localThemeUpdatedAt && (!remoteThemeUpdatedAt || new Date(localThemeUpdatedAt) > new Date(remoteThemeUpdatedAt))) {
+                    // Local theme is newer or remote has no timestamp, do not overwrite with remote theme
                     return;
                 }
             }
@@ -1497,6 +1509,8 @@ async function syncSupabaseNow(options) {
 
 // Expose to global scope for inline onclick handlers
 window.syncSupabaseNow = syncSupabaseNow;
+window.markLocalStateChanged = markLocalStateChanged;
+window.queueSupabaseSync = queueSupabaseSync;
 
 async function _syncSupabaseNowInternal(options) {
     const manual = !!(options && options.manual);
@@ -1857,7 +1871,6 @@ window.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         if (!(target instanceof HTMLInputElement)) return;
         if (target.type !== 'text') return;
-        if (target.id === 'tx-input-desc') return;
         const val = target.value;
         if (val.length > 0) {
             const capitalized = val.charAt(0).toUpperCase() + val.slice(1);
@@ -4494,7 +4507,7 @@ function showToast(msg) {
     if (isSuccess) {
         // Show premium success ripple ring - remove black background
         toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-transparent backdrop-blur-none px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center';
-        toast.innerHTML = `<div class="premium-success-ring"><div class="success-dot"></div><div class="success-pulse pulse-1"></div><div class="success-pulse pulse-2"></div></div>`;
+        toast.innerHTML = `<img src="tick.svg?t=${Date.now()}" alt="Success" class="w-10 h-10" />`;
     } else {
         // Show text for other messages - keep dark background
         toast.className = 'fixed bottom-28 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-lg py-sm rounded-full shadow-lg text-body-md font-bold opacity-0 transition-opacity duration-300 pointer-events-none z-[100] flex items-center justify-center text-white';
@@ -4516,11 +4529,7 @@ function showTickAnimation() {
 
     // Force animation reset by re-inserting elements
     overlay.innerHTML = `
-        <div class="premium-success-ring scale-[1.5]">
-            <div class="success-dot"></div>
-            <div class="success-pulse pulse-1"></div>
-            <div class="success-pulse pulse-2"></div>
-        </div>
+        <img src="tick.svg?t=${Date.now()}" alt="Success" class="w-20 h-20" />
     `;
 
     overlay.classList.remove('hidden', 'opacity-0');
