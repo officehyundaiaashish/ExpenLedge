@@ -1617,6 +1617,20 @@ async function _syncSupabaseNowInternal(options) {
         return false;
     }
 
+    if (!navigator.onLine) {
+        supabaseIntegration.pendingSync = true;
+        setSupabaseStatus('Offline: Sync pending', true, false);
+        const syncBtn = document.getElementById('supabase-sync-btn');
+        if (syncBtn) {
+            syncBtn.classList.remove('db-syncing', 'db-success', 'db-error');
+            syncBtn.classList.add('db-connected');
+        }
+        if (manual) {
+            showToast('Offline: Changes saved locally. Will sync when online.');
+        }
+        return false;
+    }
+
     // If a sync is already in progress:
     //   - For AUTO syncs: just queue and return (original behaviour).
     //   - For MANUAL syncs: show the loading overlay and wait for the
@@ -8352,3 +8366,10 @@ function toggleRealTimeSync(enabled) {
     showToast(realtimeSyncEnabled ? "Real-time sync enabled" : "Real-time sync disabled");
 }
 window.toggleRealTimeSync = toggleRealTimeSync;
+
+// Listen for network state recovery to process pending syncs automatically
+window.addEventListener('online', () => {
+    if (shouldQueueSupabaseSync() && supabaseIntegration.pendingSync) {
+        queueSupabaseSync();
+    }
+});
