@@ -118,8 +118,6 @@
                 target.setAttribute('data-protonpass-ignore', 'true');
             }
 
-            document.addEventListener('pointerdown', event => guardField(event.target), true);
-            document.addEventListener('touchstart', event => guardField(event.target), true);
             document.addEventListener('focusin', event => guardField(event.target), true);
         })();
 
@@ -2032,7 +2030,7 @@
                         id="tx-input-desc" placeholder="e.g. Lunch with team" type="text"
                         name="expenledge_transaction_note" autocomplete="new-password" autocorrect="off"
                         autocapitalize="sentences" spellcheck="false" data-lpignore="true" data-1p-ignore="true"
-                        data-bwignore="true" data-no-capitalize="true" />
+                        data-bwignore="true" />
                     <div id="remark-suggestions-panel" class="remark-suggestions-panel hidden"
                         aria-label="Remark suggestions"></div>
                 </div>
@@ -3757,11 +3755,7 @@
     <!-- Tick Animation Overlay for Transaction Save -->
     <div id="tick-overlay"
         class="fixed inset-0 z-[150] flex items-center justify-center pointer-events-none hidden opacity-0 transition-opacity duration-300">
-        <div class="premium-success-ring scale-[1.5]">
-            <div class="success-dot"></div>
-            <div class="success-pulse pulse-1"></div>
-            <div class="success-pulse pulse-2"></div>
-        </div>
+        <img src="tick.svg" alt="Success" class="w-20 h-20" />
     </div>
 
     <!-- ================== JAVASCRIPT STATE & INTERACTIVE LOGIC ================== -->
@@ -4073,10 +4067,13 @@
                                 document.documentElement.style.setProperty('--primary-gradient', theme.primary);
                             }
                             localStorage.setItem('expenledge_accent_theme', JSON.stringify(theme));
+                            localStorage.setItem('expenledge_accent_theme_updated_at', new Date().toISOString());
                             renderAccentGrids();
                             if (window.syncAllViews) {
                                 window.syncAllViews();
                             }
+                            if (window.markLocalStateChanged) window.markLocalStateChanged();
+                            if (window.queueSupabaseSync) window.queueSupabaseSync();
                         }
 
                         function renderAccentGrids() {
