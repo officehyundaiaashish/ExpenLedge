@@ -54,6 +54,10 @@ let userAccounts = [
     { id: 'cash', name: 'Cash Wallet', holderName: '', type: 'cash', startingBalance: 0.00 }
 ];
 let scheduledTransactions = [];
+// Per-account balance adjustments. These are NOT transactions and are never
+// included in dashboard, budget, income/expense or any other calculations.
+// They only tweak the displayed balance of the single account they belong to.
+let accountAdjustments = [];
 let dashboardFilter = 'month';
 let editingTransactionId = null;
 let selectedTxDateObj = new Date();
@@ -682,6 +686,7 @@ function saveToLocalStorage() {
         localStorage.setItem('expenledge_category_limits', JSON.stringify(categoryBudgetLimits));
         localStorage.setItem('expenledge_user_accounts', JSON.stringify(userAccounts));
         localStorage.setItem('expenledge_scheduled', JSON.stringify(scheduledTransactions));
+        localStorage.setItem('expenledge_account_adjustments', JSON.stringify(accountAdjustments));
         localStorage.setItem('expenledge_all_tags', JSON.stringify(allAvailableTags));
         localStorage.setItem('expenledge_include_cash', includeCashInBalance.toString());
         localStorage.setItem('expenledge_include_balance_in_income', includeBalanceInIncome.toString());
@@ -865,6 +870,15 @@ function loadFromLocalStorage() {
 
         const savedS = localStorage.getItem('expenledge_scheduled');
         if (savedS) scheduledTransactions = JSON.parse(savedS);
+
+        const savedAdj = localStorage.getItem('expenledge_account_adjustments');
+        if (savedAdj) {
+            try {
+                accountAdjustments = JSON.parse(savedAdj) || [];
+            } catch (_e) {
+                accountAdjustments = [];
+            }
+        }
 
         const savedTags = localStorage.getItem('expenledge_all_tags');
         if (savedTags) allAvailableTags = JSON.parse(savedTags);
@@ -3287,6 +3301,16 @@ function updateAccounts() {
         }
     });
 
+    // Apply per-account balance adjustments. These are intentionally kept out of
+    // the transactions loop above so they never affect dashboard, budget, income
+    // or expense totals. They only adjust the balance of the specific account.
+    accountAdjustments.forEach(adj => {
+        const acc = userAccounts.find(a => a.id === adj.accountId);
+        if (acc) {
+            acc.currentBalance = (acc.currentBalance || 0) + adj.amount;
+        }
+    });
+
     renderAccountsList();
     if (detailedAccountId) {
         updateDetailedAccountView();
@@ -5567,6 +5591,207 @@ function editCurrentDetailedAccount() {
     }, 350);
 }
 
+// ---- Long-press + context menu + delete for adjustment records ----
+let selectedAdjustmentForOptions = null;
+let activeShakingAdjustmentCard = null;
+let adjustmentLongPressTriggered = false;
+let lastAdjustmentMenuOpenTime = 0;
+
+function bindAdjustmentLongPress(card, adj) {
+    let lastX = 0;
+    let lastY = 0;
+    let startTouchX = 0;
+    let startTouchY = 0;
+    let longPressTimer = null;
+
+    const start = (e) => {
+        if (longPressTimer) clearTimeout(longPressTimer);
+        const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+        lastX = touch ? (touch.clientX || 0) : 0;
+        lastY = touch ? (touch.clientY || 0) : 0;
+        startTouchX = lastX;
+        startTouchY = lastY;
+        adjustmentLongPressTriggered = false;
+        longPressTimer = setTimeout(() => {
+            adjustmentLongPressTriggered = true;
+            openAdjustmentOptionsSheet(adj, card, lastX, lastY);
+        }, 600);
+    };
+
+    const cancel = () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    };
+
+    const move = (e) => {
+        if (!longPressTimer) return;
+        const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+        const curX = touch ? (touch.clientX || 0) : 0;
+        const curY = touch ? (touch.clientY || 0) : 0;
+        const distance = Math.sqrt(Math.pow(curX - startTouchX, 2) + Math.pow(curY - startTouchY, 2));
+        if (distance > 10) cancel();
+    };
+
+    card.addEventListener('mousedown', start);
+    card.addEventListener('touchstart', start, { passive: true });
+    card.addEventListener('mouseup', cancel);
+    card.addEventListener('touchend', cancel);
+    card.addEventListener('mouseleave', cancel);
+    card.addEventListener('touchmove', move, { passive: true });
+    card.addEventListener('mousemove', move, { passive: true });
+
+    card.addEventListener('click', (e) => {
+        if (adjustmentLongPressTriggered) {
+            e.preventDefault();
+            e.stopPropagation();
+            adjustmentLongPressTriggered = false;
+            return;
+        }
+    });
+}
+
+function openAdjustmentOptionsSheet(adj, cardElement, x, y) {
+    lastAdjustmentMenuOpenTime = Date.now();
+    selectedAdjustmentForOptions = adj;
+
+    if (activeShakingAdjustmentCard) {
+        activeShakingAdjustmentCard.classList.remove('animate-shake');
+    }
+    activeShakingAdjustmentCard = cardElement;
+    if (activeShakingAdjustmentCard) {
+        activeShakingAdjustmentCard.classList.add('animate-shake');
+    }
+
+    const popup = document.getElementById('sheet-adjustment-options');
+    if (popup) {
+        const menuWidth = 192;
+        const menuHeight = 60;
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        let left = typeof x === 'number' ? x : 100;
+        let top = typeof y === 'number' ? y : 100;
+
+        if (left + menuWidth > screenWidth) left = screenWidth - menuWidth - 8;
+        if (top + menuHeight > screenHeight) top = screenHeight - menuHeight - 8;
+        left = Math.max(8, left);
+        top = Math.max(8, top);
+
+        popup.style.left = `${left}px`;
+        popup.style.top = `${top}px`;
+        popup.classList.remove('scale-95', 'opacity-0', 'pointer-events-none');
+        popup.classList.add('scale-100', 'opacity-100', 'pointer-events-auto');
+    }
+
+    setTimeout(() => {
+        window.addEventListener('click', closeAdjustmentOptionsSheetOnOutsideClick);
+        window.addEventListener('scroll', closeAdjustmentOptionsSheetOnScroll, { capture: true, passive: true });
+    }, 10);
+}
+
+function closeAdjustmentOptionsSheetOnOutsideClick(e) {
+    if (Date.now() - lastAdjustmentMenuOpenTime < 350) return;
+    const popup = document.getElementById('sheet-adjustment-options');
+    if (!popup || !popup.contains(e.target)) {
+        closeAdjustmentOptionsSheet();
+    }
+}
+
+function closeAdjustmentOptionsSheetOnScroll() {
+    closeAdjustmentOptionsSheet();
+}
+
+function closeAdjustmentOptionsSheet() {
+    adjustmentLongPressTriggered = false;
+    if (activeShakingAdjustmentCard) {
+        activeShakingAdjustmentCard.classList.remove('animate-shake');
+        activeShakingAdjustmentCard = null;
+    }
+    const popup = document.getElementById('sheet-adjustment-options');
+    if (popup) {
+        popup.classList.add('scale-95', 'opacity-0', 'pointer-events-none');
+        popup.classList.remove('scale-100', 'opacity-100', 'pointer-events-auto');
+    }
+    window.removeEventListener('click', closeAdjustmentOptionsSheetOnOutsideClick);
+    window.removeEventListener('scroll', closeAdjustmentOptionsSheetOnScroll, { capture: true });
+}
+
+function deleteSelectedAdjustment() {
+    if (!selectedAdjustmentForOptions) return;
+    const adjToDelete = selectedAdjustmentForOptions;
+    closeAdjustmentOptionsSheet();
+    openConfirmActionSheet("Delete Adjustment", "Are you sure you want to delete this adjustment? The balance will be reversed.", () => {
+        accountAdjustments = accountAdjustments.filter(a => a.id !== adjToDelete.id);
+        saveToLocalStorage();
+        updateAccounts();
+        showToast("Adjustment deleted.");
+    });
+}
+
+// ---- Per-account balance adjustment (does not affect any other calculations) ----
+let currentAdjustType = 'add';
+
+function openAdjustAccountSheet() {
+    if (!detailedAccountId) return;
+    resetScroll('sheet-adjust-account');
+    currentAdjustType = 'add';
+    document.getElementById('adjust-input-amount').value = '';
+    document.getElementById('adjust-input-note').value = '';
+    setAdjustType('add');
+    document.getElementById('sheet-adjust-account').classList.remove('translate-y-full');
+    showBackdrop();
+}
+
+function closeAdjustAccountSheet() {
+    document.getElementById('sheet-adjust-account').classList.add('translate-y-full');
+    checkBackdropNeeded();
+}
+
+function setAdjustType(type) {
+    currentAdjustType = type;
+    const addBtn = document.getElementById('adjust-btn-add');
+    const subBtn = document.getElementById('adjust-btn-subtract');
+    if (type === 'add') {
+        addBtn.className = "py-2.5 rounded-xl border-2 border-primary bg-primary/10 text-primary font-bold flex items-center justify-center gap-xs";
+        subBtn.className = "py-2.5 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high text-on-surface-variant font-bold flex items-center justify-center gap-xs";
+    } else {
+        subBtn.className = "py-2.5 rounded-xl border-2 border-secondary bg-secondary/10 text-secondary font-bold flex items-center justify-center gap-xs";
+        addBtn.className = "py-2.5 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high text-on-surface-variant font-bold flex items-center justify-center gap-xs";
+    }
+}
+
+function saveAccountAdjustment() {
+    if (!detailedAccountId) return;
+    const acc = userAccounts.find(a => a.id === detailedAccountId);
+    if (!acc) return;
+
+    const rawAmount = parseFloat(document.getElementById('adjust-input-amount').value);
+    if (isNaN(rawAmount) || rawAmount <= 0) {
+        showToast("Please enter a valid amount");
+        return;
+    }
+    const note = document.getElementById('adjust-input-note').value.trim();
+    const signedAmount = currentAdjustType === 'add' ? Math.abs(rawAmount) : -Math.abs(rawAmount);
+
+    const now = new Date();
+    accountAdjustments.push({
+        id: 'adj_' + Date.now(),
+        accountId: acc.id,
+        amount: signedAmount,
+        note: note,
+        createdAt: now.toISOString(),
+        rawDate: now.toISOString(),
+        date: now.toLocaleDateString()
+    });
+
+    saveToLocalStorage();
+    updateAccounts();
+    closeAdjustAccountSheet();
+    showToast("Balance adjusted successfully!");
+}
+
 function filterAccountDetailsTransactions(typeFilter) {
     detailedAccountFilter = typeFilter;
     updateAccountDetailsTabStyles();
@@ -5679,10 +5904,55 @@ function renderAccountDetailsTransactions(loadMore = false) {
         return;
     }
 
-    const totalMatching = filtered.length;
-    const itemsToRender = filtered.slice(0, accountDetailsTxRenderLimit);
+    // Build a combined list of real transactions plus per-account adjustment
+    // records. Adjustments are shown only as a record inside this account and
+    // are never counted in any dashboard or other calculations.
+    const adjustmentRecords = accountAdjustments
+        .filter(adj => adj.accountId === acc.id)
+        .map(adj => ({
+            isAdjustment: true,
+            id: adj.id,
+            amount: adj.amount,
+            note: adj.note || 'Balance Adjustment',
+            rawDate: adj.rawDate,
+            date: adj.date,
+            createdAt: adj.createdAt
+        }));
+
+    const combined = [...filtered, ...adjustmentRecords];
+    combined.sort((a, b) => {
+        const dateA = getTransactionDate(a);
+        const dateB = getTransactionDate(b);
+        return dateB.getTime() - dateA.getTime();
+    });
+
+    const totalMatching = combined.length;
+    const itemsToRender = combined.slice(0, accountDetailsTxRenderLimit);
 
     itemsToRender.forEach(t => {
+        if (t.isAdjustment) {
+            const isAdd = t.amount >= 0;
+            const card = document.createElement('div');
+            card.className = "bg-surface-container-high p-md rounded-xl flex items-center gap-md border border-dashed border-outline-variant/40";
+            card.innerHTML = `
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant bg-surface-container">
+                    <span class="material-symbols-outlined">tune</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between">
+                        <p class="text-body-lg font-bold ${isAdd ? 'text-primary' : 'text-secondary'}">${isAdd ? '+' : ''}₹${Math.abs(t.amount).toFixed(2)}</p>
+                        <p class="text-label-md font-label-md text-on-surface-variant">${getTxDisplayDate(t)}</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <p class="text-body-md text-on-surface-variant">${escapeHtml(t.note)} <span class="text-[10px] uppercase font-bold tracking-wider opacity-70">Adjustment</span></p>
+                    </div>
+                </div>
+            `;
+            bindAdjustmentLongPress(card, t);
+            container.appendChild(card);
+            return;
+        }
+
         const isInc = t.type === 'income';
         const card = document.createElement('div');
         card.className = "bg-surface-container p-md rounded-xl flex items-center gap-md hover:bg-surface-container-high transition-all cursor-pointer active:scale-[0.98]";
