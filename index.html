@@ -7,7 +7,7 @@
     <meta
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual"
         name="viewport" />
-    <title>ExpenLedge - Expense Manager</title>
+    <title>ExpenLedge</title>
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json" />
@@ -3166,6 +3166,11 @@
             </div>
             <div class="flex items-center gap-xs">
                 <button
+                    class="text-tertiary hover:bg-surface-container-high rounded-xl px-2.5 py-1 font-bold text-label-lg transition-colors flex items-center gap-xs"
+                    onclick="openAdjustAccountSheet()">
+                    <span class="material-symbols-outlined text-[16px]">tune</span> Adjust
+                </button>
+                <button
                     class="text-primary hover:bg-surface-container-high rounded-xl px-2.5 py-1 font-bold text-label-lg transition-colors flex items-center gap-xs"
                     onclick="editCurrentDetailedAccount()">
                     <span class="material-symbols-outlined text-[16px]">edit</span> Edit
@@ -3232,6 +3237,86 @@
             </div>
         </main>
     </div>
+
+    <!-- BOTTOM SHEET: ADJUST ACCOUNT BALANCE -->
+    <div class="fixed bottom-0 left-0 right-0 z-[58] bg-surface rounded-t-3xl transform translate-y-full bottom-sheet-transition max-h-[50vh] overflow-hidden flex flex-col max-w-md mx-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+        id="sheet-adjust-account">
+        <div class="w-full flex justify-center pt-sm pb-xs flex-shrink-0">
+            <div class="w-10 h-1 rounded-full bg-surface-container-highest"></div>
+        </div>
+        <header
+            class="px-container-padding py-2 flex justify-between items-center border-b border-outline-variant flex-shrink-0">
+            <div class="flex items-center gap-md">
+                <button
+                    class="material-symbols-outlined text-on-surface hover:bg-surface-container-high rounded-full p-1.5"
+                    onclick="closeAdjustAccountSheet()">close</button>
+                <h2 class="text-title-medium font-bold text-on-background">Adjust Balance</h2>
+            </div>
+            <button
+                class="hover:bg-surface-container-high rounded-full p-2 transition-colors flex items-center justify-center"
+                style="color: var(--primary);" onclick="saveAccountAdjustment()">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7">
+                    </path>
+                </svg>
+            </button>
+        </header>
+        <main class="flex-1 overflow-y-auto px-container-padding py-sm space-y-sm no-scrollbar">
+            <p class="text-label-md text-on-surface-variant">
+                Add or subtract money from this account only. Does not affect the dashboard or other calculations.
+            </p>
+            <div class="space-y-xs">
+                <label class="text-label-md font-label-md text-on-surface-variant">Amount</label>
+                <input id="adjust-input-amount" type="number" inputmode="decimal" step="0.01" placeholder="0.00"
+                    class="w-full px-md py-2 rounded-xl bg-surface-container-high border border-outline-variant/30 text-body-md font-bold text-on-surface focus:outline-none focus:border-primary" />
+            </div>
+            <div class="space-y-xs">
+                <label class="text-label-md font-label-md text-on-surface-variant">Action</label>
+                <div class="grid grid-cols-2 gap-sm">
+                    <button id="adjust-btn-add"
+                        class="py-2 rounded-xl border-2 border-primary bg-primary/10 text-primary font-bold flex items-center justify-center gap-xs"
+                        onclick="setAdjustType('add')">
+                        <span class="material-symbols-outlined text-[18px]">add</span> Add Money
+                    </button>
+                    <button id="adjust-btn-subtract"
+                        class="py-2 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high text-on-surface-variant font-bold flex items-center justify-center gap-xs"
+                        onclick="setAdjustType('subtract')">
+                        <span class="material-symbols-outlined text-[18px]">remove</span> Subtract Money
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-xs">
+                <label class="text-label-md font-label-md text-on-surface-variant">Note (optional)</label>
+                <input id="adjust-input-note" type="text" placeholder="Reason for adjustment"
+                    class="w-full px-md py-2 rounded-xl bg-surface-container-high border border-outline-variant/30 text-body-md text-on-surface focus:outline-none focus:border-primary" />
+            </div>
+        </main>
+    </div>
+    <!-- WINDOWS STYLE CONTEXT MENU: ADJUSTMENT -->
+    <div class="fixed z-[60] bg-surface rounded-xl border border-outline-variant shadow-lg py-1 w-48 opacity-0 scale-95 pointer-events-none transition-all duration-150 origin-top-left"
+        id="sheet-adjustment-options">
+        <!-- Delete -->
+        <button
+            class="w-full flex items-center gap-sm px-4 py-2 hover:bg-error/10 text-error transition-colors text-left"
+            onclick="deleteSelectedAdjustment()">
+            <span class="material-symbols-outlined text-error text-[18px]">delete</span>
+            <span class="text-body-md font-semibold">Delete</span>
+        </button>
+    </div>
+
+    <!-- WINDOWS STYLE CONTEXT MENU: ADJUSTMENT -->
+    <div class="fixed z-[60] bg-surface rounded-xl border border-outline-variant shadow-lg py-1 w-48 opacity-0 scale-95 pointer-events-none transition-all duration-150 origin-top-left"
+        id="sheet-adjustment-options">
+        <!-- Delete -->
+        <button
+            class="w-full flex items-center gap-sm px-4 py-2 hover:bg-error/10 text-error transition-colors text-left"
+            onclick="deleteSelectedAdjustment()">
+            <span class="material-symbols-outlined text-error text-[18px]">delete</span>
+            <span class="text-body-md font-semibold">Delete</span>
+        </button>
+    </div>
+
     <!-- WINDOWS STYLE CONTEXT MENU -->
     <div class="fixed z-[60] bg-surface rounded-xl border border-outline-variant shadow-lg py-1 w-48 opacity-0 scale-95 pointer-events-none transition-all duration-150 origin-top-left"
         id="sheet-transaction-options">
